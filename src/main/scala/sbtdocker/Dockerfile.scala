@@ -1,7 +1,6 @@
 package sbtdocker
 
 import sbt._
-import java.nio.file.Path
 
 object Dockerfile {
 
@@ -57,13 +56,6 @@ trait DockerfileApi {
    * @param to Path to copy to inside the container.
    */
   def add(from: String, to: String) = addInstruction(Add(from, to))
-
-  /**
-   * Creates a [[sbtdocker.Instructions.Add]] instruction.
-   * @param from Path to copy from, relative to the staging dir.
-   * @param to Path to copy to inside the container.
-   */
-  def add(from: Path, to: Path) = addInstruction(Add(from.toString, to.toString))
 
   /**
    * Creates a [[sbtdocker.Instructions.Add]] instruction.

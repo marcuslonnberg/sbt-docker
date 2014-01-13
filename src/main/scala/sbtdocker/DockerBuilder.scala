@@ -29,7 +29,7 @@ object DockerBuilder {
   def copyFiles(pathsToCopy: Seq[CopyFile], stageDir: File, log: Logger) = {
     for (CopyFile(source, targetRelative) <- pathsToCopy) {
       val target = stageDir / targetRelative.getPath
-      log.debug(s"Copying '${source.toPath}' to '${target.getPath}'")
+      log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
 
       if (target.exists())
         error( s"""Path "${target.getPath}" already exists in stage directory""")
