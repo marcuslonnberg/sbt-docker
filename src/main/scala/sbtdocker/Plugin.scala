@@ -2,6 +2,7 @@ package sbtdocker
 
 import sbt._
 import Keys.{organization, name, streams}
+import scala.util.Try
 
 object Plugin extends sbt.Plugin {
 
@@ -15,16 +16,17 @@ object Plugin extends sbt.Plugin {
     val stageDir = TaskKey[File]("docker-target")
     val imageName = TaskKey[String]("docker-image-name")
     val defaultImageName = TaskKey[String]("docker-default-image-name")
+    val dockerPath = TaskKey[String]("docker-path")
   }
 
   lazy val baseSettings = Seq(
-    docker <<= (streams, stageDir in docker, dockerfile in docker, jarFile in docker, imageName in docker) map {
-      (streams, stageDir, dockerfile, jarPath, imageName) =>
+    docker <<= (streams, dockerPath in docker, stageDir in docker, dockerfile in docker, jarFile in docker, imageName in docker) map {
+      (streams, dockerPath, stageDir, dockerfile, jarPath, imageName) =>
         val log = streams.log
         log.debug("Generated Dockerfile:")
         log.debug(dockerfile.toString)
 
-        DockerBuilder(dockerfile, imageName, stageDir, log)
+        DockerBuilder(dockerPath, dockerfile, imageName, stageDir, log)
     },
     dockerfile in docker <<= (dockerfile in docker),
 
@@ -33,7 +35,8 @@ object Plugin extends sbt.Plugin {
     imageName in docker <<= (imageName in docker) or (defaultImageName in docker),
     defaultImageName in docker <<= (organization, name) map {
       (organization, name) => s"$organization/$name"
-    }
+    },
+    dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker")
   )
 
   def basicSettings(image: Option[Either[String, JVM.Version]]) = baseSettings ++ Seq(
