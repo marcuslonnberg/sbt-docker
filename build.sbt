@@ -6,4 +6,4 @@ organization := "nu.lonnberg"
 
 version := "1.0-SNAPSHOT"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
