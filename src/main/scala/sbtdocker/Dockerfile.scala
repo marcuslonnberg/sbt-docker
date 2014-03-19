@@ -79,6 +79,8 @@ trait DockerfileApi {
   def user(username: String) = addInstruction(User(username))
 
   def workDir(path: String) = addInstruction(WorkDir(path))
+
+  def onBuild(instruction: Instruction) = addInstruction(OnBuild(instruction))
 }
 
 object Instructions {
@@ -127,5 +129,12 @@ object Instructions {
   case class User(username: String) extends Instruction
 
   case class WorkDir(path: String) extends Instruction
+
+  case class OnBuild(instruction: Instruction) extends Instruction {
+    override def toInstructionString = {
+      val instructionName = productPrefix.toUpperCase
+      s"$instructionName ${instruction.toInstructionString}"
+    }
+  }
 
 }

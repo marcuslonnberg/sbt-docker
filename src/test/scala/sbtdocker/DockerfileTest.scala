@@ -20,6 +20,7 @@ class DockerfileTest extends FunSuite with Matchers {
       addInstruction(Volume("mountpoint"))
       addInstruction(User("marcus"))
       addInstruction(WorkDir("path"))
+      addInstruction(OnBuild(Run("echo", "123")))
     }
 
     d.toString.lines.toList should contain theSameElementsInOrderAs List(
@@ -33,7 +34,8 @@ class DockerfileTest extends FunSuite with Matchers {
       "ENTRYPOINT [\"entrypoint\", \"arg\"]",
       "VOLUME mountpoint",
       "USER marcus",
-      "WORKDIR path"
+      "WORKDIR path",
+      "ONBUILD RUN echo 123"
     )
   }
 
@@ -68,5 +70,12 @@ class DockerfileTest extends FunSuite with Matchers {
     }
     d.instructions should contain theSameElementsAs Seq(Add("a/b/c/d.txt", "/c/d.txt"))
     d.pathsToCopy shouldBe empty
+  }
+
+  test("onBuild method should generate a correct instruction string") {
+    val d = new Dockerfile {
+      onBuild(Run("echo", "123"))
+    }
+    d.toString should contain equals "ONBUILD RUN echo 123"
   }
 }
