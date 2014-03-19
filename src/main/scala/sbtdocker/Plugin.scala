@@ -9,14 +9,14 @@ object Plugin extends sbt.Plugin {
   import DockerKeys._
 
   object DockerKeys {
-    val docker = TaskKey[Unit]("docker", "Creates a docker container ")
+    val docker = taskKey[Unit]("Creates a Docker image.")
 
-    val dockerfile = TaskKey[Dockerfile]("docker-dockerfile")
-    val jarFile = TaskKey[File]("docker-jar-file")
-    val stageDir = TaskKey[File]("docker-target")
-    val imageName = TaskKey[String]("docker-image-name")
-    val defaultImageName = TaskKey[String]("docker-default-image-name")
-    val dockerPath = TaskKey[String]("docker-path")
+    val dockerfile = taskKey[Dockerfile]("The Dockerfile that should be built.")
+    val jarFile = taskKey[File]("Which JAR file to add to the image.")
+    val stageDir = taskKey[File]("Staging directory use when building the image.")
+    val imageName = taskKey[String]("Name of the built image.")
+    val defaultImageName = taskKey[String]("Default name of the built image. Is used when imageName is not set.")
+    val dockerPath = taskKey[String]("Path to the Docker binary.")
   }
 
   lazy val baseSettings = Seq(
@@ -40,10 +40,10 @@ object Plugin extends sbt.Plugin {
   )
 
   def basicSettings(image: Option[Either[String, JVM.Version]]) = baseSettings ++ Seq(
-    dockerfile in docker <<= (stageDir in docker, jarFile in docker) map {
-      (stageDir, jarFile) => new Dockerfile {
+    dockerfile in docker <<= (stageDir in docker, jarFile in docker) map { (stageDir, jarFile) =>
+      new Dockerfile {
         implicit val stageDirImplicit = stageDir
-        
+
         val imageName = image match {
           case None => "totokaka/arch-java"
           case Some(Left(name)) => name
@@ -61,7 +61,9 @@ object Plugin extends sbt.Plugin {
   def dockerSettings = baseSettings
 
   def dockerSettingsBasic = basicSettings(None)
+
   def dockerSettingsBasic(fromImage: String) = basicSettings(Some(Left(fromImage)))
+
   def dockerSettingsBasic(jvmVersion: JVM.Version) = basicSettings(Some(Right(jvmVersion)))
 
   object JVM extends Enumeration {
@@ -69,4 +71,5 @@ object Plugin extends sbt.Plugin {
     val v7 = Value("1.7")
     type Version = Value
   }
+
 }
