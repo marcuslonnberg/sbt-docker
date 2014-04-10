@@ -8,6 +8,9 @@ object Plugin extends sbt.Plugin {
 
   import DockerKeys._
 
+  val NamespaceNameDisallowedChars = "[^a-z0-9_]".r
+  val RepositoryNameDisallowedChars = "[^a-z0-9-_\\.]".r
+
   object DockerKeys {
     val docker = taskKey[Unit]("Creates a Docker image.")
 
@@ -35,7 +38,10 @@ object Plugin extends sbt.Plugin {
     imageName in docker <<= (imageName in docker) or (defaultImageName in docker),
     defaultImageName in docker <<= (organization, name) map {
       case ("", name) => name
-      case (organization, name) => s"$organization/$name"
+      case (organization, name) =>
+        val namespaceName = NamespaceNameDisallowedChars.replaceAllIn(organization, "")
+        val repositoryName = RepositoryNameDisallowedChars.replaceAllIn(name, "")
+        s"$namespaceName/$repositoryName"
     },
     dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker")
   )
