@@ -24,7 +24,7 @@ object Plugin extends sbt.Plugin {
       (streams, dockerPath, stageDir, dockerfile, jarPath, imageName) =>
         val log = streams.log
         log.debug("Generated Dockerfile:")
-        log.debug(dockerfile.toString)
+        log.debug(dockerfile.toInstructionsString)
 
         DockerBuilder(dockerPath, dockerfile, imageName, stageDir, log)
     },
@@ -34,21 +34,18 @@ object Plugin extends sbt.Plugin {
     jarFile in docker := new File("temp"),
     imageName in docker <<= (imageName in docker) or (defaultImageName in docker),
     defaultImageName in docker <<= (organization, name) map {
-      (organization, name) => s"$organization/$name"
+      case ("", name) => name
+      case (organization, name) => s"$organization/$name"
     },
     dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker")
   )
 
-  def basicSettings(image: Option[Either[String, JVM.Version]]) = baseSettings ++ Seq(
+  def basicSettings(image: Option[String]) = baseSettings ++ Seq(
     dockerfile in docker <<= (stageDir in docker, jarFile in docker) map { (stageDir, jarFile) =>
       new Dockerfile {
         implicit val stageDirImplicit = stageDir
 
-        val imageName = image match {
-          case None => "totokaka/arch-java"
-          case Some(Left(name)) => name
-          case Some(Right(jvmVersion)) => ??? // TODO: return a trusted image - s"org/jre-$jvmVersion"
-        }
+        val imageName = image.getOrElse("totokaka/arch-java")
 
         from(imageName)
         val targetJarFile = file("app") / jarFile.getName
@@ -62,14 +59,6 @@ object Plugin extends sbt.Plugin {
 
   def dockerSettingsBasic = basicSettings(None)
 
-  def dockerSettingsBasic(fromImage: String) = basicSettings(Some(Left(fromImage)))
-
-  def dockerSettingsBasic(jvmVersion: JVM.Version) = basicSettings(Some(Right(jvmVersion)))
-
-  object JVM extends Enumeration {
-    val v6 = Value("1.6")
-    val v7 = Value("1.7")
-    type Version = Value
-  }
+  def dockerSettingsBasic(fromImage: String) = basicSettings(Some(fromImage))
 
 }

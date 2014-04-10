@@ -8,25 +8,28 @@ object Dockerfile {
 
 }
 
-class Dockerfile extends DockerfileApi {
+import Dockerfile._
+import Instructions._
 
-  import Dockerfile._
-  import Instructions._
-
-  var instructions = Seq.empty[Instruction]
-  var pathsToCopy = Seq.empty[CopyFile]
-
+/**
+ * Mutable Dockerfile. Holds instructions and paths that should be copied to the staging directory.
+ *
+ * @param instructions Sequence of ordered instructions
+ * @param pathsToCopy Paths that should be copied to staging directory
+ */
+case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empty,
+                      var pathsToCopy: Seq[Dockerfile.CopyFile] = Seq.empty) extends DockerfileCommands {
   def addInstruction(instruction: Instruction) = instructions :+= instruction
 
   def copyToStageDir(source: File, targetRelativeToStageDir: File) = pathsToCopy :+= CopyFile(source, targetRelativeToStageDir)
 
-  override def toString = {
+  def toInstructionsString = {
     val lines = instructions.map(_.toInstructionString)
     lines.mkString("\n")
   }
 }
 
-trait DockerfileApi {
+trait DockerfileCommands {
 
   import Instructions._
 
@@ -40,13 +43,11 @@ trait DockerfileApi {
 
   def maintainer(name: String, email: String) = addInstruction(Maintainer(s"$name <$email>"))
 
-  def run(command: String) = addInstruction(Run(command))
-
   def run(args: String*) = addInstruction(Run(args: _*))
 
   def cmd(args: String*) = addInstruction(Cmd(args: _*))
 
-  def expose(port: Int) = addInstruction(Expose(port))
+  def expose(ports: Int*) = addInstruction(Expose(ports: _*))
 
   def env(key: String, value: String) = addInstruction(Env(key, value))
 
@@ -85,23 +86,30 @@ trait DockerfileApi {
 
 object Instructions {
 
-  def escapeQuotationMarks(str: String) = str.replace("\"", "\\\"")
+  private def escapeQuotationMarks(str: String) = str.replace("\"", "\\\"")
 
   trait Instruction {
-    self: Product =>
+    this: Product =>
     def arguments = productIterator.mkString(" ")
 
+    def instructionName = productPrefix.toUpperCase
+
     def toInstructionString = {
-      val instructionName = productPrefix.toUpperCase
       s"$instructionName $arguments"
     }
   }
 
   trait SeqArguments {
-    self: Instruction =>
+    this: Instruction =>
     def args: Seq[String]
 
-    override def arguments = args map escapeQuotationMarks mkString("[\"", "\", \"", "\"]")
+    def shellFormat: Boolean
+
+    private def execArguments = args.map(escapeQuotationMarks).mkString("[\"", "\", \"", "\"]")
+
+    private def shellArguments = args.mkString(" ")
+
+    override def arguments = if (shellFormat) shellArguments else execArguments
   }
 
   case class From(from: String) extends Instruction
@@ -109,20 +117,51 @@ object Instructions {
   case class Maintainer(name: String) extends Instruction
 
   object Run {
-    def apply(args: String*): Run = Run(args.map(escapeQuotationMarks).mkString(" "))
+    def shell(args: String*) = new Run(true, args: _*)
+
+    def apply(args: String*) = new Run(false, args: _*)
   }
 
-  case class Run(command: String) extends Instruction
+  /**
+   * RUN instruction.
+   * @param shellFormat true if the command should be executed in a shell
+   * @param args command
+   */
+  case class Run(shellFormat: Boolean, args: String*) extends Instruction with SeqArguments
 
-  case class Cmd(args: String*) extends Instruction with SeqArguments
+  object Cmd {
+    def shell(args: String*) = new Cmd(true, args: _*)
 
-  case class Expose(port: Int) extends Instruction
+    def apply(args: String*) = new Cmd(false, args: _*)
+  }
+
+  /**
+   * CMD instruction.
+   * @param shellFormat true if the command should be executed in a shell
+   * @param args command
+   */
+  case class Cmd(shellFormat: Boolean, args: String*) extends Instruction with SeqArguments
+
+  case class Expose(ports: Int*) extends Instruction {
+    override def arguments = ports.mkString(" ")
+  }
 
   case class Env(key: String, value: String) extends Instruction
 
   case class Add(from: String, to: String) extends Instruction
 
-  case class EntryPoint(args: String*) extends Instruction with SeqArguments
+  object EntryPoint {
+    def shell(args: String*) = new EntryPoint(true, args: _*)
+
+    def apply(args: String*) = new EntryPoint(false, args: _*)
+  }
+
+  /**
+   * ENTRYPOINT instruction.
+   * @param shellFormat true if the command should be executed in a shell
+   * @param args command
+   */
+  case class EntryPoint(shellFormat: Boolean, args: String*) extends Instruction with SeqArguments
 
   case class Volume(mountPoint: String) extends Instruction
 
@@ -131,10 +170,7 @@ object Instructions {
   case class WorkDir(path: String) extends Instruction
 
   case class OnBuild(instruction: Instruction) extends Instruction {
-    override def toInstructionString = {
-      val instructionName = productPrefix.toUpperCase
-      s"$instructionName ${instruction.toInstructionString}"
-    }
+    override def arguments = instruction.toInstructionString
   }
 
 }

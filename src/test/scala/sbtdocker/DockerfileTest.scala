@@ -7,42 +7,68 @@ import Instructions._
 import org.scalatest.{FunSuite, Matchers}
 
 class DockerfileTest extends FunSuite with Matchers {
-  test("Instructions are generated in sequence and correctly") {
-    val d = new Dockerfile {
-      addInstruction(From("image"))
-      addInstruction(Maintainer("marcus"))
-      addInstruction(Run("echo docker"))
-      addInstruction(Cmd("cmd", "arg"))
-      addInstruction(Expose(80))
-      addInstruction(Env("key", "value"))
-      addInstruction(Add("a", "b"))
-      addInstruction(EntryPoint("entrypoint", "arg"))
-      addInstruction(Volume("mountpoint"))
-      addInstruction(User("marcus"))
-      addInstruction(WorkDir("path"))
-      addInstruction(OnBuild(Run("echo", "123")))
-    }
+  val allInstructions = Seq(
+    From("image"),
+    Maintainer("marcus"),
+    Run("echo", "docker"),
+    Cmd("cmd", "arg"),
+    Expose(80, 8080),
+    Env("key", "value"),
+    Add("a", "b"),
+    EntryPoint("entrypoint", "arg"),
+    Volume("mountpoint"),
+    User("marcus"),
+    WorkDir("path"),
+    OnBuild(Run("echo", "123"))
+  )
 
-    d.toString.lines.toList should contain theSameElementsInOrderAs List(
-      "FROM image",
-      "MAINTAINER marcus",
-      "RUN echo docker",
-      "CMD [\"cmd\", \"arg\"]",
-      "EXPOSE 80",
-      "ENV key value",
-      "ADD a b",
-      "ENTRYPOINT [\"entrypoint\", \"arg\"]",
-      "VOLUME mountpoint",
-      "USER marcus",
-      "WORKDIR path",
-      "ONBUILD RUN echo 123"
-    )
+  test("Instructions string is in sequence and matches instructions") {
+    val dockerfile = Dockerfile(allInstructions)
+
+    dockerfile.toInstructionsString shouldEqual
+      """FROM image
+        |MAINTAINER marcus
+        |RUN ["echo", "docker"]
+        |CMD ["cmd", "arg"]
+        |EXPOSE 80 8080
+        |ENV key value
+        |ADD a b
+        |ENTRYPOINT ["entrypoint", "arg"]
+        |VOLUME mountpoint
+        |USER marcus
+        |WORKDIR path
+        |ONBUILD RUN ["echo", "123"]""".stripMargin
   }
 
-  test("Cmd and Entrypoint should handle \" in  arguments") {
-    Cmd("\"").toInstructionString should equal( """CMD ["\""]""")
+  test("addInstruction changes the Dockerfile by adding a instruction to the end") {
+    val predefined = Dockerfile(allInstructions)
 
-    EntryPoint("\"").toInstructionString should equal( """ENTRYPOINT ["\""]""")
+    val withAddInstruction = new Dockerfile {
+      allInstructions foreach addInstruction
+    }
+
+    withAddInstruction shouldEqual predefined
+  }
+
+  test("Instruction methods adds a instruction to the dockerfile") {
+    val predefined = Dockerfile(allInstructions)
+
+    val withMethods = new Dockerfile {
+      from("image")
+      maintainer("marcus")
+      run("echo", "docker")
+      cmd("cmd", "arg")
+      expose(80, 8080)
+      env("key", "value")
+      add("a", "b")
+      entryPoint("entrypoint", "arg")
+      volume("mountpoint")
+      user("marcus")
+      workDir("path")
+      onBuild(Run("echo", "123"))
+    }
+
+    withMethods shouldEqual predefined
   }
 
   test("add method should create a from path that is relative to the stage dir") {
@@ -72,10 +98,21 @@ class DockerfileTest extends FunSuite with Matchers {
     d.pathsToCopy shouldBe empty
   }
 
-  test("onBuild method should generate a correct instruction string") {
-    val d = new Dockerfile {
-      onBuild(Run("echo", "123"))
-    }
-    d.toString should contain equals "ONBUILD RUN echo 123"
+  test("OnBuild instruction should correctly generate instruction string") {
+    val onBuild = OnBuild(Run("echo", "123"))
+
+    onBuild.toInstructionString shouldEqual """ONBUILD RUN ["echo", "123"]"""
+  }
+
+  test("Run, EntryPoint and Cmd should support shell format") {
+    Run.shell("a", "b", "\"c\"").toInstructionString shouldEqual """RUN a b "c""""
+    EntryPoint.shell("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT a b "c""""
+    Cmd.shell("a", "b", "\"c\"").toInstructionString shouldEqual """CMD a b "c""""
+  }
+
+  test("Run, EntryPoint and Cmd should support exec format") {
+    Run("a", "b", "\"c\"").toInstructionString shouldEqual """RUN ["a", "b", "\"c\""]"""
+    EntryPoint("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
+    Cmd("a", "b", "\"c\"").toInstructionString shouldEqual """CMD ["a", "b", "\"c\""]"""
   }
 }
