@@ -23,6 +23,7 @@ dockerfile in docker <<= (stageDir in docker, jarFile in docker, mainClass in Co
   (stageDir, jarFile, mainClass) => new Dockerfile {
     from("totokaka/arch-java")
     // Install scala
+    run("pacman", "-Sy")
     run("pacman", "-S", "--noconfirm", "scala")
     // Add the generated jar file
     add(jarFile, file(jarFile.getName))(stageDir)
@@ -32,5 +33,7 @@ dockerfile in docker <<= (stageDir in docker, jarFile in docker, mainClass in Co
 }
 
 // Set a custom image name
-imageName in docker <<= (organization, name, version) map
-  ((organization, name, version) => s"$organization/$name:v$version")
+imageName in docker <<= (organization, name, version) map {(organization, name, version) =>
+    val namespaceName = NamespaceNameDisallowedChars.replaceAllIn(organization, "")
+    s"$namespaceName/$name:v$version"
+}
