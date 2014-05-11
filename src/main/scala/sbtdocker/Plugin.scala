@@ -47,16 +47,13 @@ object Plugin extends sbt.Plugin {
     dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker")
   )
 
-  def basicSettings(image: Option[String]) = baseSettings ++ Seq(
+  def singleJarSettings(fromImage: String) = baseSettings ++ Seq(
     dockerfile in docker <<= (stageDir in docker, jarFile in docker) map { (stageDir, jarFile) =>
+      val targetJarFile = file("/app") / jarFile.getName
+
       new Dockerfile {
-        implicit val stageDirImplicit = stageDir
-
-        val imageName = image.getOrElse("totokaka/arch-java")
-
-        from(imageName)
-        val targetJarFile = file("app") / jarFile.getName
-        add(jarFile, targetJarFile)
+        from(fromImage)
+        add(jarFile, targetJarFile)(stageDir)
         entryPoint("java", "-jar", targetJarFile.getPath)
       }
     }
@@ -64,8 +61,13 @@ object Plugin extends sbt.Plugin {
 
   def dockerSettings = baseSettings
 
-  def dockerSettingsBasic = basicSettings(None)
+  /**
+   * Defines a simple Dockerfile that only adds a single JAR and starts it with 'java -jar application.jar'.
+   * The source JAR file is specified with the key 'jarFile'.
+   * Uses 'dockerfile/java' as base image.
+   */
+  def dockerSettingsSingleJar = singleJarSettings(fromImage = "dockerfile/java")
 
-  def dockerSettingsBasic(fromImage: String) = basicSettings(Some(fromImage))
+  def dockerSettingsSingleJar(fromImage: String) = singleJarSettings(fromImage)
 
 }

@@ -1,4 +1,3 @@
-import sbtdocker.Dockerfile
 import sbtdocker.Plugin._
 import sbtdocker.Plugin.DockerKeys._
 import sbtassembly.Plugin.AssemblyKeys
@@ -13,10 +12,11 @@ organization := "sbtdocker"
 version := "0.1.0"
 
 
-dockerSettingsBasic
+// Import default settings and a predefined Dockerfile that expects a single (fat) jar
+dockerSettingsSingleJar
 
 // Make docker depend on the assembly task, which generates a fat jar file
 docker <<= docker.dependsOn (assembly)
 
-// Tell docker at which path the jar file will be created
+// Tell docker which jarFile to add to the container
 jarFile in docker <<= (outputPath in assembly)
