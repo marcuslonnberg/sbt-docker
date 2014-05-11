@@ -3,6 +3,7 @@ package sbtdocker
 import sbt._
 import Keys.{organization, name, streams}
 import scala.util.Try
+import sbtdocker.Dockerfile.StageDir
 
 object Plugin extends sbt.Plugin {
 
@@ -15,8 +16,8 @@ object Plugin extends sbt.Plugin {
     val docker = taskKey[Unit]("Creates a Docker image.")
 
     val dockerfile = taskKey[Dockerfile]("The Dockerfile that should be built.")
-    val jarFile = taskKey[File]("Which JAR file to add to the image.")
-    val stageDir = taskKey[File]("Staging directory use when building the image.")
+    val jarFile = taskKey[File]("JAR file to add to the image.")
+    val stageDir = taskKey[StageDir]("Staging directory used when building the image.")
     val imageName = taskKey[String]("Name of the built image.")
     val defaultImageName = taskKey[String]("Default name of the built image. Is used when imageName is not set.")
     val dockerPath = taskKey[String]("Path to the Docker binary.")
@@ -33,7 +34,7 @@ object Plugin extends sbt.Plugin {
     },
     dockerfile in docker <<= (dockerfile in docker),
 
-    stageDir in docker <<= (stageDir in docker) or (Keys.target map (_ / "docker")),
+    stageDir in docker <<= (stageDir in docker) or (Keys.target map (target => StageDir(target / "docker"))),
     jarFile in docker := new File("temp"),
     imageName in docker <<= (imageName in docker) or (defaultImageName in docker),
     defaultImageName in docker <<= (organization, name) map {

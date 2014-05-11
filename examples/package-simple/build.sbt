@@ -6,7 +6,7 @@ import Keys._
 
 name := "example-package-simple"
 
-organization := "sbt-docker"
+organization := "sbtdocker"
 
 version := "0.1.0"
 
@@ -18,22 +18,26 @@ docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 // Tell docker at which path the jar file will be created
 jarFile in docker <<= (artifactPath in(Compile, packageBin)).toTask
 
-// Create a custom Dockerfile
-dockerfile in docker <<= (stageDir in docker, jarFile in docker, mainClass in Compile) map {
-  (stageDir, jarFile, mainClass) => new Dockerfile {
-    from("totokaka/arch-java")
-    // Install scala
-    run("pacman", "-Sy")
-    run("pacman", "-S", "--noconfirm", "scala")
+// Define a Dockerfile
+dockerfile in docker <<= (stageDir in docker, jarFile in docker, managedClasspath in Runtime, mainClass in Compile) map {
+  case (stageDir, jarFile, classpath, Some(mainClass)) => new Dockerfile {
+    implicit val stageDirImplicit = stageDir
+    from("dockerfile/java")
+    val files = classpath.files.map { file =>
+      val target = "/app/" + file.getName
+      add(file, target)
+      target
+    }
     // Add the generated jar file
-    add(jarFile, file(jarFile.getName))(stageDir)
+    private val jarTarget = file("/app") / jarFile.getName
+    add(jarFile, jarTarget)
     // Run the jar file with scala library on the class path
-    entryPoint("java", "-cp", s"/usr/share/scala/lib/scala-library.jar:${jarFile.getName}", mainClass.get)
+    val classpathString = files.mkString(":") + ":" + jarTarget.getPath
+    entryPoint("java", "-cp", classpathString, mainClass)
   }
 }
 
 // Set a custom image name
 imageName in docker <<= (organization, name, version) map {(organization, name, version) =>
-    val namespaceName = NamespaceNameDisallowedChars.replaceAllIn(organization, "")
-    s"$namespaceName/$name:v$version"
+    s"$organization/$name:v$version"
 }

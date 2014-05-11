@@ -1,10 +1,14 @@
 package sbtdocker
 
 import sbt._
+import java.io.File
+import sbt.File
 
 object Dockerfile {
 
   case class CopyPath(source: File, targetRelative: File)
+
+  case class StageDir(file: File)
 
 }
 
@@ -60,17 +64,41 @@ trait DockerfileCommands {
 
   /**
    * Creates a [[sbtdocker.Instructions.Add]] instruction.
-   * Also copies the `from` path into the staging directory if it is not already in it (requires `stageDir` to be set).
+   * Also copies the `from` path into the staging directory if it is not already in it.
    * @param from Path on the local file system to a file or directory.
    * @param to Path to copy to inside the container.
    */
-  def add(from: File, to: File)(implicit stageDir: File = file("/")) {
-    val fromPath = IO.relativize(stageDir, from).getOrElse {
+  def add(from: File, to: File)(implicit stageDir: StageDir) {
+    add(from, to.getPath)(stageDir)
+  }
+
+  /**
+   * Creates a [[sbtdocker.Instructions.Add]] instruction.
+   * Also copies the `from` path into the staging directory if it is not already in it.
+   * @param from Path on the local file system to a file or directory.
+   * @param to Path to copy to inside the container.
+   *
+   */
+  def add(from: File, to: String)(implicit stageDir: StageDir) {
+    val fromPath = pathRelativeToStageDir(stageDir, from).getOrElse {
       val fromName = from.getName
       copyToStageDir(from, file(fromName))
       fromName
     }
-    addInstruction(Add(fromPath, to.getPath))
+    addInstruction(Add(fromPath, to))
+  }
+
+  private def pathRelativeToStageDir(stageDir: StageDir, file: File) = {
+    val stageDirPath = {
+      val path = stageDir.file.getAbsolutePath
+      if (path.endsWith(File.separator)) path else path + File.separator
+    }
+    val filePath = file.getAbsolutePath
+    if (filePath.startsWith(stageDirPath)) {
+      Some(filePath.substring(stageDirPath.length))
+    } else {
+      None
+    }
   }
 
   def entryPoint(args: String*) = addInstruction(EntryPoint(args: _*))
