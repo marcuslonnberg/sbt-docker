@@ -3,7 +3,7 @@ package sbtdocker
 import sbt._
 import scala.sys.process.{Process, ProcessLogger}
 import scala.sys.error
-import sbtdocker.Dockerfile.CopyFile
+import sbtdocker.Dockerfile.CopyPath
 
 object DockerBuilder {
   /**
@@ -32,8 +32,8 @@ object DockerBuilder {
     copyFiles(dockerFile.pathsToCopy, stageDir, log)
   }
 
-  def copyFiles(pathsToCopy: Seq[CopyFile], stageDir: File, log: Logger) = {
-    for (CopyFile(source, targetRelative) <- pathsToCopy) {
+  def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: File, log: Logger) = {
+    for (CopyPath(source, targetRelative) <- pathsToCopy) {
       val target = stageDir / targetRelative.getPath
       log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
 

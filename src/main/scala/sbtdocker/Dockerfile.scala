@@ -4,7 +4,7 @@ import sbt._
 
 object Dockerfile {
 
-  case class CopyFile(source: File, targetRelative: File)
+  case class CopyPath(source: File, targetRelative: File)
 
 }
 
@@ -12,16 +12,16 @@ import Dockerfile._
 import Instructions._
 
 /**
- * Mutable Dockerfile. Holds instructions and paths that should be copied to the staging directory.
+ * Mutable Dockerfile. Contains instructions and paths that should be copied to the staging directory.
  *
  * @param instructions Sequence of ordered instructions
- * @param pathsToCopy Paths that should be copied to staging directory
+ * @param pathsToCopy Paths that should be copied to the staging directory
  */
 case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empty,
-                      var pathsToCopy: Seq[Dockerfile.CopyFile] = Seq.empty) extends DockerfileCommands {
+                      var pathsToCopy: Seq[Dockerfile.CopyPath] = Seq.empty) extends DockerfileCommands {
   def addInstruction(instruction: Instruction) = instructions :+= instruction
 
-  def copyToStageDir(source: File, targetRelativeToStageDir: File) = pathsToCopy :+= CopyFile(source, targetRelativeToStageDir)
+  def copyToStageDir(source: File, targetRelativeToStageDir: File) = pathsToCopy :+= CopyPath(source, targetRelativeToStageDir)
 
   def toInstructionsString = {
     val lines = instructions.map(_.toInstructionString)
