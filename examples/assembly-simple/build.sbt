@@ -16,7 +16,7 @@ version := "0.1.0"
 dockerSettingsSingleJar
 
 // Make docker depend on the assembly task, which generates a fat jar file
-docker <<= docker.dependsOn (assembly)
+docker <<= (docker dependsOn assembly)
 
 // Tell docker which jarFile to add to the container
 jarFile in docker <<= (outputPath in assembly)
