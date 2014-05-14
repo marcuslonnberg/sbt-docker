@@ -5,6 +5,8 @@ import scala.sys.process.{Process, ProcessLogger}
 import scala.sys.error
 import sbtdocker.Dockerfile.{StageDir, CopyPath}
 
+case class ImageId(id: String)
+
 object DockerBuilder {
   /**
    * Build a Dockerfile using a provided docker binary.
@@ -15,7 +17,7 @@ object DockerBuilder {
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, dockerFile: Dockerfile, imageName: String, stageDir: StageDir, log: Logger) = {
+  def apply(dockerPath: String, dockerFile: Dockerfile, imageName: String, stageDir: StageDir, log: Logger): ImageId = {
     log.info(s"Creating docker image with name: '$imageName'")
 
     prepareFiles(dockerFile, stageDir, log)
@@ -49,16 +51,23 @@ object DockerBuilder {
     }
   }
 
-  def buildImage(dockerPath: String, imageName: String, stageDir: StageDir, log: Logger) = {
+  private val SuccessfullyBuilt = "Successfully built (.*)".r
+
+  def buildImage(dockerPath: String, imageName: String, stageDir: StageDir, log: Logger): ImageId = {
     val processLog = ProcessLogger({ line =>
       log.info(line)
     })
 
     val command = Seq(dockerPath, "build", "-t", imageName, ".")
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.file.absString}'")
-    Process(command, stageDir.file) ! processLog match {
-      case 0 => log.info(s"Successfully built docker image: $imageName")
-      case n => error(s"Error when building Dockerfile, exit code: $n")
+
+    val process = Process(command, stageDir.file).lines_!(processLog)
+    process.last match {
+      case SuccessfullyBuilt(id) =>
+        log.info(s"Successfully built docker image: $imageName")
+        ImageId(id)
+      case _ =>
+        error("Error when building Dockerfile")
     }
   }
 }

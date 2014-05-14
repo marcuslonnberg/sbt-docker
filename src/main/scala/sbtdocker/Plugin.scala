@@ -13,7 +13,7 @@ object Plugin extends sbt.Plugin {
   val RepositoryNameDisallowedChars = "[^a-z0-9-_\\.]".r
 
   object DockerKeys {
-    val docker = taskKey[Unit]("Creates a Docker image.")
+    val docker = taskKey[ImageId]("Creates a Docker image.")
 
     val dockerfile = taskKey[Dockerfile]("The Dockerfile that should be built.")
     val jarFile = taskKey[File]("JAR file to add to the image.")
