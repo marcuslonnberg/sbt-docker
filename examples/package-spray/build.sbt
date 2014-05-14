@@ -1,9 +1,6 @@
 import sbtdocker.{Dockerfile, Plugin}
-import Dockerfile._
-import Plugin._
 import Plugin.DockerKeys._
 import sbt._
-import Keys._
 
 name := "example-package-spray"
 
@@ -11,9 +8,7 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
-resolvers ++= Seq(
-  "spray repo" at "http://repo.spray.io/"
-)
+resolvers ++= Seq("spray repo" at "http://repo.spray.io/")
 
 libraryDependencies ++= {
   val akkaV = "2.2.3"

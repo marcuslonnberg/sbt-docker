@@ -9,17 +9,14 @@ object Plugin extends sbt.Plugin {
 
   import DockerKeys._
 
-  val NamespaceNameDisallowedChars = "[^a-z0-9_]".r
-  val RepositoryNameDisallowedChars = "[^a-z0-9-_\\.]".r
-
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
 
     val dockerfile = taskKey[Dockerfile]("The Dockerfile that should be built.")
     val jarFile = taskKey[File]("JAR file to add to the image.")
     val stageDir = taskKey[StageDir]("Staging directory used when building the image.")
-    val imageName = taskKey[String]("Name of the built image.")
-    val defaultImageName = taskKey[String]("Default name of the built image. Is used when imageName is not set.")
+    val imageName = taskKey[ImageName]("Name of the built image.")
+    val defaultImageName = taskKey[ImageName]("Default name of the built image. Is used when imageName is not set.")
     val dockerPath = taskKey[String]("Path to the Docker binary.")
     val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
   }
@@ -39,11 +36,10 @@ object Plugin extends sbt.Plugin {
     jarFile in docker := new File("temp"),
     imageName in docker <<= (imageName in docker) or (defaultImageName in docker),
     defaultImageName in docker <<= (organization, name) map {
-      case ("", name) => name
+      case ("", name) =>
+        ImageName(name)
       case (organization, name) =>
-        val namespaceName = NamespaceNameDisallowedChars.replaceAllIn(organization, "")
-        val repositoryName = RepositoryNameDisallowedChars.replaceAllIn(name, "")
-        s"$namespaceName/$repositoryName"
+        ImageName(namespace = Some(organization), repository = name)
     },
     dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()

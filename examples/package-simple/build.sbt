@@ -1,4 +1,4 @@
-import sbtdocker.{Dockerfile, Plugin}
+import sbtdocker.{BuildOptions, ImageName, Dockerfile, Plugin}
 import Plugin._
 import Plugin.DockerKeys._
 import sbt._
@@ -39,5 +39,5 @@ dockerfile in docker <<= (stageDir in docker, jarFile in docker, managedClasspat
 
 // Set a custom image name
 imageName in docker <<= (organization, name, version) map {(organization, name, version) =>
-    s"$organization/$name:v$version"
+  ImageName(namespace = Some(organization), repository = name, tag = Some("v" + version))
 }
