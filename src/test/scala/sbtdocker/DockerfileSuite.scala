@@ -6,7 +6,7 @@ import Instructions._
 import org.scalatest.{FunSuite, Matchers}
 import sbtdocker.Dockerfile.StageDir
 
-class DockerfileTest extends FunSuite with Matchers {
+class DockerfileSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
     From("image"),
     Maintainer("marcus"),
