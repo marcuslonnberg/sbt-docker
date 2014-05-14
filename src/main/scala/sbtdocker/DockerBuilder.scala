@@ -7,22 +7,30 @@ import sbtdocker.Dockerfile.{StageDir, CopyPath}
 
 case class ImageId(id: String)
 
+/**
+ * Options for the docker build command.
+ * @param noCache Do not use cache when building the image.
+ * @param rm Remove intermediate containers after a successful build.
+ */
+case class BuildOptions(noCache: Option[Boolean] = None, rm: Option[Boolean] = None)
+
 object DockerBuilder {
   /**
    * Build a Dockerfile using a provided docker binary.
    *
    * @param dockerPath path to the docker binary
-   * @param dockerFile Dockerfile to build
+   * @param buildOptions options for the build command
    * @param imageName name of the resulting image
+   * @param dockerFile Dockerfile to build
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, dockerFile: Dockerfile, imageName: String, stageDir: StageDir, log: Logger): ImageId = {
+  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: String, dockerFile: Dockerfile, stageDir: StageDir, log: Logger): ImageId = {
     log.info(s"Creating docker image with name: '$imageName'")
 
     prepareFiles(dockerFile, stageDir, log)
 
-    buildImage(dockerPath, imageName, stageDir, log)
+    buildImage(dockerPath, buildOptions, imageName, stageDir, log)
   }
 
   def prepareFiles(dockerFile: Dockerfile, stageDir: StageDir, log: Logger) = {
@@ -53,12 +61,16 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "Successfully built (.*)".r
 
-  def buildImage(dockerPath: String, imageName: String, stageDir: StageDir, log: Logger): ImageId = {
+  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: String, stageDir: StageDir, log: Logger): ImageId = {
     val processLog = ProcessLogger({ line =>
       log.info(line)
     })
 
-    val command = Seq(dockerPath, "build", "-t", imageName, ".")
+    val flags = List(
+      buildOptions.noCache.map(value => s"--no-cache=$value"),
+      buildOptions.rm.map(value => s"--rm=$value"))
+
+    val command = (dockerPath :: "build" :: "-t" :: imageName :: flags.flatten) :+ "."
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.file.absString}'")
 
     val process = Process(command, stageDir.file).lines_!(processLog)

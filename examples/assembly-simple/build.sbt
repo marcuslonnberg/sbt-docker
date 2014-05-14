@@ -1,3 +1,4 @@
+import sbtdocker.BuildOptions
 import sbtdocker.Plugin._
 import sbtdocker.Plugin.DockerKeys._
 import sbtassembly.Plugin.AssemblyKeys
@@ -20,3 +21,5 @@ docker <<= (docker dependsOn assembly)
 
 // Tell docker which jarFile to add to the container
 jarFile in docker <<= (outputPath in assembly)
+
+buildOptions in docker := BuildOptions(noCache = Some(true))

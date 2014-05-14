@@ -21,16 +21,17 @@ object Plugin extends sbt.Plugin {
     val imageName = taskKey[String]("Name of the built image.")
     val defaultImageName = taskKey[String]("Default name of the built image. Is used when imageName is not set.")
     val dockerPath = taskKey[String]("Path to the Docker binary.")
+    val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
   }
 
   lazy val baseSettings = Seq(
-    docker <<= (streams, dockerPath in docker, stageDir in docker, dockerfile in docker, jarFile in docker, imageName in docker) map {
-      (streams, dockerPath, stageDir, dockerfile, jarPath, imageName) =>
+    docker <<= (streams, dockerPath in docker, buildOptions in docker, stageDir in docker, dockerfile in docker, jarFile in docker, imageName in docker) map {
+      (streams, dockerPath, buildOptions, stageDir, dockerfile, jarPath, imageName) =>
         val log = streams.log
         log.debug("Generated Dockerfile:")
         log.debug(dockerfile.toInstructionsString)
 
-        DockerBuilder(dockerPath, dockerfile, imageName, stageDir, log)
+        DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
     dockerfile in docker <<= (dockerfile in docker),
 
@@ -44,7 +45,8 @@ object Plugin extends sbt.Plugin {
         val repositoryName = RepositoryNameDisallowedChars.replaceAllIn(name, "")
         s"$namespaceName/$repositoryName"
     },
-    dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker")
+    dockerPath in docker := Try(System.getenv("DOCKER")).filter(s => s != null && s.nonEmpty).getOrElse("docker"),
+    buildOptions in docker := BuildOptions()
   )
 
   def singleJarSettings(fromImage: String) = baseSettings ++ Seq(
