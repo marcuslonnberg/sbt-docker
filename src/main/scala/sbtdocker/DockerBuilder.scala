@@ -17,7 +17,7 @@ object DockerBuilder {
    * @param log logger
    */
   def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: Dockerfile, stageDir: StageDir, log: Logger): ImageId = {
-    log.info(s"Creating docker image with name: '$imageName'")
+    log.info(s"Creating docker image with name: '${imageName.name}'")
 
     prepareFiles(dockerFile, stageDir, log)
 
@@ -34,18 +34,28 @@ object DockerBuilder {
   }
 
   def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: StageDir, log: Logger) = {
-    for (CopyPath(source, targetRelative) <- pathsToCopy) {
-      val target = stageDir.file / targetRelative.getPath
-      log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
+    for (CopyPath(source, targetRelative) <- pathsToCopy.distinct) {
+      copyFile(source, targetRelative, stageDir, log)
+    }
+  }
 
+  def copyFile(source: File, targetRelative: File, stageDir: StageDir, log: Logger) {
+    val target = stageDir.file / targetRelative.getPath
+    log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
+
+    if (source == target) {
+      log.debug(s"Source is already in stage dir '${source.getPath}'")
+    } else {
       if (target.exists()) {
-        error( s"""Path "${target.getPath}" already exists in stage directory""")
+        log.warn( s"""Path "${target.getPath}" already exists in stage directory""")
       }
 
       if (source.isFile) {
         IO.copyFile(source, target, preserveLastModified = true)
       } else if (source.isDirectory) {
         IO.copyDirectory(source, target, overwrite = false, preserveLastModified = true)
+      } else {
+        log.error(s"Unknown type of '${source.getPath}'")
       }
     }
   }

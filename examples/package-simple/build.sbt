@@ -19,9 +19,8 @@ docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 jarFile in docker <<= (artifactPath in(Compile, packageBin)).toTask
 
 // Define a Dockerfile
-dockerfile in docker <<= (stageDir in docker, jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
-  case (stageDir, jarFile, classpath, Some(mainClass)) => new Dockerfile {
-    implicit val stageDirImplicit = stageDir
+dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
+  case (jarFile, classpath, Some(mainClass)) => new Dockerfile {
     from("dockerfile/java")
     val files = classpath.files.map { file =>
       val target = "/app/" + file.getName

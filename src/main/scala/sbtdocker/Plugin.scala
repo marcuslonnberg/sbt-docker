@@ -51,7 +51,7 @@ object Plugin extends sbt.Plugin {
 
       new Dockerfile {
         from(fromImage)
-        add(jarFile, targetJarFile)(stageDir)
+        add(jarFile, targetJarFile.toPath)
         entryPoint("java", "-jar", targetJarFile.getPath)
       }
     }

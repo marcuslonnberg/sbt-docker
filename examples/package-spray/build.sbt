@@ -29,11 +29,10 @@ docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 jarFile in docker <<= (artifactPath in(Compile, packageBin)).toTask
 
 // Define a Dockerfile
-dockerfile in docker <<= (stageDir in docker, jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
-  case (stageDir, jarFile, managedClasspath, Some(mainClass)) => {
-    implicit val stageDirImplicit = stageDir
+dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
+  case (jarFile, managedClasspath, Some(mainClass)) => {
     val libs = "/app/libs"
-    val jarTarget = file("/app") / jarFile.name
+    val jarTarget = "/app/" + jarFile.name
     new Dockerfile {
       // Use a base image that contains Java
       from("dockerfile/java")
@@ -49,7 +48,7 @@ dockerfile in docker <<= (stageDir in docker, jarFile in docker, managedClasspat
       // Add the generated jar file
       add(jarFile, jarTarget)
       // The classpath is the 'libs' dir and the produced jar file
-      val classpath = s"$libs/*:${jarTarget.getPath}"
+      val classpath = s"$libs/*:$jarTarget"
       // Set the entry point to start the application using the main class
       cmd("java", "-cp", classpath, mainClass)
     }

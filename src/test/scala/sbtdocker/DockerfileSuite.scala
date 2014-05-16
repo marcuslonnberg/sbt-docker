@@ -4,7 +4,7 @@ import sbt.file
 import sbt.Path._
 import Instructions._
 import org.scalatest.{FunSuite, Matchers}
-import sbtdocker.Dockerfile.StageDir
+import sbtdocker.Dockerfile.{CopyPath, StageDir}
 
 class DockerfileSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
@@ -71,20 +71,41 @@ class DockerfileSuite extends FunSuite with Matchers {
     withMethods shouldEqual predefined
   }
 
-  test("add method should create a from path that is relative to the stage dir") {
+  test("Add a file to /") {
     val stageDir = StageDir(file("/tmp/abc/xyz/"))
-    val d = new Dockerfile {
-      add(stageDir.file / "b.txt", file("c.txt"))(stageDir)
+    val sourceFile = stageDir.file / "xyz"
+    val dockerfile = new Dockerfile {
+      add(sourceFile, "/")
     }
-    d.instructions should contain theSameElementsAs Seq(Add("b.txt", "c.txt"))
-    d.pathsToCopy shouldBe empty
 
-    val d2 = new Dockerfile {
-      implicit val stageDir = StageDir(file("/e"))
-      add(file("/a/b/c/d.txt"), file("/c/d.txt"))
+    dockerfile.instructions should contain theSameElementsAs Seq(Add("/xyz", "/xyz"))
+  }
+
+  test("Add a file in the root") {
+    val sourceFile = file("/tmp/xyz")
+    val d = new Dockerfile {
+      add(sourceFile, "abc")
     }
-    d2.instructions should contain theSameElementsAs Seq(Add("d.txt", "/c/d.txt"))
-    d2.pathsToCopy should have length 1
+    d.instructions should contain theSameElementsAs Seq(Add("abc", "abc"))
+    d.pathsToCopy should contain theSameElementsAs Seq(CopyPath(sourceFile, file("abc")))
+  }
+
+  test("Adding a single source file to multiple paths") {
+    val sourceFile = file("/a/b/c/d")
+    val dockerfile = new Dockerfile {
+      add(sourceFile, "/x/y")
+      add(sourceFile, "/z")
+      add(sourceFile, "/z")
+    }
+
+    dockerfile.instructions should contain theSameElementsInOrderAs Seq(
+      Add("/x/y", "/x/y"),
+      Add("/z", "/z"),
+      Add("/z", "/z"))
+    dockerfile.pathsToCopy should contain theSameElementsInOrderAs Seq(
+      CopyPath(sourceFile, file("/x/y")),
+      CopyPath(sourceFile, file("/z")),
+      CopyPath(sourceFile, file("/z")))
   }
 
   test("OnBuild instruction should correctly generate instruction string") {

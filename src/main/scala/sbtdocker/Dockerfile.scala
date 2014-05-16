@@ -1,8 +1,7 @@
 package sbtdocker
 
 import sbt._
-import java.io.File
-import sbt.File
+import java.nio.file.Path
 
 object Dockerfile {
 
@@ -31,6 +30,26 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
     val lines = instructions.map(_.toInstructionString)
     lines.mkString("\n")
   }
+
+  /**
+   * Creates a [[Instructions.Add]] instruction.
+   * Also copies the `from` path into the staging directory.
+   * @param from Path on the local file system to a file or directory.
+   * @param to Path to copy to inside the container.
+   */
+  override def add(from: File, to: Path) = {
+    val target = file(expandPath(from, to))
+    val sameTarget = pathsToCopy.filter(_.targetRelative == target)
+    // If there is already a queued copy to the the same path but with a different source file.
+    // Then we set a different name on the file while its in the staging directory.
+    if (sameTarget.nonEmpty && sameTarget.exists(_.source != from)) {
+      val stagePath = target.getPath + from.hashCode()
+      copyToStageDir(from, file(stagePath))
+      addInstruction(Add(stagePath, target.getPath))
+    } else {
+      super.add(from, to)
+    }
+  }
 }
 
 trait DockerfileCommands {
@@ -56,49 +75,38 @@ trait DockerfileCommands {
   def env(key: String, value: String) = addInstruction(Env(key, value))
 
   /**
-   * Creates a [[sbtdocker.Instructions.Add]] instruction.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
    * @param from Path to copy from, relative to the staging dir.
    * @param to Path to copy to inside the container.
    */
   def add(from: String, to: String) = addInstruction(Add(from, to))
 
   /**
-   * Creates a [[sbtdocker.Instructions.Add]] instruction.
-   * Also copies the `from` path into the staging directory if it is not already in it.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
+   * Also copies the `from` path into the staging directory.
    * @param from Path on the local file system to a file or directory.
    * @param to Path to copy to inside the container.
    */
-  def add(from: File, to: File)(implicit stageDir: StageDir) {
-    add(from, to.getPath)(stageDir)
+  def add(from: File, to: String): Unit = add(from, file(to).toPath)
+
+  /**
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
+   * Also copies the `from` path into the staging directory.
+   * @param from Path on the local file system to a file or directory.
+   * @param to Path to copy to inside the container.
+   */
+  def add(from: File, to: Path): Unit = {
+    val toPathString = expandPath(from, to)
+    copyToStageDir(from, file(toPathString))
+    addInstruction(Add(toPathString, toPathString))
   }
 
   /**
-   * Creates a [[sbtdocker.Instructions.Add]] instruction.
-   * Also copies the `from` path into the staging directory if it is not already in it.
-   * @param from Path on the local file system to a file or directory.
-   * @param to Path to copy to inside the container.
-   *
+   * If the `to` path ends with a '/' then append the name from the `from` file.
    */
-  def add(from: File, to: String)(implicit stageDir: StageDir) {
-    val fromPath = pathRelativeToStageDir(stageDir, from).getOrElse {
-      val fromName = from.getName
-      copyToStageDir(from, file(fromName))
-      fromName
-    }
-    addInstruction(Add(fromPath, to))
-  }
-
-  private def pathRelativeToStageDir(stageDir: StageDir, file: File) = {
-    val stageDirPath = {
-      val path = stageDir.file.getAbsolutePath
-      if (path.endsWith(File.separator)) path else path + File.separator
-    }
-    val filePath = file.getAbsolutePath
-    if (filePath.startsWith(stageDirPath)) {
-      Some(filePath.substring(stageDirPath.length))
-    } else {
-      None
-    }
+  protected def expandPath(from: File, to: Path): String = {
+    if (to.endsWith("/")) (file(to.toString) / from.name).getPath
+    else to.toString
   }
 
   def entryPoint(args: String*) = addInstruction(EntryPoint(args: _*))
