@@ -1,6 +1,5 @@
-import sbtdocker.{Dockerfile, Plugin}
-import Plugin.DockerKeys._
-import sbt._
+import DockerKeys._
+import sbtdocker.Dockerfile
 
 name := "example-package-spray"
 
@@ -23,14 +22,11 @@ libraryDependencies ++= {
 dockerSettings
 
 // Make docker depend on the package task, which generates a jar file of the application code
-docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
-
-// Tell docker at which path the jar file will be created
-jarFile in docker <<= (artifactPath in(Compile, packageBin)).toTask
+docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
 
 // Define a Dockerfile
-dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
-  case (jarFile, managedClasspath, Some(mainClass)) => {
+dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
+  case (jarFile, managedClasspath, Some(mainClass)) =>
     val libs = "/app/libs"
     val jarTarget = "/app/" + jarFile.name
     new Dockerfile {
@@ -52,5 +48,4 @@ dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainCl
       // Set the entry point to start the application using the main class
       cmd("java", "-cp", classpath, mainClass)
     }
-  }
 }

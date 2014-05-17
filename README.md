@@ -36,22 +36,17 @@ There are several ways of producing artifacts, this example makes use of the `sb
 ```scala
 assemblySettings
 
-// Make docker depend on the assembly task, which generates a fat jar file
+// Make the docker task depend on the assembly task, which generates a fat JAR file
 docker <<= (docker dependsOn assembly)
 
-// Make it clear which JAR file we should add to our container
-jarFile in docker <<= (outputPath in assembly)
-
-// Define a Dockerfile with our artifact
-dockerfile in docker <<= (stageDir in docker, jarFile in docker) map {
-  case (stageDir, jarFile) =>
-    implicit val stageDirImplicit = stageDir
-    val jarTarget = s"/app/${jarFile.getName}"
-    new Dockerfile {
-      from("dockerfile/java")
-      add(jarFile, jarTarget)
-      entryPoint("java", "-jar", jarTarget)
-    }
+// Defines a Dockerfile that adds the JAR file that the assembly task generates
+dockerfile in docker <<= (outputPath in assembly) map { jarFile =>
+  val jarTarget = s"/app/${jarFile.getName}"
+  new Dockerfile {
+    from("dockerfile/java")
+    add(jarFile, jarTarget)
+    entryPoint("java", "-jar", jarTarget)
+  }
 }
 ```
 

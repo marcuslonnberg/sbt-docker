@@ -1,8 +1,7 @@
-import sbtdocker.{BuildOptions, ImageName, Dockerfile, Plugin}
-import Plugin._
-import Plugin.DockerKeys._
-import sbt._
-import Keys._
+import java.nio.file.Paths
+import sbtdocker.{ImageName, Dockerfile}
+import DockerKeys._
+import scala.Some
 
 name := "example-package-simple"
 
@@ -15,11 +14,8 @@ dockerSettings
 // Make docker depend on the package task, which generates a jar file of the application code
 docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 
-// Tell docker at which path the jar file will be created
-jarFile in docker <<= (artifactPath in(Compile, packageBin)).toTask
-
 // Define a Dockerfile
-dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainClass in Runtime) map {
+dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
   case (jarFile, classpath, Some(mainClass)) => new Dockerfile {
     from("dockerfile/java")
     val files = classpath.files.map { file =>
@@ -28,10 +24,10 @@ dockerfile in docker <<= (jarFile in docker, managedClasspath in Runtime, mainCl
       target
     }
     // Add the generated jar file
-    private val jarTarget = file("/app") / jarFile.getName
+    val jarTarget = Paths.get("/app", jarFile.getName)
     add(jarFile, jarTarget)
     // Run the jar file with scala library on the class path
-    val classpathString = files.mkString(":") + ":" + jarTarget.getPath
+    val classpathString = files.mkString(":") + ":" + jarTarget.toString
     entryPoint("java", "-cp", classpathString, mainClass)
   }
 }

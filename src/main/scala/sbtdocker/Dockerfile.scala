@@ -1,7 +1,7 @@
 package sbtdocker
 
 import sbt._
-import java.nio.file.Path
+import java.nio.file.{Paths, Path}
 
 object Dockerfile {
 
@@ -32,15 +32,15 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
   }
 
   /**
-   * Creates a [[Instructions.Add]] instruction.
+   * Adds an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
-   * @param from Path on the local file system to a file or directory.
+   * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
   override def add(from: File, to: Path) = {
     val target = file(expandPath(from, to))
     val sameTarget = pathsToCopy.filter(_.targetRelative == target)
-    // If there is already a queued copy to the the same path but with a different source file.
+    // If there is already a queued copy with the same destination path but with a different source file.
     // Then we set a different name on the file while its in the staging directory.
     if (sameTarget.nonEmpty && sameTarget.exists(_.source != from)) {
       val stagePath = target.getPath + from.hashCode()
@@ -75,24 +75,24 @@ trait DockerfileCommands {
   def env(key: String, value: String) = addInstruction(Env(key, value))
 
   /**
-   * Add an [[sbtdocker.Instructions.Add]] instruction.
+   * Adds an [[sbtdocker.Instructions.Add]] instruction.
    * @param from Path to copy from, relative to the staging dir.
    * @param to Path to copy to inside the container.
    */
   def add(from: String, to: String) = addInstruction(Add(from, to))
 
   /**
-   * Add an [[sbtdocker.Instructions.Add]] instruction.
+   * Adds an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
-   * @param from Path on the local file system to a file or directory.
+   * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  def add(from: File, to: String): Unit = add(from, file(to).toPath)
+  def add(from: File, to: String): Unit = add(from, Paths.get(to))
 
   /**
-   * Add an [[sbtdocker.Instructions.Add]] instruction.
+   * Adds an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
-   * @param from Path on the local file system to a file or directory.
+   * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
   def add(from: File, to: Path): Unit = {
