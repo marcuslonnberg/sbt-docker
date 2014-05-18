@@ -30,7 +30,7 @@ dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath
     val libs = "/app/libs"
     val jarTarget = "/app/" + jarFile.name
     new Dockerfile {
-      // Use a base image that contains Java
+      // Use a base image that contain Java
       from("dockerfile/java")
       // Expose port 8080
       expose(8080)
