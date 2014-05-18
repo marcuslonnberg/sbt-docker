@@ -24,7 +24,7 @@ object ImageName {
  * @param repository Name of the repository.
  * @param registry Registry domain.
  * @param namespace Namespace name.
- * @param tag Tag.
+ * @param tag Tag, for example a version number.
  */
 case class ImageName(registry: Option[String] = None, namespace: Option[String] = None, repository: String, tag: Option[String] = None) {
   def name = {

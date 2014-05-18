@@ -7,8 +7,6 @@ object Dockerfile {
 
   case class CopyPath(source: File, targetRelative: File)
 
-  case class StageDir(file: File)
-
 }
 
 import Dockerfile._

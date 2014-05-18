@@ -2,7 +2,6 @@ package sbtdocker
 
 import sbt._
 import Keys._
-import sbtdocker.Dockerfile.StageDir
 
 object Plugin extends sbt.Plugin {
 
@@ -12,22 +11,22 @@ object Plugin extends sbt.Plugin {
     val docker = taskKey[ImageId]("Creates a Docker image.")
 
     val dockerfile = taskKey[Dockerfile]("Definition of the Dockerfile that should be built.")
-    val stageDir = taskKey[StageDir]("Staging directory used when building the image.")
+    val stageDirectory = taskKey[File]("Staging directory used when building the image.")
     val imageName = taskKey[ImageName]("Name of the built image.")
     val dockerPath = settingKey[String]("Path to the Docker binary.")
     val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
   }
 
   lazy val baseDockerSettings = Seq(
-    docker <<= (streams, dockerPath in docker, buildOptions in docker, stageDir in docker, dockerfile in docker, imageName in docker) map {
+    docker <<= (streams, dockerPath in docker, buildOptions in docker, stageDirectory in docker, dockerfile in docker, imageName in docker) map {
       (streams, dockerPath, buildOptions, stageDir, dockerfile, imageName) =>
         val log = streams.log
-        log.debug("Generated Dockerfile:")
+        log.debug("Using Dockerfile:")
         log.debug(dockerfile.toInstructionsString)
 
         DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
-    stageDir in docker <<= target map (target => StageDir(target / "docker")),
+    stageDirectory in docker <<= target map (target => target / "docker"),
     imageName in docker <<= (organization, name) map {
       case ("", name) =>
         ImageName(name)

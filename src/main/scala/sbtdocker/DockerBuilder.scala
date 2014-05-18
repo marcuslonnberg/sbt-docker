@@ -2,8 +2,7 @@ package sbtdocker
 
 import sbt._
 import scala.sys.process.{Process, ProcessLogger}
-import scala.sys.error
-import sbtdocker.Dockerfile.{StageDir, CopyPath}
+import sbtdocker.Dockerfile.CopyPath
 
 object DockerBuilder {
   /**
@@ -16,7 +15,7 @@ object DockerBuilder {
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: Dockerfile, stageDir: StageDir, log: Logger): ImageId = {
+  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: Dockerfile, stageDir: File, log: Logger): ImageId = {
     log.info(s"Creating docker image with name: '${imageName.name}'")
 
     prepareFiles(dockerFile, stageDir, log)
@@ -24,30 +23,30 @@ object DockerBuilder {
     buildImage(dockerPath, buildOptions, imageName, stageDir, log)
   }
 
-  def prepareFiles(dockerFile: Dockerfile, stageDir: StageDir, log: Logger) = {
-    log.debug(s"Preparing stage directory '${stageDir.file.getPath}'")
+  def prepareFiles(dockerFile: Dockerfile, stageDir: File, log: Logger) = {
+    log.debug(s"Preparing stage directory '${stageDir.getPath}'")
 
-    IO.delete(stageDir.file)
+    IO.delete(stageDir)
 
-    IO.write(stageDir.file / "Dockerfile", dockerFile.toInstructionsString)
+    IO.write(stageDir / "Dockerfile", dockerFile.toInstructionsString)
     copyFiles(dockerFile.pathsToCopy, stageDir, log)
   }
 
-  def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: StageDir, log: Logger) = {
+  def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: File, log: Logger) = {
     for (CopyPath(source, targetRelative) <- pathsToCopy.distinct) {
       copyFile(source, targetRelative, stageDir, log)
     }
   }
 
-  def copyFile(source: File, targetRelative: File, stageDir: StageDir, log: Logger) {
-    val target = stageDir.file / targetRelative.getPath
+  def copyFile(source: File, targetRelative: File, stageDir: File, log: Logger) {
+    val target = stageDir / targetRelative.getPath
     log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
 
     if (source == target) {
-      log.debug(s"Source is already in stage dir '${source.getPath}'")
+      log.debug(s"Source is already in stage directory '${source.getPath}'")
     } else {
       if (target.exists()) {
-        log.warn( s"""Path "${target.getPath}" already exists in stage directory""")
+        log.warn(s"""Path "${target.getPath}" already exists in stage directory""")
       }
 
       if (source.isFile) {
@@ -62,7 +61,7 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "Successfully built (.*)".r
 
-  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: StageDir, log: Logger): ImageId = {
+  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: File, log: Logger): ImageId = {
     val processLog = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
@@ -74,18 +73,18 @@ object DockerBuilder {
       buildOptions.rm.map(value => s"--rm=$value"))
 
     val command = (dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten) :+ "."
-    log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.file.absString}'")
+    log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
-    val process = Process(command, stageDir.file).lines_!(processLog)
-    process.foreach { line =>
+    val processOutput = Process(command, stageDir).lines_!(processLog)
+    processOutput.foreach { line =>
       log.info(line)
     }
-    process.last match {
+    processOutput.last match {
       case SuccessfullyBuilt(id) =>
         log.info(s"Successfully built docker image: ${imageName.name}")
         ImageId(id)
       case _ =>
-        error("Error when building Dockerfile")
+        sys.error("Error when building Dockerfile")
     }
   }
 }
