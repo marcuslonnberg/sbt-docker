@@ -4,7 +4,7 @@ import sbt.file
 import sbt.Path._
 import Instructions._
 import org.scalatest.{FunSuite, Matchers}
-import sbtdocker.Dockerfile.{CopyPath, StageDir}
+import sbtdocker.Dockerfile.CopyPath
 
 class DockerfileSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
@@ -72,8 +72,8 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("Add a file to /") {
-    val stageDir = StageDir(file("/tmp/abc/xyz/"))
-    val sourceFile = stageDir.file / "xyz"
+    val stageDir = file("/tmp/abc/xyz/")
+    val sourceFile = stageDir / "xyz"
     val dockerfile = new Dockerfile {
       add(sourceFile, "/")
     }

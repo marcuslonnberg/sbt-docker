@@ -2,7 +2,6 @@ package sbtdocker
 
 import org.scalatest.{FreeSpec, Matchers}
 import sbt._
-import sbtdocker.Dockerfile.StageDir
 import sbtdocker.Instructions.Add
 
 class DockerBuilderSpec extends FreeSpec with Matchers {
@@ -25,7 +24,7 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
             add(fileC, "/x/y")
           }
 
-          DockerBuilder.prepareFiles(dockerfile, StageDir(stageDir), ConsoleLogger())
+          DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
           val addInstructions = dockerfile.instructions.collect { case add: Add => add}
           addInstructions should have length 3
@@ -53,7 +52,7 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
             add(fileB, "/dest")
           }
 
-          DockerBuilder.prepareFiles(dockerfile, StageDir(stageDir), ConsoleLogger())
+          DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
           val addInstructions = dockerfile.instructions.collect { case add: Add => add}
           addInstructions should have length 2
@@ -79,7 +78,7 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
             add(fileA, "/dest")
           }
 
-          DockerBuilder.prepareFiles(dockerfile, StageDir(stageDir), ConsoleLogger())
+          DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
           val addInstructions = dockerfile.instructions.collect { case add: Add => add}
           addInstructions should have length 2

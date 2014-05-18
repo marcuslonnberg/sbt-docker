@@ -2,15 +2,14 @@ package sbtdocker
 
 import sbt._
 import java.nio.file.{Paths, Path}
+import Dockerfile._
+import Instructions._
 
 object Dockerfile {
 
   case class CopyPath(source: File, targetRelative: File)
 
 }
-
-import Dockerfile._
-import Instructions._
 
 /**
  * Mutable Dockerfile. Contains instructions and paths that should be copied to the staging directory.
@@ -60,6 +59,8 @@ trait DockerfileCommands {
 
   def from(imageName: String) = addInstruction(From(imageName))
 
+  def from(imageName: ImageName) = addInstruction(From(imageName.name))
+
   def maintainer(name: String) = addInstruction(Maintainer(name))
 
   def maintainer(name: String, email: String) = addInstruction(Maintainer(s"$name <$email>"))
@@ -74,7 +75,7 @@ trait DockerfileCommands {
 
   /**
    * Adds an [[sbtdocker.Instructions.Add]] instruction.
-   * @param from Path to copy from, relative to the staging dir.
+   * @param from Path to copy from where the stage directory is the root.
    * @param to Path to copy to inside the container.
    */
   def add(from: String, to: String) = addInstruction(Add(from, to))
