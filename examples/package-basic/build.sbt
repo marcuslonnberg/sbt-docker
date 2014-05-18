@@ -3,7 +3,7 @@ import sbtdocker.{ImageName, Dockerfile}
 import DockerKeys._
 import scala.Some
 
-name := "example-package-simple"
+name := "example-package-basic"
 
 organization := "sbtdocker"
 

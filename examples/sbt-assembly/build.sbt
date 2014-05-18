@@ -1,12 +1,10 @@
 import sbtdocker._
-import sbtdocker.Plugin._
-import sbtdocker.Plugin.DockerKeys._
-import sbtassembly.Plugin.AssemblyKeys
+import DockerKeys._
 import AssemblyKeys._
 
 assemblySettings
 
-name := "example-assembly-simple"
+name := "example-sbt-assembly"
 
 organization := "sbtdocker"
 

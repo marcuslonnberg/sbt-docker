@@ -6,4 +6,4 @@ and all of the libraries on the classpath.
 
 Build the image by running `sbt docker` in this directory.
 
-Then run the produced image with `docker run -i sbt-docker/example-auto-package`.
+Then run the produced image with `docker run -i sbtdocker/example-auto-package`.
