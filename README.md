@@ -10,7 +10,12 @@ Requirements
 Setup
 -----
 
-Published release will come soon.
+Latest version is `0.1.0`.
+
+Add sbt-docker as a dependency in `project/docker.sbt`:
+```scala
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.0")
+```
 
 To use the latest snapshot add sbt-docker as a dependency in `project/docker.sbt`:
 ```scala
@@ -22,34 +27,111 @@ addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.0-SNAPSHOT")
 Usage
 -----
 
-Start by adding the following to your build file:
+Start by adding the following to your `build.sbt` file:
 ```scala
 import DockerKeys._
 
 dockerSettings
+
+// add your sbt-docker settings here
 ```
 
-Then make the `docker` task depend on the task that produces your artifacts and
-define how the docker image should be built with them at key `dockerfile in docker`.
+This sets up some settings with default values and adds the `docker` task which builds the Docker image.
+The only setting that is left for you to define is `dockerfile in docker`.
 
-There are several ways of producing artifacts, this example makes use of the `sbt-assembly` plugin to produce an artifact:
+### Artifacts
+
+Typically you rely on some sbt task to generate one or several artifacts that you want inside your Docker image.
+For example the `package` task could be used to generate JAR files, or tasks from plugins such as `sbt-assembly`.
+In those cases you may want to set the `docker` task to depend on those other tasks.
+So that the artifacts are always up to date when building a Docker image.
+
+Here is how to make the docker task depend on the sbt `package` task:
+```scala
+docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
+```
+
+### Defining a Dockerfile
+
+A Dockerfile is defined at the `dockerfile` key.
+It expects an instance of type [sbtdocker.Dockerfile](src/main/scala/sbtdocker/Dockerfile.scala) as result.
+The `sbtdocker.Dockerfile` have similar methods to the instructions of a Dockerfile.
+
+Example with the sbt `package` task.
+```scala
+import Dockerfile
+
+dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
+  case (jarFile, classpath, Some(mainClass)) =>
+    new Dockerfile {
+      // Base image
+      from("dockerfile/java")
+      // Add all files on the classpath
+      val files = classpath.files.map { file =>
+        val target = "/app/" + file.getName
+        add(file, target)
+        target
+      }
+      // Add the generated JAR file
+      val jarTarget = s"/app/${jarFile.getName}"
+      add(jarFile, jarTarget)
+	  // Make a colon seperated classpath with the JAR file
+      val classpathString = files.mkString(":") + ":" + jarTarget
+      // On launch run Java with the classpath and the found main class
+      entryPoint("java", "-cp", classpathString, mainClass)
+    }
+  case (_, _, None) =>
+    sys.error("Expected exactly one main class")
+}
+```
+
+Example with the `sbt-assembly` plugin:
 ```scala
 assemblySettings
 
 // Make the docker task depend on the assembly task, which generates a fat JAR file
 docker <<= (docker dependsOn assembly)
 
-// Defines a Dockerfile that adds the JAR file that the assembly task generates
-dockerfile in docker <<= (outputPath in assembly) map { jarFile =>
-  val jarTarget = s"/app/${jarFile.getName}"
+dockerfile in docker := {
+  val artifact = (outputPath in assembly).value
+  val artifactTargetPath = s"/app/${artifact.name}"
   new Dockerfile {
     from("dockerfile/java")
-    add(jarFile, jarTarget)
-    entryPoint("java", "-jar", jarTarget)
+    add(artifact, artifactTargetPath)
+    entryPoint("java", "-jar", artifactTargetPath)
   }
 }
 ```
 
-To build an image simply run `sbt docker`.
+[DockerfileExamples](examples/DockerfileExamples.scala) shows different ways of defining a Dockerfile.
+
+### Building an image
+
+Simply run `sbt docker` or run the `docker` task in the sbt console.
+
+### Custom image name
+
+Set `imageName in docker` of type `sbtdocker.ImageName`.
+
+Example:
+```scala
+import sbtdocker.ImageName
+
+imageName in docker := {
+  ImageName(
+  	namespace = Some(organization.value),
+    repository = name.value,
+    tag = Some("v" + version.value))
+}
+```
+
+### Auto packaging
+
+Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposePorts)` can be used.
+This method defines a dockerfile automatically and uses the `package` task to try to generate an artifact.
+It's intended purpose is to give a very simple way of creating Docker images for new small projects.
+
+### Example projects
 
 See [example projects](examples).
+
