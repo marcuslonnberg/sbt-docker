@@ -75,16 +75,16 @@ object DockerBuilder {
     val command = (dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten) :+ "."
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
-    val processOutput = Process(command, stageDir).lines_!(processLog)
+    val processOutput = Process(command, stageDir).lines(processLog)
     processOutput.foreach { line =>
       log.info(line)
     }
     processOutput.last match {
       case SuccessfullyBuilt(id) =>
-        log.info(s"Successfully built docker image: ${imageName.name}")
+        log.info(s"Successfully built Docker image: ${imageName.name}")
         ImageId(id)
       case _ =>
-        sys.error("Error when building Dockerfile")
+        sys.error("Could not parse image id")
     }
   }
 }
