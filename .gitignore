@@ -16,4 +16,4 @@ dist
 /cache
 .DS_Store
 *.class
-.swp
+*.sw*
