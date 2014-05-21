@@ -16,23 +16,31 @@ docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 
 // Define a Dockerfile
 dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
-  case (jarFile, classpath, Some(mainClass)) => new Dockerfile {
-    from("dockerfile/java")
-    val files = classpath.files.map { file =>
-      val target = "/app/" + file.getName
-      add(file, target)
-      target
+  case (jarFile, classpath, Some(mainClass)) =>
+    new Dockerfile {
+      // Base image
+      from("dockerfile/java")
+      // Add all files on the classpath
+      val files = classpath.files.map { file =>
+        val target = "/app/" + file.getName
+        add(file, target)
+        target
+      }
+      // Add the generated JAR file
+      val jarTarget = s"/app/${jarFile.getName}"
+      add(jarFile, jarTarget)
+	  // Make a colon seperated classpath with the JAR file
+      val classpathString = files.mkString(":") + ":" + jarTarget
+      // On launch run Java with the classpath and the found main class
+      entryPoint("java", "-cp", classpathString, mainClass)
     }
-    // Add the generated jar file
-    val jarTarget = Paths.get("/app", jarFile.getName)
-    add(jarFile, jarTarget)
-    // Run the jar file with scala library on the class path
-    val classpathString = files.mkString(":") + ":" + jarTarget.toString
-    entryPoint("java", "-cp", classpathString, mainClass)
-  }
+  case (_, _, None) =>
+    sys.error("Expected exactly one main class")
 }
 
 // Set a custom image name
-imageName in docker <<= (organization, name, version) map {(organization, name, version) =>
-  ImageName(namespace = Some(organization), repository = name, tag = Some("v" + version))
+imageName in docker := {
+  ImageName(namespace = Some(organization.value),
+    repository = name.value,
+    tag = Some("v" + version.value))
 }

@@ -17,7 +17,8 @@ dockerSettings
 // Make docker depend on the assembly task, which generates a fat jar file
 docker <<= (docker dependsOn assembly)
 
-dockerfile in docker <<= (outputPath in assembly) map { artifact =>
+dockerfile in docker := {
+  val artifact = (outputPath in assembly).value
   val appDirPath = "/app"
   val artifactTargetPath = s"$appDirPath/${artifact.name}"
   new Dockerfile {
