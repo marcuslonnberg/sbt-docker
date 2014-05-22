@@ -6,7 +6,7 @@ organization := "se.marcuslonnberg"
 
 organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
-version := "0.1.1"
+version := "0.1.2-SNAPSHOT"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
 
