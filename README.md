@@ -10,11 +10,11 @@ Requirements
 Setup
 -----
 
-Latest version is `0.1.0`.
+Latest version is `0.1.1`.
 
 Add sbt-docker as a dependency in `project/docker.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.1")
 ```
 
 To use the latest snapshot set the following in `project/docker.sbt`:
