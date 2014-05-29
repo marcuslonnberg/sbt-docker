@@ -59,7 +59,7 @@ object DockerBuilder {
     }
   }
 
-  private val SuccessfullyBuilt = "Successfully built (.*)".r
+  private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
   def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: File, log: Logger): ImageId = {
     val processLog = ProcessLogger({ line =>
@@ -79,11 +79,16 @@ object DockerBuilder {
     processOutput.foreach { line =>
       log.info(line)
     }
-    processOutput.last match {
-      case SuccessfullyBuilt(id) =>
+
+    val imageId = processOutput.reverse.collectFirst {
+      case SuccessfullyBuilt(id) => ImageId(id)
+    }
+
+    imageId match {
+      case Some(id) =>
         log.info(s"Successfully built Docker image: ${imageName.name}")
-        ImageId(id)
-      case _ =>
+        id
+      case None =>
         sys.error("Could not parse image id")
     }
   }
