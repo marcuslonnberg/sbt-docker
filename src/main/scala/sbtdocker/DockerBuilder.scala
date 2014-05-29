@@ -72,7 +72,7 @@ object DockerBuilder {
       buildOptions.noCache.map(value => s"--no-cache=$value"),
       buildOptions.rm.map(value => s"--rm=$value"))
 
-    val command = (dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten) :+ "."
+    val command = dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLog)
