@@ -107,7 +107,7 @@ dockerfile in docker := {
 
 ### Building an image
 
-Simply run `sbt docker` or run the `docker` task in the sbt console.
+Simply run `sbt docker` from your prompt or `docker` in the sbt console.
 
 ### Custom image name
 
@@ -123,6 +123,19 @@ imageName in docker := {
     repository = name.value,
     tag = Some("v" + version.value))
 }
+```
+
+### Build options
+
+Use the key `buildOptions in docker` to set build options.  
+The expected type is `sbtdocker.BuildOptions` which have flags to disable caching and removal of intermediate 
+containers.
+
+Example:
+```scala
+import sbtdocker.BuildOptions
+
+buildOptions in docker := BuildOptions(noCache = Some(true))
 ```
 
 ### Auto packaging
