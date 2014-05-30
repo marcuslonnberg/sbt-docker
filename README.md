@@ -10,18 +10,18 @@ Requirements
 Setup
 -----
 
-Latest version is `0.1.1`.
+Latest version is `0.1.2`.
 
 Add sbt-docker as a dependency in `project/docker.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.1")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.2")
 ```
 
 To use the latest snapshot set the following in `project/docker.sbt`:
 ```scala
 resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.2-SNAPSHOT")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.1.3-SNAPSHOT")
 ```
 
 Usage
@@ -127,8 +127,8 @@ imageName in docker := {
 
 ### Build options
 
-Use the key `buildOptions in docker` to set build options.  
-The expected type is `sbtdocker.BuildOptions` which have flags to disable caching and removal of intermediate 
+Use the key `buildOptions in docker` to set build options.
+The expected type is `sbtdocker.BuildOptions` which have flags to disable caching and removal of intermediate
 containers.
 
 Example:
