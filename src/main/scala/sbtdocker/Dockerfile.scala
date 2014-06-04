@@ -29,7 +29,7 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
   }
 
   /**
-   * Adds an [[sbtdocker.Instructions.Add]] instruction.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
@@ -57,31 +57,65 @@ trait DockerfileCommands {
 
   def copyToStageDir(source: File, targetRelativeToStageDir: File)
 
+  /**
+   * Add a [[sbtdocker.Instructions.From]] instruction.
+   */
   def from(imageName: String) = addInstruction(From(imageName))
 
+  /**
+   * Add a [[sbtdocker.Instructions.From]] instruction.
+   */
   def from(imageName: ImageName) = addInstruction(From(imageName.name))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Maintainer]] instruction.
+   */
   def maintainer(name: String) = addInstruction(Maintainer(name))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Maintainer]] instruction.
+   */
   def maintainer(name: String, email: String) = addInstruction(Maintainer(s"$name <$email>"))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Run]] instruction.
+   */
   def run(args: String*) = addInstruction(Run(args: _*))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Run]] instruction that executes the specified command in a shell.
+   */
+  def runShell(args: String*) = addInstruction(Run.shell(args: _*))
+
+  /**
+   * Add a [[sbtdocker.Instructions.Cmd]] instruction.
+   */
   def cmd(args: String*) = addInstruction(Cmd(args: _*))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Cmd]] instruction that executes the specified command in a shell.
+   */
+  def cmdShell(args: String*) = addInstruction(Cmd.shell(args: _*))
+
+  /**
+   * Add an [[sbtdocker.Instructions.Expose]] instruction.
+   */
   def expose(ports: Int*) = addInstruction(Expose(ports: _*))
 
+  /**
+   * Add a [[sbtdocker.Instructions.Env]] instruction.
+   */
   def env(key: String, value: String) = addInstruction(Env(key, value))
 
   /**
-   * Adds an [[sbtdocker.Instructions.Add]] instruction.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
    * @param from Path to copy from where the stage directory is the root.
    * @param to Path to copy to inside the container.
    */
   def add(from: String, to: String) = addInstruction(Add(from, to))
 
   /**
-   * Adds an [[sbtdocker.Instructions.Add]] instruction.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
@@ -89,7 +123,7 @@ trait DockerfileCommands {
   def add(from: File, to: String): Unit = add(from, Paths.get(to))
 
   /**
-   * Adds an [[sbtdocker.Instructions.Add]] instruction.
+   * Add an [[sbtdocker.Instructions.Add]] instruction.
    * Also copies the `from` path into the staging directory.
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
@@ -101,21 +135,41 @@ trait DockerfileCommands {
   }
 
   /**
-   * If the `to` path ends with a '/' then append the name from the `from` file.
+   * If the `to` path ends with a '/' then append the name of the `from` file.
    */
   protected def expandPath(from: File, to: Path): String = {
     if (to.endsWith("/")) (file(to.toString) / from.name).getPath
     else to.toString
   }
 
+  /**
+   * Add a [[sbtdocker.Instructions.EntryPoint]] instruction.
+   */
   def entryPoint(args: String*) = addInstruction(EntryPoint(args: _*))
 
+  /**
+   * Add a [[sbtdocker.Instructions.EntryPoint]] instruction that executes the specified command in a shell.
+   */
+  def entryPointShell(args: String*) = addInstruction(EntryPoint.shell(args: _*))
+
+  /**
+   * Add a [[sbtdocker.Instructions.Volume]] instruction.
+   */
   def volume(mountPoint: String) = addInstruction(Volume(mountPoint))
 
+  /**
+   * Add a [[sbtdocker.Instructions.User]] instruction.
+   */
   def user(username: String) = addInstruction(User(username))
 
+  /**
+   * Add a [[sbtdocker.Instructions.WorkDir]] instruction.
+   */
   def workDir(path: String) = addInstruction(WorkDir(path))
 
+  /**
+   * Add a [[sbtdocker.Instructions.OnBuild]] instruction.
+   */
   def onBuild(instruction: Instruction) = addInstruction(OnBuild(instruction))
 }
 

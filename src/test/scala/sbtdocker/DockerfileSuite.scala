@@ -11,11 +11,14 @@ class DockerfileSuite extends FunSuite with Matchers {
     From("image"),
     Maintainer("marcus"),
     Run("echo", "docker"),
+    Run.shell("echo", "docker"),
     Cmd("cmd", "arg"),
+    Cmd.shell("cmd", "arg"),
     Expose(80, 8080),
     Env("key", "value"),
     Add("a", "b"),
     EntryPoint("entrypoint", "arg"),
+    EntryPoint.shell("entrypoint", "arg"),
     Volume("mountpoint"),
     User("marcus"),
     WorkDir("path"),
@@ -29,11 +32,14 @@ class DockerfileSuite extends FunSuite with Matchers {
       """FROM image
         |MAINTAINER marcus
         |RUN ["echo", "docker"]
+        |RUN echo docker
         |CMD ["cmd", "arg"]
+        |CMD cmd arg
         |EXPOSE 80 8080
         |ENV key value
         |ADD a b
         |ENTRYPOINT ["entrypoint", "arg"]
+        |ENTRYPOINT entrypoint arg
         |VOLUME mountpoint
         |USER marcus
         |WORKDIR path
@@ -57,11 +63,14 @@ class DockerfileSuite extends FunSuite with Matchers {
       from("image")
       maintainer("marcus")
       run("echo", "docker")
+      runShell("echo", "docker")
       cmd("cmd", "arg")
+      cmdShell("cmd", "arg")
       expose(80, 8080)
       env("key", "value")
       add("a", "b")
       entryPoint("entrypoint", "arg")
+      entryPointShell("entrypoint", "arg")
       volume("mountpoint")
       user("marcus")
       workDir("path")
