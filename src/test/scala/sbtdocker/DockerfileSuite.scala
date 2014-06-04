@@ -80,6 +80,25 @@ class DockerfileSuite extends FunSuite with Matchers {
     withMethods shouldEqual predefined
   }
 
+  test("Run, Cmd and EntryPoint instructions should handle arguments with whitespace") {
+    val dockerfile = new Dockerfile {
+      run("echo", "arg \"with\t\nspaces")
+      runShell("echo", "arg \"with\t\nspaces")
+      cmd("echo", "arg \"with\t\nspaces")
+      cmdShell("echo", "arg \"with\t\nspaces")
+      entryPoint("echo", "arg \"with\t\nspaces")
+      entryPointShell("echo", "arg \"with\t\nspaces")
+    }
+
+    dockerfile.toInstructionsString shouldEqual
+      """RUN ["echo", "arg \"with\t\nspaces"]
+        |RUN echo "arg \"with\t\nspaces"
+        |CMD ["echo", "arg \"with\t\nspaces"]
+        |CMD echo "arg \"with\t\nspaces"
+        |ENTRYPOINT ["echo", "arg \"with\t\nspaces"]
+        |ENTRYPOINT echo "arg \"with\t\nspaces"""".stripMargin
+  }
+
   test("Add a file to /") {
     val stageDir = file("/tmp/abc/xyz/")
     val sourceFile = stageDir / "xyz"
@@ -124,9 +143,9 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("Run, EntryPoint and Cmd should support shell format") {
-    Run.shell("a", "b", "\"c\"").toInstructionString shouldEqual """RUN a b "c""""
-    EntryPoint.shell("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT a b "c""""
-    Cmd.shell("a", "b", "\"c\"").toInstructionString shouldEqual """CMD a b "c""""
+    Run.shell("a", "b", "\"c\"").toInstructionString shouldEqual """RUN a b \"c\""""
+    EntryPoint.shell("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT a b \"c\""""
+    Cmd.shell("a", "b", "\"c\"").toInstructionString shouldEqual """CMD a b \"c\""""
   }
 
   test("Run, EntryPoint and Cmd should support exec format") {

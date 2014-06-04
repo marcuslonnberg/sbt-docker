@@ -177,6 +177,8 @@ object Instructions {
 
   private def escapeQuotationMarks(str: String) = str.replace("\"", "\\\"")
 
+  private def escapeWhitespaces(str: String) = str.replace("\n", "\\n").replace("\t", "\\t")
+
   trait Instruction {
     this: Product =>
     def arguments = productIterator.mkString(" ")
@@ -194,9 +196,17 @@ object Instructions {
 
     def shellFormat: Boolean
 
-    private def execArguments = args.map(escapeQuotationMarks).mkString("[\"", "\", \"", "\"]")
+    private def execArguments = args.map(escapeQuotationMarks).map(escapeWhitespaces).mkString("[\"", "\", \"", "\"]")
 
-    private def shellArguments = args.mkString(" ")
+    private def wrapIfWhitespaces(argument: String) = {
+      if (argument.exists(_.isWhitespace)) {
+        '"' + argument + '"'
+      } else {
+        argument
+      }
+    }
+
+    private def shellArguments = args.map(escapeQuotationMarks).map(escapeWhitespaces).map(wrapIfWhitespaces).mkString(" ")
 
     override def arguments = if (shellFormat) shellArguments else execArguments
   }
