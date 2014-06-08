@@ -17,6 +17,7 @@ class DockerfileSuite extends FunSuite with Matchers {
     Expose(80, 8080),
     Env("key", "value"),
     Add("a", "b"),
+    Copy("a", "b"),
     EntryPoint("entrypoint", "arg"),
     EntryPoint.shell("entrypoint", "arg"),
     Volume("mountpoint"),
@@ -38,6 +39,7 @@ class DockerfileSuite extends FunSuite with Matchers {
         |EXPOSE 80 8080
         |ENV key value
         |ADD a b
+        |COPY a b
         |ENTRYPOINT ["entrypoint", "arg"]
         |ENTRYPOINT entrypoint arg
         |VOLUME mountpoint
@@ -69,6 +71,7 @@ class DockerfileSuite extends FunSuite with Matchers {
       expose(80, 8080)
       env("key", "value")
       add("a", "b")
+      copy("a", "b")
       entryPoint("entrypoint", "arg")
       entryPointShell("entrypoint", "arg")
       volume("mountpoint")
@@ -99,23 +102,35 @@ class DockerfileSuite extends FunSuite with Matchers {
         |ENTRYPOINT echo "arg \"with\t\nspaces"""".stripMargin
   }
 
-  test("Add a file to /") {
+  test("Add and copy a file to /") {
     val stageDir = file("/tmp/abc/xyz/")
     val sourceFile = stageDir / "xyz"
     val dockerfile = new Dockerfile {
       add(sourceFile, "/")
+      copy(sourceFile, "/")
     }
 
-    dockerfile.instructions should contain theSameElementsAs Seq(Add("/xyz", "/xyz"))
+    dockerfile.instructions should contain theSameElementsInOrderAs Seq(
+      Add("/xyz", "/xyz"),
+      Copy("/xyz", "/xyz"))
+    dockerfile.pathsToCopy should contain theSameElementsInOrderAs Seq(
+      CopyPath(sourceFile, file("/xyz")),
+      CopyPath(sourceFile, file("/xyz")))
   }
 
-  test("Add a file in the root") {
+  test("Add and copy a file to a specified destination") {
     val sourceFile = file("/tmp/xyz")
     val d = new Dockerfile {
       add(sourceFile, "abc")
+      copy(sourceFile, "xyz")
     }
-    d.instructions should contain theSameElementsAs Seq(Add("abc", "abc"))
-    d.pathsToCopy should contain theSameElementsAs Seq(CopyPath(sourceFile, file("abc")))
+
+    d.instructions should contain theSameElementsInOrderAs Seq(
+      Add("abc", "abc"),
+      Copy("xyz", "xyz"))
+    d.pathsToCopy should contain theSameElementsInOrderAs Seq(
+      CopyPath(sourceFile, file("abc")),
+      CopyPath(sourceFile, file("xyz")))
   }
 
   test("Adding a single source file to multiple paths") {
@@ -124,13 +139,22 @@ class DockerfileSuite extends FunSuite with Matchers {
       add(sourceFile, "/x/y")
       add(sourceFile, "/z")
       add(sourceFile, "/z")
+      copy(sourceFile, "/x/y")
+      copy(sourceFile, "/z")
+      copy(sourceFile, "/z")
     }
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
       Add("/x/y", "/x/y"),
       Add("/z", "/z"),
-      Add("/z", "/z"))
+      Add("/z", "/z"),
+      Copy("/x/y", "/x/y"),
+      Copy("/z", "/z"),
+      Copy("/z", "/z"))
     dockerfile.pathsToCopy should contain theSameElementsInOrderAs Seq(
+      CopyPath(sourceFile, file("/x/y")),
+      CopyPath(sourceFile, file("/z")),
+      CopyPath(sourceFile, file("/z")),
       CopyPath(sourceFile, file("/x/y")),
       CopyPath(sourceFile, file("/z")),
       CopyPath(sourceFile, file("/z")))

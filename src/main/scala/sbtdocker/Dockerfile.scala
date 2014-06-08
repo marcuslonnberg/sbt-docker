@@ -36,16 +36,42 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
    */
   override def add(from: File, to: Path) = {
     val target = file(expandPath(from, to))
-    val sameTarget = pathsToCopy.filter(_.targetRelative == target)
     // If there is already a queued copy with the same destination path but with a different source file.
-    // Then we set a different name on the file while its in the staging directory.
-    if (sameTarget.nonEmpty && sameTarget.exists(_.source != from)) {
+    // Then set a different name on the file while its in the staging directory.
+    if (collidingCopy(from, target)) {
       val stagePath = target.getPath + from.hashCode()
       copyToStageDir(from, file(stagePath))
       addInstruction(Add(stagePath, target.getPath))
     } else {
       super.add(from, to)
     }
+  }
+
+  /**
+   * Add an [[sbtdocker.Instructions.Copy]] instruction.
+   * Also copies the `from` path into the staging directory.
+   * @param from File or directory on the local file system.
+   * @param to Path to copy to inside the container.
+   */
+  override def copy(from: File, to: Path) = {
+    val target = file(expandPath(from, to))
+    // If there is already a queued copy with the same destination path but with a different source file.
+    // Then set a different name on the file while its in the staging directory.
+    if (collidingCopy(from, target)) {
+      val stagePath = target.getPath + from.hashCode()
+      copyToStageDir(from, file(stagePath))
+      addInstruction(Copy(stagePath, target.getPath))
+    } else {
+      super.copy(from, to)
+    }
+  }
+
+  /**
+   * Check if there is already a queued copy with the same destination path but with a different source file.
+   */
+  def collidingCopy(from: File, target: File): Boolean = {
+    val sameTarget = pathsToCopy.filter(_.targetRelative == target)
+    sameTarget.nonEmpty && sameTarget.exists(_.source != from)
   }
 }
 
@@ -132,6 +158,33 @@ trait DockerfileCommands {
     val toPathString = expandPath(from, to)
     copyToStageDir(from, file(toPathString))
     addInstruction(Add(toPathString, toPathString))
+  }
+
+  /**
+   * Add a [[sbtdocker.Instructions.Copy]] instruction.
+   * @param from Path to copy from where the stage directory is the root.
+   * @param to Path to copy to inside the container.
+   */
+  def copy(from: String, to: String) = addInstruction(Copy(from, to))
+
+  /**
+   * Add a [[sbtdocker.Instructions.Copy]] instruction.
+   * Also copies the `from` path into the staging directory.
+   * @param from File or directory on the local file system.
+   * @param to Path to copy to inside the container.
+   */
+  def copy(from: File, to: String): Unit = copy(from, Paths.get(to))
+
+  /**
+   * Add a [[sbtdocker.Instructions.Copy]] instruction.
+   * Also copies the `from` path into the staging directory.
+   * @param from File or directory on the local file system.
+   * @param to Path to copy to inside the container.
+   */
+  def copy(from: File, to: Path): Unit = {
+    val toPathString = expandPath(from, to)
+    copyToStageDir(from, file(toPathString))
+    addInstruction(Copy(toPathString, toPathString))
   }
 
   /**
@@ -248,6 +301,8 @@ object Instructions {
   case class Env(key: String, value: String) extends Instruction
 
   case class Add(from: String, to: String) extends Instruction
+
+  case class Copy(from: String, to: String) extends Instruction
 
   object EntryPoint {
     def shell(args: String*) = new EntryPoint(true, args: _*)
