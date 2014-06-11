@@ -2,7 +2,7 @@ import java.nio.file.Paths
 import sbtdocker.{ImageName, Dockerfile}
 import DockerKeys._
 
-name := "example-package-basic"
+name := "scripted-simple"
 
 organization := "sbtdocker"
 
@@ -42,4 +42,12 @@ imageName in docker := {
   ImageName(namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value))
+}
+
+val check = taskKey[Unit]("Check")
+
+check := {
+  val process = Process("docker", Seq("run", (imageName in docker).value.name))
+  val out = process.!!
+  if (out.trim != "Hello World") sys.error("Unexpected output: " + out)
 }
