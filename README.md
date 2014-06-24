@@ -59,7 +59,8 @@ The `sbtdocker.Dockerfile` have similar methods to the instructions of a Dockerf
 
 Example with the sbt `package` task.
 ```scala
-import Dockerfile
+import DockerKeys._
+import sbtdocker.Dockerfile
 
 dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
   case (jarFile, classpath, Some(mainClass)) =>
@@ -75,7 +76,7 @@ dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath
       // Add the generated JAR file
       val jarTarget = s"/app/${jarFile.getName}"
       add(jarFile, jarTarget)
-	  // Make a colon seperated classpath with the JAR file
+	  // Make a colon separated classpath with the JAR file
       val classpathString = files.mkString(":") + ":" + jarTarget
       // On launch run Java with the classpath and the found main class
       entryPoint("java", "-cp", classpathString, mainClass)
@@ -85,8 +86,14 @@ dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath
 }
 ```
 
-Example with the `sbt-assembly` plugin:
+Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
+import AssemblyKeys._
+import DockerKeys._
+import sbtdocker.Dockerfile
+
+dockerSettings
+
 assemblySettings
 
 // Make the docker task depend on the assembly task, which generates a fat JAR file
@@ -115,6 +122,7 @@ Set `imageName in docker` of type `sbtdocker.ImageName`.
 
 Example:
 ```scala
+import DockerKeys._
 import sbtdocker.ImageName
 
 imageName in docker := {
@@ -133,6 +141,7 @@ containers.
 
 Example:
 ```scala
+import DockerKeys._
 import sbtdocker.BuildOptions
 
 buildOptions in docker := BuildOptions(noCache = Some(true))
