@@ -1,7 +1,6 @@
 package sbtdocker
 
 import sbt._
-import java.nio.file.{Paths, Path}
 import Dockerfile._
 import Instructions._
 
@@ -34,7 +33,7 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  override def add(from: File, to: Path) = {
+  override def add(from: File, to: File) = {
     val target = file(expandPath(from, to))
     // If there is already a queued copy with the same destination path but with a different source file.
     // Then set a different name on the file while its in the staging directory.
@@ -53,7 +52,7 @@ case class Dockerfile(var instructions: Seq[Instructions.Instruction] = Seq.empt
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  override def copy(from: File, to: Path) = {
+  override def copy(from: File, to: File) = {
     val target = file(expandPath(from, to))
     // If there is already a queued copy with the same destination path but with a different source file.
     // Then set a different name on the file while its in the staging directory.
@@ -146,7 +145,7 @@ trait DockerfileCommands {
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  def add(from: File, to: String): Unit = add(from, Paths.get(to))
+  def add(from: File, to: String): Unit = add(from, file(to))
 
   /**
    * Add an [[sbtdocker.Instructions.Add]] instruction.
@@ -154,7 +153,7 @@ trait DockerfileCommands {
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  def add(from: File, to: Path): Unit = {
+  def add(from: File, to: File): Unit = {
     val toPathString = expandPath(from, to)
     copyToStageDir(from, file(toPathString))
     addInstruction(Add(toPathString, toPathString))
@@ -173,7 +172,7 @@ trait DockerfileCommands {
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  def copy(from: File, to: String): Unit = copy(from, Paths.get(to))
+  def copy(from: File, to: String): Unit = copy(from, file(to))
 
   /**
    * Add a [[sbtdocker.Instructions.Copy]] instruction.
@@ -181,7 +180,7 @@ trait DockerfileCommands {
    * @param from File or directory on the local file system.
    * @param to Path to copy to inside the container.
    */
-  def copy(from: File, to: Path): Unit = {
+  def copy(from: File, to: File): Unit = {
     val toPathString = expandPath(from, to)
     copyToStageDir(from, file(toPathString))
     addInstruction(Copy(toPathString, toPathString))
@@ -190,8 +189,8 @@ trait DockerfileCommands {
   /**
    * If the `to` path ends with a '/' then append the name of the `from` file.
    */
-  protected def expandPath(from: File, to: Path): String = {
-    if (to.endsWith("/")) (file(to.toString) / from.name).getPath
+  protected def expandPath(from: File, to: File): String = {
+    if (to.getPath.endsWith("/")) (to / from.name).getPath
     else to.toString
   }
 
