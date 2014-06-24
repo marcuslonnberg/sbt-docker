@@ -1,4 +1,3 @@
-import java.nio.file.Paths
 import sbtdocker.{ImageName, Dockerfile}
 import DockerKeys._
 
