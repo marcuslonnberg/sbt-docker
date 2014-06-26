@@ -21,7 +21,7 @@ To use the latest snapshot set the following in `project/docker.sbt`:
 ```scala
 resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.2.1-SNAPSHOT")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.3.1-SNAPSHOT")
 ```
 
 Usage
