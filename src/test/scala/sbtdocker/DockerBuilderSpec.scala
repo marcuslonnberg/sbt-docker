@@ -37,19 +37,19 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
       }
     }
 
-    "Add two different files to same destination path" - {
+    "Add two different files to same path" - {
       IO.withTemporaryDirectory { origDir =>
         IO.withTemporaryDirectory { stageDir =>
           val fileA = origDir / "a"
-          val fileAData = createFile(fileA)
+          createFile(fileA)
 
           val fileB = origDir / "b"
           val fileBData = createFile(fileB)
 
           val dockerfile = new Dockerfile {
-            add(fileA, "/dest")
-            // Here could be RUN mv /dest /other/path
-            add(fileB, "/dest")
+            add(fileA, "/file")
+            // Here could be RUN mv /file /other/path
+            add(fileB, "/file")
           }
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
@@ -58,24 +58,22 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           addInstructions should have length 2
           val Seq(addA, addB) = addInstructions
 
-          IO.read(stageDir / addA.from) shouldEqual fileAData
+          addA shouldEqual addB
           IO.read(stageDir / addB.from) shouldEqual fileBData
         }
       }
     }
 
-    "Add same file twice to same dest" - {
+    "Add same file twice to same path" - {
       IO.withTemporaryDirectory { origDir =>
         IO.withTemporaryDirectory { stageDir =>
           val fileA = origDir / "a"
-          val fileAData = "a"
-          assume(fileA.createNewFile())
-          IO.write(fileA, fileAData)
+          val fileAData = createFile(fileA)
 
           val dockerfile = new Dockerfile {
-            add(fileA, "/dest")
-            // Here could be RUN mv /dest /other/path
-            add(fileA, "/dest")
+            add(fileA, "/file")
+            // Here could be RUN mv /file /other/path
+            add(fileA, "/file")
           }
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())

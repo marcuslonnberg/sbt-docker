@@ -33,7 +33,7 @@ object DockerBuilder {
   }
 
   def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: File, log: Logger) = {
-    for (CopyPath(source, targetRelative) <- pathsToCopy.distinct) {
+    for (CopyPath(source, targetRelative) <- pathsToCopy) {
       copyFile(source, targetRelative, stageDir, log)
     }
   }
@@ -46,13 +46,13 @@ object DockerBuilder {
       log.debug(s"Source is already in stage directory '${source.getPath}'")
     } else {
       if (target.exists()) {
-        log.warn(s"""Path "${target.getPath}" already exists in stage directory""")
+        log.warn(s"""Path '${target.getPath}' already exists in the stage directory, will be overwritten with '${source.getPath}'""")
       }
 
       if (source.isFile) {
         IO.copyFile(source, target, preserveLastModified = true)
       } else if (source.isDirectory) {
-        IO.copyDirectory(source, target, overwrite = false, preserveLastModified = true)
+        IO.copyDirectory(source, target, overwrite = true, preserveLastModified = true)
       } else {
         log.error(s"Unknown type of '${source.getPath}'")
       }
