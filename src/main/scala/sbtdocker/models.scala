@@ -27,7 +27,7 @@ object ImageName {
  * @param tag Tag, for example a version number.
  */
 case class ImageName(registry: Option[String] = None, namespace: Option[String] = None, repository: String, tag: Option[String] = None) {
-  def name = {
+  override def toString = {
     val registryString = registry.fold("")(_ + "/")
     val namespaceString = namespace.fold("")(_ + "/")
     val tagString = tag.fold("")(":" + _)

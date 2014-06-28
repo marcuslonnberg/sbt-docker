@@ -16,7 +16,7 @@ object DockerBuilder {
    * @param log logger
    */
   def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: Dockerfile, stageDir: File, log: Logger): ImageId = {
-    log.info(s"Creating docker image with name: '${imageName.name}'")
+    log.info(s"Creating docker image with name: '$imageName'")
 
     prepareFiles(dockerFile, stageDir, log)
 
@@ -72,7 +72,7 @@ object DockerBuilder {
       buildOptions.noCache.map(value => s"--no-cache=$value"),
       buildOptions.rm.map(value => s"--rm=$value"))
 
-    val command = dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten ::: "." :: Nil
+    val command = dockerPath :: "build" :: "-t" :: imageName.toString :: flags.flatten ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLog)
@@ -86,7 +86,7 @@ object DockerBuilder {
 
     imageId match {
       case Some(id) =>
-        log.info(s"Successfully built Docker image: ${imageName.name}")
+        log.info(s"Successfully built Docker image: $imageName")
         id
       case None =>
         sys.error("Could not parse image id")

@@ -90,7 +90,7 @@ trait DockerfileCommands {
   /**
    * Add a [[sbtdocker.Instructions.From]] instruction.
    */
-  def from(imageName: ImageName) = addInstruction(From(imageName.name))
+  def from(imageName: ImageName) = addInstruction(From(imageName.toString))
 
   /**
    * Add a [[sbtdocker.Instructions.Maintainer]] instruction.
@@ -263,7 +263,7 @@ object Instructions {
     override def arguments = if (shellFormat) shellArguments else execArguments
   }
 
-  case class From(from: String) extends Instruction
+  case class From(image: String) extends Instruction
 
   case class Maintainer(name: String) extends Instruction
 
