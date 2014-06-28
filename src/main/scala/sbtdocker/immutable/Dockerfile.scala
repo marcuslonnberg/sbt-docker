@@ -1,7 +1,7 @@
 package sbtdocker.immutable
 
 import sbtdocker.Dockerfile.CopyPath
-import sbtdocker.{ImageName, Instructions}
+import sbtdocker.{Instruction, ImageName, Instructions}
 import sbt._
 
 import java.io.File
@@ -12,7 +12,7 @@ object Dockerfile {
   def empty = Dockerfile()
 }
 
-case class Dockerfile(instructions: Seq[Instructions.Instruction] = Seq.empty,
+case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
                       stagedFiles: Seq[CopyPath] = Seq.empty) extends DockerfileCommands {
   type T = Dockerfile
 
