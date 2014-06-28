@@ -163,18 +163,18 @@ class DockerfileSuite extends FunSuite with Matchers {
   test("OnBuild instruction should correctly generate instruction string") {
     val onBuild = OnBuild(Run("echo", "123"))
 
-    onBuild.toInstructionString shouldEqual """ONBUILD RUN ["echo", "123"]"""
+    onBuild.toString shouldEqual """ONBUILD RUN ["echo", "123"]"""
   }
 
   test("Run, EntryPoint and Cmd should support shell format") {
-    Run.shell("a", "b", "\"c\"").toInstructionString shouldEqual """RUN a b \"c\""""
-    EntryPoint.shell("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT a b \"c\""""
-    Cmd.shell("a", "b", "\"c\"").toInstructionString shouldEqual """CMD a b \"c\""""
+    Run.shell("a", "b", "\"c\"").toString shouldEqual """RUN a b \"c\""""
+    EntryPoint.shell("a", "b", "\"c\"").toString shouldEqual """ENTRYPOINT a b \"c\""""
+    Cmd.shell("a", "b", "\"c\"").toString shouldEqual """CMD a b \"c\""""
   }
 
   test("Run, EntryPoint and Cmd should support exec format") {
-    Run("a", "b", "\"c\"").toInstructionString shouldEqual """RUN ["a", "b", "\"c\""]"""
-    EntryPoint("a", "b", "\"c\"").toInstructionString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
-    Cmd("a", "b", "\"c\"").toInstructionString shouldEqual """CMD ["a", "b", "\"c\""]"""
+    Run("a", "b", "\"c\"").toString shouldEqual """RUN ["a", "b", "\"c\""]"""
+    EntryPoint("a", "b", "\"c\"").toString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
+    Cmd("a", "b", "\"c\"").toString shouldEqual """CMD ["a", "b", "\"c\""]"""
   }
 }

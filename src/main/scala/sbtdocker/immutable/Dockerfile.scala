@@ -16,7 +16,7 @@ case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
                       stagedFiles: Seq[CopyPath] = Seq.empty) extends DockerfileCommands {
   type T = Dockerfile
 
-  def mkString = instructions.map(_.toInstructionString).mkString("\n")
+  def mkString = instructions.mkString("\n")
 
   def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction, stagedFiles)
 

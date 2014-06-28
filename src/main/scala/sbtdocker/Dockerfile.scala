@@ -23,7 +23,7 @@ case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty,
   def copyToStageDir(source: File, targetRelativeToStageDir: File) = pathsToCopy :+= CopyPath(source, targetRelativeToStageDir)
 
   def toInstructionsString = {
-    val lines = instructions.map(_.toInstructionString)
+    val lines = instructions.map(_.toString)
     lines.mkString("\n")
   }
 

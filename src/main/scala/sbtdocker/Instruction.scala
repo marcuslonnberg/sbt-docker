@@ -6,9 +6,7 @@ trait Instruction {
 
   def instructionName = productPrefix.toUpperCase
 
-  def toInstructionString = {
-    s"$instructionName $arguments"
-  }
+  override def toString = s"$instructionName $arguments"
 }
 
 object Instructions {
@@ -98,7 +96,7 @@ object Instructions {
   case class WorkDir(path: String) extends Instruction
 
   case class OnBuild(instruction: Instruction) extends Instruction {
-    override def arguments = instruction.toInstructionString
+    override def arguments = instruction.toString
   }
 
 }
