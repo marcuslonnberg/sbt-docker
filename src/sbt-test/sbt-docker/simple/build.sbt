@@ -13,32 +13,35 @@ dockerSettings
 docker <<= docker.dependsOn(Keys.`package` in(Compile, packageBin))
 
 // Define a Dockerfile
-dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
-  case (jarFile, classpath, Some(mainClass)) =>
-    new Dockerfile {
-      // Base image
-      from("dockerfile/java")
-      // Add all files on the classpath
-      val files = classpath.files.map { file =>
-        val target = "/app/" + file.getName
-        add(file, target)
-        target
-      }
-      // Add the generated JAR file
-      val jarTarget = s"/app/${jarFile.getName}"
-      add(jarFile, jarTarget)
-	    // Make a colon separated classpath with the JAR file
-      val classpathString = files.mkString(":") + ":" + jarTarget
-      // On launch run Java with the classpath and the found main class
-      entryPoint("java", "-cp", classpathString, mainClass)
-    }
-  case (_, _, None) =>
+dockerfile in docker := {
+  val jarFile = artifactPath.in(Compile, packageBin).value
+  val classpath = (managedClasspath in Compile).value
+  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse {
     sys.error("Expected exactly one main class")
+  }
+  val jarTarget = s"/app/${jarFile.getName}"
+  // Add all files on the classpath
+  val files = classpath.files.map(file => file -> s"/app/${file.getName}").toMap
+  // Make a colon separated classpath with the JAR file
+  val classpathString = files.values.mkString(":") + ":" + jarTarget
+  // Base instructions
+  val base = Dockerfile.empty
+    .from("dockerfile/java")
+  // Add all files that is on the classpath
+  val filesAdded = files.foldLeft(base) {
+    case (df, (s, d)) =>
+      df.add(s, d)
+  }
+  // Add the JAR and set the entry point
+  filesAdded
+    .add(jarFile, jarTarget)
+    .entryPoint("java", "-cp", classpathString, mainclass)
 }
 
 // Set a custom image name
 imageName in docker := {
-  ImageName(namespace = Some(organization.value),
+  ImageName(
+    namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value))
 }

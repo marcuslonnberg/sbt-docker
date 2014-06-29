@@ -29,7 +29,7 @@ class DockerfileSuite extends FunSuite with Matchers {
   test("Instructions string is in sequence and matches instructions") {
     val dockerfile = Dockerfile(allInstructions)
 
-    dockerfile.toInstructionsString shouldEqual
+    dockerfile.mkString shouldEqual
       """FROM image
         |MAINTAINER marcus
         |RUN ["echo", "docker"]
@@ -51,9 +51,10 @@ class DockerfileSuite extends FunSuite with Matchers {
   test("addInstruction changes the Dockerfile by adding a instruction to the end") {
     val predefined = Dockerfile(allInstructions)
 
-    val withAddInstruction = new Dockerfile {
-      allInstructions foreach addInstruction
-    }
+    val withAddInstruction =
+      allInstructions.foldLeft(Dockerfile.empty) {
+        case (dockerfile, instruction) => dockerfile.addInstruction(instruction)
+      }
 
     withAddInstruction shouldEqual predefined
   }
@@ -61,39 +62,37 @@ class DockerfileSuite extends FunSuite with Matchers {
   test("Instruction methods adds a instruction to the dockerfile") {
     val predefined = Dockerfile(allInstructions)
 
-    val withMethods = new Dockerfile {
-      from("image")
-      maintainer("marcus")
-      run("echo", "docker")
-      runShell("echo", "docker")
-      cmd("cmd", "arg")
-      cmdShell("cmd", "arg")
-      expose(80, 8080)
-      env("key", "value")
-      add("a", "b")
-      copy("a", "b")
-      entryPoint("entrypoint", "arg")
-      entryPointShell("entrypoint", "arg")
-      volume("mountpoint")
-      user("marcus")
-      workDir("path")
-      onBuild(Run("echo", "123"))
-    }
+    val withMethods = Dockerfile.empty
+      .from("image")
+      .maintainer("marcus")
+      .run("echo", "docker")
+      .runShell("echo", "docker")
+      .cmd("cmd", "arg")
+      .cmdShell("cmd", "arg")
+      .expose(80, 8080)
+      .env("key", "value")
+      .add("a", "b")
+      .copy("a", "b")
+      .entryPoint("entrypoint", "arg")
+      .entryPointShell("entrypoint", "arg")
+      .volume("mountpoint")
+      .user("marcus")
+      .workDir("path")
+      .onBuild(Run("echo", "123"))
 
     withMethods shouldEqual predefined
   }
 
   test("Run, Cmd and EntryPoint instructions should handle arguments with whitespace") {
-    val dockerfile = new Dockerfile {
-      run("echo", "arg \"with\t\nspaces")
-      runShell("echo", "arg \"with\t\nspaces")
-      cmd("echo", "arg \"with\t\nspaces")
-      cmdShell("echo", "arg \"with\t\nspaces")
-      entryPoint("echo", "arg \"with\t\nspaces")
-      entryPointShell("echo", "arg \"with\t\nspaces")
-    }
+    val dockerfile = Dockerfile.empty
+      .run("echo", "arg \"with\t\nspaces")
+      .runShell("echo", "arg \"with\t\nspaces")
+      .cmd("echo", "arg \"with\t\nspaces")
+      .cmdShell("echo", "arg \"with\t\nspaces")
+      .entryPoint("echo", "arg \"with\t\nspaces")
+      .entryPointShell("echo", "arg \"with\t\nspaces")
 
-    dockerfile.toInstructionsString shouldEqual
+    dockerfile.mkString shouldEqual
       """RUN ["echo", "arg \"with\t\nspaces"]
         |RUN echo "arg \"with\t\nspaces"
         |CMD ["echo", "arg \"with\t\nspaces"]
@@ -103,46 +102,42 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("Add and copy a file to /") {
-    val stageDir = file("/tmp/abc/xyz/")
-    val sourceFile = stageDir / "xyz"
-    val dockerfile = new Dockerfile {
-      add(sourceFile, "/")
-      copy(sourceFile, "/")
-    }
+    val sourceFile = file("/tmp/abc/xyz/")
+    val dockerfile = Dockerfile.empty
+      .add(sourceFile, "/")
+      .copy(sourceFile, "/")
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
-      Add("/xyz", "/xyz"),
-      Copy("/xyz", "/xyz"))
-    dockerfile.pathsToCopy should contain theSameElementsInOrderAs Seq(
+      Add("/xyz", "/"),
+      Copy("/xyz", "/"))
+    dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
       CopyPath(sourceFile, file("/xyz")),
       CopyPath(sourceFile, file("/xyz")))
   }
 
   test("Add and copy a file to a specified destination") {
     val sourceFile = file("/tmp/xyz")
-    val d = new Dockerfile {
-      add(sourceFile, "abc")
-      copy(sourceFile, "xyz")
-    }
+    val d = Dockerfile.empty
+      .add(sourceFile, "abc")
+      .copy(sourceFile, "xyz")
 
     d.instructions should contain theSameElementsInOrderAs Seq(
       Add("abc", "abc"),
       Copy("xyz", "xyz"))
-    d.pathsToCopy should contain theSameElementsInOrderAs Seq(
+    d.stagedFiles should contain theSameElementsInOrderAs Seq(
       CopyPath(sourceFile, file("abc")),
       CopyPath(sourceFile, file("xyz")))
   }
 
   test("Adding a single source file to multiple paths") {
     val sourceFile = file("/a/b/c/d")
-    val dockerfile = new Dockerfile {
-      add(sourceFile, "/x/y")
-      add(sourceFile, "/z")
-      add(sourceFile, "/z")
-      copy(sourceFile, "/x/y")
-      copy(sourceFile, "/z")
-      copy(sourceFile, "/z")
-    }
+    val dockerfile = Dockerfile.empty
+      .add(sourceFile, "/x/y")
+      .add(sourceFile, "/z")
+      .add(sourceFile, "/z")
+      .copy(sourceFile, "/x/y")
+      .copy(sourceFile, "/z")
+      .copy(sourceFile, "/z")
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
       Add("/x/y", "/x/y"),
@@ -151,7 +146,7 @@ class DockerfileSuite extends FunSuite with Matchers {
       Copy("/x/y", "/x/y"),
       Copy("/z", "/z"),
       Copy("/z", "/z"))
-    dockerfile.pathsToCopy should contain theSameElementsInOrderAs Seq(
+    dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
       CopyPath(sourceFile, file("/x/y")),
       CopyPath(sourceFile, file("/z")),
       CopyPath(sourceFile, file("/z")),

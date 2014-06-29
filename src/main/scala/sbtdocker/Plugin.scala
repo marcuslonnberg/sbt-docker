@@ -22,7 +22,7 @@ object Plugin extends sbt.Plugin {
       (streams, dockerPath, buildOptions, stageDir, dockerfile, imageName) =>
         val log = streams.log
         log.debug("Using Dockerfile:")
-        log.debug(dockerfile.toInstructionsString)
+        log.debug(dockerfile.mkString)
 
         DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
@@ -40,34 +40,33 @@ object Plugin extends sbt.Plugin {
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
     docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin)),
     mainClass in docker <<= mainClass in docker or mainClass.in(Compile, packageBin),
-    dockerfile in docker <<= (managedClasspath in Compile, artifactPath.in(Compile, packageBin), mainClass in docker) map {
-      case (_, _, None) =>
+    dockerfile in docker := {
+      val classpath = (managedClasspath in Compile).value
+      val jar = artifactPath.in(Compile, packageBin).value
+      val mainclass = (mainClass in docker).value.getOrElse {
         sys.error("No main class found or multiple main classes exists. " +
           "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
-      case (classpath, artifact, Some(mainClass)) =>
-        val appPath = "/app"
-        val libsPath = s"$appPath/libs"
-        val artifactPath = s"$appPath/${artifact.name}"
+      }
+      val appPath = "/app"
+      val libsPath = s"$appPath/libs"
+      val jarPath = s"$appPath/${jar.name}"
 
-        val dockerfile = Dockerfile()
-        dockerfile.from(fromImage)
+      val libFiles = classpath.files.map(libFile => libFile -> s"$libsPath/${libFile.name}").toMap
+      val classpathString = s"${libFiles.values.mkString(":")}:$jarPath"
 
+      val base = Dockerfile.empty
+        .from(fromImage)
+
+      val portsAdded =
         if (exposePorts.nonEmpty) {
-          dockerfile.expose(exposePorts: _*)
-        }
+          base.expose(exposePorts: _*)
+        } else base
 
-        val libPaths = classpath.files.map { libFile =>
-          val toPath = file(libsPath) / libFile.name
-          dockerfile.copyToStageDir(libFile, toPath)
-          toPath
-        }
-        val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
-
-        dockerfile.add(libsPath, libsPath)
-        dockerfile.add(artifact, artifactPath)
-        dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
-
-        dockerfile
+      portsAdded
+        .stageFiles(libFiles)
+        .add(libsPath, libsPath)
+        .add(jar, jarPath)
+        .entryPoint("java", "-cp", classpathString, mainclass)
     }
   )
 

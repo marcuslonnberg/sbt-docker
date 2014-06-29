@@ -4,7 +4,7 @@ import java.net.URL
 
 import sbt.file
 import org.scalatest.{FlatSpec, Matchers}
-import sbtdocker.{ImageName, Instructions}
+import sbtdocker.{Dockerfile, ImageName, Instructions}
 import sbtdocker.Instructions._
 
 class ImmutableDockerfileSuite extends FlatSpec with Matchers {

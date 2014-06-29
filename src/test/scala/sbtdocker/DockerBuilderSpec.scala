@@ -18,11 +18,10 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           val fileC = origDir / "x" / "y" / "a"
           val fileCData = createFile(fileC)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/a/b")
-            add(fileB, "/")
-            add(fileC, "/x/y")
-          }
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/a/b")
+            .add(fileB, "/")
+            .add(fileC, "/x/y")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
@@ -46,11 +45,10 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           val fileB = origDir / "b"
           val fileBData = createFile(fileB)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/dest")
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/dest")
             // Here could be RUN mv /dest /other/path
-            add(fileB, "/dest")
-          }
+            .add(fileB, "/dest")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
@@ -58,7 +56,7 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           addInstructions should have length 2
           val Seq(addA, addB) = addInstructions
 
-          IO.read(stageDir / addA.from) shouldEqual fileAData
+          addA shouldEqual addB
           IO.read(stageDir / addB.from) shouldEqual fileBData
         }
       }
@@ -72,11 +70,10 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           assume(fileA.createNewFile())
           IO.write(fileA, fileAData)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/dest")
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/dest")
             // Here could be RUN mv /dest /other/path
-            add(fileA, "/dest")
-          }
+            .add(fileA, "/dest")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 

@@ -28,8 +28,8 @@ object DockerBuilder {
 
     IO.delete(stageDir)
 
-    IO.write(stageDir / "Dockerfile", dockerFile.toInstructionsString)
-    copyFiles(dockerFile.pathsToCopy, stageDir, log)
+    IO.write(stageDir / "Dockerfile", dockerFile.mkString)
+    copyFiles(dockerFile.stagedFiles, stageDir, log)
   }
 
   def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: File, log: Logger) = {
