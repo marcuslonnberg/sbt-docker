@@ -1,5 +1,3 @@
-import DockerKeys._
-
 name := "scripted-auto-package"
 
 organization := "sbtdocker"
@@ -8,7 +6,7 @@ version := "0.1.0"
 
 scalaVersion := "2.11.1"
 
-dockerSettingsAutoPackage()
+dockerAutoPackage()
 
 val check = taskKey[Unit]("Check")
 
