@@ -4,6 +4,6 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.1"
 
-dockerSettingsAutoPackage()
+dockerAutoPackage()
