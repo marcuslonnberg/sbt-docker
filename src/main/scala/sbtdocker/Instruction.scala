@@ -1,15 +1,17 @@
 package sbtdocker
 
-trait Instruction {
-  this: Product =>
-  def arguments = productIterator.mkString(" ")
-
-  def instructionName = productPrefix.toUpperCase
-
-  override def toString = s"$instructionName $arguments"
-}
-
 object Instructions {
+  trait Instruction {
+    this: Product =>
+    def arguments = productIterator.mkString(" ")
+
+    def instructionName = productPrefix.toUpperCase
+
+    override def toString = s"$instructionName $arguments"
+
+    @deprecated("Use toString instead.", "0.4.0")
+    def toInstructionString = toString
+  }
 
   private def escapeQuotationMarks(str: String) = str.replace("\"", "\\\"")
 

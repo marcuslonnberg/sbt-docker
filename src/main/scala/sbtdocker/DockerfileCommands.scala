@@ -20,7 +20,13 @@ trait DockerfileCommands[T <: DockerfileCommands[T]] {
 
   def addInstruction(instruction: Instruction): T
 
-  def stageFile(copy: CopyPath): T
+  @deprecated("Use stageFile instead.", "0.4.0")
+  def copyToStageDir(source: File, destination: File) = stageFile(source, destination)
+
+  @deprecated("Use stageFile instead.", "0.4.0")
+  def copyToStageDir(source: File, destination: String) = stageFile(source, destination)
+
+  protected def stageFile(copy: CopyPath): T
 
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.

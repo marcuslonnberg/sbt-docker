@@ -33,4 +33,7 @@ case class ImageName(registry: Option[String] = None, namespace: Option[String] 
     val tagString = tag.fold("")(":" + _)
     registryString + namespaceString + repository + tagString
   }
+
+  @deprecated("Use toString instead.", "0.4.0")
+  def name = toString
 }
