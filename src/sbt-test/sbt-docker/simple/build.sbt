@@ -1,4 +1,4 @@
-import sbtdocker.{ImageName, Dockerfile}
+import sbtdocker._
 import DockerKeys._
 
 name := "scripted-simple"
@@ -24,18 +24,17 @@ dockerfile in docker := {
   val files = classpath.files.map(file => file -> s"/app/${file.getName}").toMap
   // Make a colon separated classpath with the JAR file
   val classpathString = files.values.mkString(":") + ":" + jarTarget
-  // Base instructions
-  val base = Dockerfile.empty
-    .from("dockerfile/java")
-  // Add all files that is on the classpath
-  val filesAdded = files.foldLeft(base) {
-    case (df, (s, d)) =>
-      df.add(s, d)
+  new Dockerfile {
+    from("dockerfile/java")
+    // Add all files that is on the classpath
+    files.foreach {
+      case (source, destination) =>
+        add(source, destination)
+    }
+    // Add the JAR and set the entry point
+    add(jarFile, jarTarget)
+    entryPoint("java", "-cp", classpathString, mainclass)
   }
-  // Add the JAR and set the entry point
-  filesAdded
-    .add(jarFile, jarTarget)
-    .entryPoint("java", "-cp", classpathString, mainclass)
 }
 
 // Set a custom image name

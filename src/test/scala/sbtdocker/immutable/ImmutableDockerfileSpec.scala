@@ -4,10 +4,11 @@ import java.net.URL
 
 import sbt.file
 import org.scalatest.{FlatSpec, Matchers}
-import sbtdocker.{Dockerfile, ImageName, Instructions}
-import sbtdocker.Instructions._
+import sbtdocker.ImageName
 
-class ImmutableDockerfileSuite extends FlatSpec with Matchers {
+class ImmutableDockerfileSpec extends FlatSpec with Matchers {
+  import sbtdocker.Instructions._
+
   "A Dockerfile" should "be immutable" in {
     val empty = Dockerfile()
     val nonEmpty = empty
@@ -47,9 +48,10 @@ class ImmutableDockerfileSuite extends FlatSpec with Matchers {
       .volume("/srv")
       .user("marcus")
       .workDir("/srv")
-      .onBuild(Instructions.Run("echo", "text"))
+      .onBuild(Run("echo", "text"))
 
-    val instructions = Seq(From("image"),
+    val instructions = Seq(
+      From("image"),
       From("ubuntu"),
       Maintainer("marcus"),
       Maintainer("marcus <marcus@domain.tld>"),
@@ -72,8 +74,8 @@ class ImmutableDockerfileSuite extends FlatSpec with Matchers {
       Volume("/srv"),
       User("marcus"),
       WorkDir("/srv"),
-      OnBuild(Instructions.Run("echo", "text")))
+      OnBuild(Run("echo", "text")))
 
-    dockerfile.instructions shouldEqual instructions
+    dockerfile.instructions should contain theSameElementsInOrderAs instructions
   }
 }

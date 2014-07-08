@@ -10,7 +10,7 @@ object Plugin extends sbt.Plugin {
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
 
-    val dockerfile = taskKey[Dockerfile]("Definition of the Dockerfile that should be built.")
+    val dockerfile = taskKey[DockerfileLike[_]]("Definition of the Dockerfile that should be built.")
     val stageDirectory = taskKey[File]("Staging directory used when building the image.")
     val imageName = taskKey[ImageName]("Name of the built image.")
     val dockerPath = settingKey[String]("Path to the Docker binary.")
@@ -47,6 +47,7 @@ object Plugin extends sbt.Plugin {
         sys.error("No main class found or multiple main classes exists. " +
           "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
       }
+
       val appPath = "/app"
       val libsPath = s"$appPath/libs"
       val jarPath = s"$appPath/${jar.name}"
@@ -54,19 +55,19 @@ object Plugin extends sbt.Plugin {
       val libFiles = classpath.files.map(libFile => libFile -> s"$libsPath/${libFile.name}").toMap
       val classpathString = s"${libFiles.values.mkString(":")}:$jarPath"
 
-      val base = Dockerfile.empty
-        .from(fromImage)
+      new Dockerfile {
+        from(fromImage)
 
-      val portsAdded =
         if (exposePorts.nonEmpty) {
-          base.expose(exposePorts: _*)
-        } else base
+          expose(exposePorts: _*)
+        }
 
-      portsAdded
-        .stageFiles(libFiles)
-        .add(libsPath, libsPath)
-        .add(jar, jarPath)
-        .entryPoint("java", "-cp", classpathString, mainclass)
+        stageFiles(libFiles)
+        add(libsPath, libsPath)
+        add(jar, jarPath)
+
+        entryPoint("java", "-cp", classpathString, mainclass)
+      }
     }
   )
 
@@ -82,7 +83,7 @@ object Plugin extends sbt.Plugin {
    * The from image defaults to 'dockerfile/java'.
    *
    * These settings will not work for all projects, use [[sbtdocker.Plugin.dockerSettings]] instead and define a
-   * [[sbtdocker.Dockerfile]] that works with your project.
+   * Dockerfile that works with your project.
    */
   def dockerSettingsAutoPackage(fromImage: String = "dockerfile/java",
                                 exposePorts: Seq[Int] = Seq.empty): Seq[sbt.Def.Setting[_]] = {

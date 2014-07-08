@@ -1,10 +1,8 @@
 package sbtdocker
 
 import sbt.file
-import sbt.Path._
 import Instructions._
 import org.scalatest.{FunSuite, Matchers}
-import sbtdocker.Dockerfile.CopyPath
 
 class DockerfileSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
@@ -27,7 +25,7 @@ class DockerfileSuite extends FunSuite with Matchers {
   )
 
   test("Instructions string is in sequence and matches instructions") {
-    val dockerfile = Dockerfile(allInstructions)
+    val dockerfile = immutable.Dockerfile(allInstructions)
 
     dockerfile.mkString shouldEqual
       """FROM image
@@ -49,10 +47,10 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("addInstruction changes the Dockerfile by adding a instruction to the end") {
-    val predefined = Dockerfile(allInstructions)
+    val predefined = immutable.Dockerfile(allInstructions)
 
     val withAddInstruction =
-      allInstructions.foldLeft(Dockerfile.empty) {
+      allInstructions.foldLeft(immutable.Dockerfile.empty) {
         case (dockerfile, instruction) => dockerfile.addInstruction(instruction)
       }
 
@@ -60,9 +58,9 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("Instruction methods adds a instruction to the dockerfile") {
-    val predefined = Dockerfile(allInstructions)
+    val predefined = immutable.Dockerfile(allInstructions)
 
-    val withMethods = Dockerfile.empty
+    val withMethods = immutable.Dockerfile.empty
       .from("image")
       .maintainer("marcus")
       .run("echo", "docker")
@@ -84,7 +82,7 @@ class DockerfileSuite extends FunSuite with Matchers {
   }
 
   test("Run, Cmd and EntryPoint instructions should handle arguments with whitespace") {
-    val dockerfile = Dockerfile.empty
+    val dockerfile = immutable.Dockerfile.empty
       .run("echo", "arg \"with\t\nspaces")
       .runShell("echo", "arg \"with\t\nspaces")
       .cmd("echo", "arg \"with\t\nspaces")
@@ -103,7 +101,7 @@ class DockerfileSuite extends FunSuite with Matchers {
 
   test("Add and copy a file to /") {
     val sourceFile = file("/tmp/abc/xyz/")
-    val dockerfile = Dockerfile.empty
+    val dockerfile = immutable.Dockerfile.empty
       .add(sourceFile, "/")
       .copy(sourceFile, "/")
 
@@ -117,7 +115,7 @@ class DockerfileSuite extends FunSuite with Matchers {
 
   test("Add and copy a file to a specified destination") {
     val sourceFile = file("/tmp/xyz")
-    val d = Dockerfile.empty
+    val d = immutable.Dockerfile.empty
       .add(sourceFile, "abc")
       .copy(sourceFile, "xyz")
 
@@ -131,7 +129,7 @@ class DockerfileSuite extends FunSuite with Matchers {
 
   test("Adding a single source file to multiple paths") {
     val sourceFile = file("/a/b/c/d")
-    val dockerfile = Dockerfile.empty
+    val dockerfile = immutable.Dockerfile.empty
       .add(sourceFile, "/x/y")
       .add(sourceFile, "/z")
       .add(sourceFile, "/z")

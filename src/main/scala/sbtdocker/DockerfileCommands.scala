@@ -1,23 +1,26 @@
 package sbtdocker
 
 import sbt._
-import sbtdocker.Dockerfile.CopyPath
 import sbtdocker.Instructions._
 
-object Dockerfile {
-  def empty = Dockerfile()
+case class CopyPath(source: File, destination: File)
 
-  case class CopyPath(source: File, destination: File)
+trait DockerfileLike[T <: DockerfileCommands[T]] extends DockerfileCommands[T] {
+  this: T =>
 
-}
+  def instructions: Seq[Instruction]
 
-case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
-                      stagedFiles: Seq[CopyPath] = Seq.empty) extends DockerfileCommands {
-  type T = Dockerfile
+  def stagedFiles: Seq[CopyPath]
 
   def mkString = instructions.mkString("\n")
+}
 
-  def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction, stagedFiles)
+trait DockerfileCommands[T <: DockerfileCommands[T]] {
+  this: T =>
+
+  def addInstruction(instruction: Instruction): T
+
+  def stageFile(copy: CopyPath): T
 
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
@@ -28,9 +31,9 @@ case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
    * @param source File to copy into stage dir.
    * @param destination Path to copy file to, should be relative to the stage dir.
    */
-  def stageFile(source: File, destination: File) = {
+  def stageFile(source: File, destination: File): T = {
     val copy = CopyPath(source, destination)
-    Dockerfile(instructions, stagedFiles :+ copy)
+    stageFile(copy)
   }
 
   /**
@@ -44,27 +47,16 @@ case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
    * @param source File to copy into stage dir.
    * @param destination Path to copy file to, should be relative to the stage dir.
    */
-  def stageFile(source: File, destination: String) = {
+  def stageFile(source: File, destination: String): T = {
     val targetFile = expandPath(source, destination)
     val copy = CopyPath(source, targetFile)
-    Dockerfile(instructions, stagedFiles :+ copy)
+    stageFile(copy)
   }
 
-  def stageFiles(files: Map[File, String]) = files.foldLeft(this) {
-    case (df, (source, destination)) => df.stageFile(source, destination)
+  def stageFiles(files: Map[File, String]): T = files.foldLeft(this) {
+    case (df, (source, destination)) =>
+      df.stageFile(source, destination)
   }
-}
-
-trait DockerfileCommands {
-  type T <: DockerfileCommands
-
-  def addInstruction(instruction: Instruction): T
-
-  def stageFile(from: File, target: File): T
-
-  def stageFile(from: File, target: String): T
-
-  def stageFiles(files: Map[File, String]): T
 
   protected def expandPath(source: File, path: String) = {
     val pathFile = file(path)

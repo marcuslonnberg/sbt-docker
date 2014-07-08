@@ -5,6 +5,8 @@ import sbt._
 import sbtdocker.Instructions.Add
 
 class DockerBuilderSpec extends FreeSpec with Matchers {
+  import sbtdocker.immutable.Dockerfile
+
   "prepareFiles" - {
     "Add multiple files to different paths" - {
       IO.withTemporaryDirectory { origDir =>

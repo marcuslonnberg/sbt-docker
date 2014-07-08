@@ -1,4 +1,4 @@
-import sbtdocker.{ImageName, Dockerfile}
+import sbtdocker._
 import DockerKeys._
 
 name := "scripted-expand-archive"
@@ -11,7 +11,7 @@ dockerSettings
 
 dockerfile in docker := {
   val archive = file("archive.tgz")
-  Dockerfile.empty
+  immutable.Dockerfile.empty
     .from("ubuntu:14.04")
     .add(archive, "/")
     .cmd("ls", "dir")
