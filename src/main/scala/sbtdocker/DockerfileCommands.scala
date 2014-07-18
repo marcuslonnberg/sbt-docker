@@ -5,7 +5,7 @@ import sbtdocker.Instructions._
 
 case class CopyPath(source: File, destination: File)
 
-trait DockerfileLike[T <: DockerfileCommands[T]] extends DockerfileCommands[T] {
+trait DockerfileLike[T <: DockerfileLike[T]] extends DockerfileCommands[T] {
   this: T =>
 
   def instructions: Seq[Instruction]
