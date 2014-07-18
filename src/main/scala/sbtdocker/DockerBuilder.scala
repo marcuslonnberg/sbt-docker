@@ -70,9 +70,9 @@ object DockerBuilder {
 
     val flags = List(
       buildOptions.noCache.map(value => s"--no-cache=$value"),
-      buildOptions.rm.map(value => s"--rm=$value"))
+      buildOptions.rm.map(value => s"--rm=$value")).flatten
 
-    val command = dockerPath :: "build" :: "-t" :: imageName.toString :: flags.flatten ::: "." :: Nil
+    val command = dockerPath :: "build" :: "-t" :: imageName.toString :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLog)
@@ -80,9 +80,9 @@ object DockerBuilder {
       log.info(line)
     }
 
-    val imageId = processOutput.reverse.collectFirst {
+    val imageId = processOutput.collect {
       case SuccessfullyBuilt(id) => ImageId(id)
-    }
+    }.lastOption
 
     imageId match {
       case Some(id) =>
