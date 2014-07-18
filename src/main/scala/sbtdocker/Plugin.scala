@@ -9,6 +9,7 @@ object Plugin extends sbt.Plugin {
 
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
+    val dockerpush = taskKey[Unit]("Runs docker push on the Docker image")
 
     val dockerfile = taskKey[Dockerfile]("Definition of the Dockerfile that should be built.")
     val stageDirectory = taskKey[File]("Staging directory used when building the image.")
@@ -24,7 +25,7 @@ object Plugin extends sbt.Plugin {
         log.debug("Using Dockerfile:")
         log.debug(dockerfile.toInstructionsString)
 
-        DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
+      DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
     stageDirectory in docker <<= target map (target => target / "docker"),
     imageName in docker <<= (organization, name) map {
@@ -34,7 +35,13 @@ object Plugin extends sbt.Plugin {
         ImageName(namespace = Some(organization), repository = name)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    dockerpush <<= (streams, dockerPath in docker, imageName in docker) map {
+      (streams, dockerPath, imageName) =>
+      val log = streams.log
+
+      DockerPush(dockerPath, imageName, log)
+    }
   )
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
