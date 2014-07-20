@@ -11,7 +11,7 @@ val jarFile: File = ???
 
 // An immutable Dockerfile
 
-val base = immutable.Dockerfile.empty
+immutable.Dockerfile.empty
   .from("ubuntu")
   .run("apt-get", "-y", "install", "openjdk-7-jre-headless")
   .add(jarFile, "/srv/app.jar")
