@@ -27,8 +27,13 @@ case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty,
     this
   }
 
-  def stageFile(copy: CopyPath) = {
-    stagedFiles :+= copy
+  def stageFile(file: CopyPath) = {
+    stagedFiles :+= file
+    this
+  }
+
+  def stageFiles(files: TraversableOnce[CopyPath]) = {
+    stagedFiles ++= files
     this
   }
 }

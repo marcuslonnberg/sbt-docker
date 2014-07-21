@@ -2,6 +2,14 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
+import Utils._
+
+object CopyPath {
+  def apply(source: File, destination: String): CopyPath = {
+    val destinationFile = expandPath(source, destination)
+    CopyPath(source, destinationFile)
+  }
+}
 
 case class CopyPath(source: File, destination: File)
 
@@ -26,7 +34,7 @@ trait DockerfileCommands[T <: DockerfileCommands[T]] {
   @deprecated("Use stageFile instead.", "0.4.0")
   def copyToStageDir(source: File, destination: String) = stageFile(source, destination)
 
-  protected def stageFile(copy: CopyPath): T
+  def stageFile(file: CopyPath): T
 
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
@@ -54,21 +62,11 @@ trait DockerfileCommands[T <: DockerfileCommands[T]] {
    * @param destination Path to copy file to, should be relative to the stage dir.
    */
   def stageFile(source: File, destination: String): T = {
-    val targetFile = expandPath(source, destination)
-    val copy = CopyPath(source, targetFile)
+    val copy = CopyPath(source, destination)
     stageFile(copy)
   }
 
-  def stageFiles(files: Map[File, String]): T = files.foldLeft(this) {
-    case (df, (source, destination)) =>
-      df.stageFile(source, destination)
-  }
-
-  protected def expandPath(source: File, path: String) = {
-    val pathFile = file(path)
-    if (path.endsWith("/")) pathFile / source.name
-    else pathFile
-  }
+  def stageFiles(files: TraversableOnce[CopyPath]): T
 
   // Instructions
 
