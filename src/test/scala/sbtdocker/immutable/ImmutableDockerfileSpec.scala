@@ -2,11 +2,12 @@ package sbtdocker.immutable
 
 import java.net.URL
 
-import sbt.file
 import org.scalatest.{FlatSpec, Matchers}
-import sbtdocker.ImageName
+import sbt.file
+import sbtdocker.{ImageName, StageFile}
 
 class ImmutableDockerfileSpec extends FlatSpec with Matchers {
+
   import sbtdocker.Instructions._
 
   "A Dockerfile" should "be immutable" in {
@@ -77,5 +78,21 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       OnBuild(Run("echo", "text")))
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
+  }
+
+  it should "stage files on Add and Copy instructions" in {
+    val src = file("src")
+    val dest = file("dest")
+
+    val Empty = Dockerfile.empty
+
+    def test(df: Dockerfile) = {
+      df.stagedFiles should contain theSameElementsAs Seq(StageFile(src, dest))
+    }
+
+    test(Empty.add(src, dest))
+    test(Empty.add(src, "dest"))
+    test(Empty.copy(src, dest))
+    test(Empty.copy(src, "dest"))
   }
 }

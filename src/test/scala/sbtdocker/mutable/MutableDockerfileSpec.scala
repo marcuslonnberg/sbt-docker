@@ -1,11 +1,12 @@
 package sbtdocker.mutable
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 import sbt._
-import sbtdocker.{Instructions, ImageName}
+import sbtdocker.{ImageName, StageFile}
 
 class MutableDockerfileSpec extends FlatSpec with Matchers {
-  import Instructions._
+
+  import sbtdocker.Instructions._
 
   "A Dockerfile" should "be mutable" in {
     val dockerfile = new Dockerfile()
@@ -78,5 +79,18 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
   }
-}
 
+  it should "stage files on Add and Copy instructions" in {
+    val src = file("src")
+    val dest = file("dest")
+
+    def test(df: Dockerfile) = {
+      df.stagedFiles should contain theSameElementsAs Seq(StageFile(src, dest))
+    }
+
+    test(Dockerfile().add(src, dest))
+    test(Dockerfile().add(src, "dest"))
+    test(Dockerfile().copy(src, dest))
+    test(Dockerfile().copy(src, "dest"))
+  }
+}
