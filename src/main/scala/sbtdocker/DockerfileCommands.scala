@@ -2,23 +2,34 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
-import Utils._
+import sbtdocker.Utils._
 
-object CopyPath {
-  def apply(source: File, destination: String): CopyPath = {
-    val destinationFile = expandPath(source, destination)
-    CopyPath(source, destinationFile)
+object StageFile {
+  /**
+   * @param source File that should be staged.
+   * @param target Target path in the stage directory.
+   *               If it ends with "/" then it will be expanded with the filename of the `source`.
+   */
+  def apply(source: File, target: String): StageFile = {
+    val destinationFile = expandPath(source, target)
+    StageFile(source, destinationFile)
   }
 }
 
-case class CopyPath(source: File, destination: File)
+/**
+ * Container for a file (or directory) that should be copied to a path in the stage directory.
+ *
+ * @param source File that should be staged.
+ * @param target Path in the stage directory.
+ */
+case class StageFile(source: File, target: File)
 
 trait DockerfileLike[T <: DockerfileLike[T]] extends DockerfileCommands[T] {
   this: T =>
 
   def instructions: Seq[Instruction]
 
-  def stagedFiles: Seq[CopyPath]
+  def stagedFiles: Seq[StageFile]
 
   def mkString = instructions.mkString("\n")
 }
@@ -29,44 +40,50 @@ trait DockerfileCommands[T <: DockerfileCommands[T]] {
   def addInstruction(instruction: Instruction): T
 
   @deprecated("Use stageFile instead.", "0.4.0")
-  def copyToStageDir(source: File, destination: File) = stageFile(source, destination)
-
-  @deprecated("Use stageFile instead.", "0.4.0")
-  def copyToStageDir(source: File, destination: String) = stageFile(source, destination)
-
-  def stageFile(file: CopyPath): T
+  def copyToStageDir(source: File, targetRelativeToStageDir: File) = stageFile(source, targetRelativeToStageDir)
 
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
    *
-   * The destination file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
-   * files on the same destination.
-   *
-   * @param source File to copy into stage dir.
-   * @param destination Path to copy file to, should be relative to the stage dir.
+   * The target file must be unique for this Dockerfile. Otherwise files that are staged later with the same target
+   * will overwrite this file.
    */
-  def stageFile(source: File, destination: File): T = {
-    val copy = CopyPath(source, destination)
+  def stageFile(file: StageFile): T
+
+  /**
+   * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
+   *
+   * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
+   * files on the same target.
+   *
+   *@param source File to copy into stage dir.
+   * @param target Path to copy file to, should be relative to the stage dir.
+   */
+  def stageFile(source: File, target: File): T = {
+    val copy = StageFile(source, target)
     stageFile(copy)
   }
 
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
    *
-   * If the destination ends with a "/" then the source filename will be added at the end.
+   * If the `target` ends with / then the source filename will be added at the end.
    *
-   * The destination file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
-   * files on the same destination.
+   * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
+   * files on the same target.
    *
    * @param source File to copy into stage dir.
-   * @param destination Path to copy file to, should be relative to the stage dir.
+   * @param target Path to copy file to, should be relative to the stage dir.
    */
-  def stageFile(source: File, destination: String): T = {
-    val copy = CopyPath(source, destination)
+  def stageFile(source: File, target: String): T = {
+    val copy = StageFile(source, target)
     stageFile(copy)
   }
 
-  def stageFiles(files: TraversableOnce[CopyPath]): T
+  /**
+   * Stage multiple files.
+   */
+  def stageFiles(files: TraversableOnce[StageFile]): T
 
   // Instructions
 

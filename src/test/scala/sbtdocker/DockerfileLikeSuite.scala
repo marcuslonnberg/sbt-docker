@@ -1,10 +1,10 @@
 package sbtdocker
 
-import sbt.file
-import Instructions._
 import org.scalatest.{FunSuite, Matchers}
+import sbt.file
+import sbtdocker.Instructions._
 
-class DockerfileSuite extends FunSuite with Matchers {
+class DockerfileLikeSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
     From("image"),
     Maintainer("marcus"),
@@ -109,8 +109,8 @@ class DockerfileSuite extends FunSuite with Matchers {
       Add("/xyz", "/"),
       Copy("/xyz", "/"))
     dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
-      CopyPath(sourceFile, file("/xyz")),
-      CopyPath(sourceFile, file("/xyz")))
+      StageFile(sourceFile, file("/xyz")),
+      StageFile(sourceFile, file("/xyz")))
   }
 
   test("Add and copy a file to a specified destination") {
@@ -123,8 +123,8 @@ class DockerfileSuite extends FunSuite with Matchers {
       Add("abc", "abc"),
       Copy("xyz", "xyz"))
     d.stagedFiles should contain theSameElementsInOrderAs Seq(
-      CopyPath(sourceFile, file("abc")),
-      CopyPath(sourceFile, file("xyz")))
+      StageFile(sourceFile, file("abc")),
+      StageFile(sourceFile, file("xyz")))
   }
 
   test("Adding a single source file to multiple paths") {
@@ -145,12 +145,12 @@ class DockerfileSuite extends FunSuite with Matchers {
       Copy("/z", "/z"),
       Copy("/z", "/z"))
     dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
-      CopyPath(sourceFile, file("/x/y")),
-      CopyPath(sourceFile, file("/z")),
-      CopyPath(sourceFile, file("/z")),
-      CopyPath(sourceFile, file("/x/y")),
-      CopyPath(sourceFile, file("/z")),
-      CopyPath(sourceFile, file("/z")))
+      StageFile(sourceFile, file("/x/y")),
+      StageFile(sourceFile, file("/z")),
+      StageFile(sourceFile, file("/z")),
+      StageFile(sourceFile, file("/x/y")),
+      StageFile(sourceFile, file("/z")),
+      StageFile(sourceFile, file("/z")))
   }
 
   test("OnBuild instruction should correctly generate instruction string") {

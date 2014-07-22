@@ -52,8 +52,8 @@ object Plugin extends sbt.Plugin {
       val libsPath = s"$appPath/libs"
       val jarPath = s"$appPath/${jar.name}"
 
-      val libFiles = classpath.files.map(libFile => CopyPath(libFile, libsPath))
-      val classpathString = s"${libFiles.map(_.destination).mkString(":")}:$jarPath"
+      val libFiles = classpath.files.map(libFile => StageFile(libFile, libsPath))
+      val classpathString = s"${libFiles.map(_.target).mkString(":")}:$jarPath"
 
       new Dockerfile {
         from(fromImage)
