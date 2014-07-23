@@ -53,14 +53,15 @@ docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
 
 ### Defining a Dockerfile
 
-A Dockerfile is defined at the `dockerfile` key.
-It expects an instance of type [sbtdocker.Dockerfile](src/main/scala/sbtdocker/Dockerfile.scala) as result.
-The `sbtdocker.Dockerfile` have similar methods to the instructions of a Dockerfile.
+In order to produce a Docker image a Dockerfile must be defined.
+It should be defined at the `dockerfile in docker` key.
+There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
+The mutable class is default and is used in the examples below.
 
 Example with the sbt `package` task.
 ```scala
 import DockerKeys._
-import sbtdocker.Dockerfile
+import sbtdocker.mutable.Dockerfile
 
 dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
   case (jarFile, classpath, Some(mainClass)) =>
@@ -90,7 +91,7 @@ Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
 import AssemblyKeys._
 import DockerKeys._
-import sbtdocker.Dockerfile
+import sbtdocker.mutable.Dockerfile
 
 dockerSettings
 
@@ -110,7 +111,7 @@ dockerfile in docker := {
 }
 ```
 
-[DockerfileExamples](examples/DockerfileExamples.scala) shows different ways of defining a Dockerfile.
+Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
 ### Building an image
 
