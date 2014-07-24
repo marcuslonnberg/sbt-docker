@@ -43,15 +43,10 @@ object Plugin extends sbt.Plugin {
 
       DockerPush(dockerPath, imageName, log)
     },
-    dockerbuildandpush <<= (streams, dockerPath in docker, buildOptions in docker, stageDirectory in docker, dockerfile in docker, imageName in docker) map {
-      (streams, dockerPath, buildOptions, stageDir, dockerfile, imageName) =>
-        val log = streams.log
-        log.debug("Using Dockerfile:")
-        log.debug(dockerfile.toInstructionsString)
-
-      val builtImage = DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
-      DockerPush(dockerPath, imageName, log)
-      builtImage
+    dockerbuildandpush := {
+      val imageId = docker.value
+      dockerpush.value
+      imageId
     }
   )
 
