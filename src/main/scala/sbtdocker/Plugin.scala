@@ -9,6 +9,8 @@ object Plugin extends sbt.Plugin {
 
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
+    val dockerpush = taskKey[Unit]("Runs docker push on the Docker image")
+    val dockerbuildandpush = taskKey[ImageId]("Runs docker build and docker push")
 
     val dockerfile = taskKey[DockerfileLike[_]]("Definition of the Dockerfile that should be built.")
     val stageDirectory = taskKey[File]("Staging directory used when building the image.")
@@ -24,7 +26,7 @@ object Plugin extends sbt.Plugin {
         log.debug("Using Dockerfile:")
         log.debug(dockerfile.mkString)
 
-        DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
+      DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
     stageDirectory in docker <<= target map (target => target / "docker"),
     imageName in docker <<= (organization, name) map {
@@ -34,7 +36,23 @@ object Plugin extends sbt.Plugin {
         ImageName(namespace = Some(organization), repository = name)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    dockerpush <<= (streams, dockerPath in docker, imageName in docker) map {
+      (streams, dockerPath, imageName) =>
+      val log = streams.log
+
+      DockerPush(dockerPath, imageName, log)
+    },
+    dockerbuildandpush <<= (streams, dockerPath in docker, buildOptions in docker, stageDirectory in docker, dockerfile in docker, imageName in docker) map {
+      (streams, dockerPath, buildOptions, stageDir, dockerfile, imageName) =>
+        val log = streams.log
+        log.debug("Using Dockerfile:")
+        log.debug(dockerfile.toInstructionsString)
+
+      val builtImage = DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
+      DockerPush(dockerPath, imageName, log)
+      builtImage
+    }
   )
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
