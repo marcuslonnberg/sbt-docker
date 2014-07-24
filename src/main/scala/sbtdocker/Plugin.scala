@@ -1,16 +1,16 @@
 package sbtdocker
 
+import sbt.Keys._
 import sbt._
-import Keys._
 
 object Plugin extends sbt.Plugin {
 
-  import DockerKeys._
+  import sbtdocker.Plugin.DockerKeys._
 
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
-    val dockerpush = taskKey[Unit]("Runs docker push on the Docker image")
-    val dockerbuildandpush = taskKey[ImageId]("Runs docker build and docker push")
+    val dockerPush = taskKey[Unit]("Pushes a already built image to the registry.")
+    val dockerBuildAndPush = taskKey[ImageId]("Creates a Docker image and pushes it to the registry.")
 
     val dockerfile = taskKey[DockerfileLike[_]]("Definition of the Dockerfile that should be built.")
     val stageDirectory = taskKey[File]("Staging directory used when building the image.")
@@ -26,7 +26,7 @@ object Plugin extends sbt.Plugin {
         log.debug("Using Dockerfile:")
         log.debug(dockerfile.mkString)
 
-      DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
+        DockerBuilder(dockerPath, buildOptions, imageName, dockerfile, stageDir, log)
     },
     stageDirectory in docker <<= target map (target => target / "docker"),
     imageName in docker <<= (organization, name) map {
@@ -37,15 +37,15 @@ object Plugin extends sbt.Plugin {
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions(),
-    dockerpush <<= (streams, dockerPath in docker, imageName in docker) map {
+    dockerPush <<= (streams, dockerPath in docker, imageName in docker) map {
       (streams, dockerPath, imageName) =>
-      val log = streams.log
+        val log = streams.log
 
-      DockerPush(dockerPath, imageName, log)
+        DockerPush(dockerPath, imageName, log)
     },
-    dockerbuildandpush := {
+    dockerBuildAndPush := {
       val imageId = docker.value
-      dockerpush.value
+      dockerPush.value
       imageId
     }
   )
