@@ -105,7 +105,15 @@ Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for diffe
 
 ### Building an image
 
+To build an image use the `docker` task.
 Simply run `sbt docker` from your prompt or `docker` in the sbt console.
+
+### Pushing an image
+
+An image that have already been built can be pushed with the `dockerPush` task.
+To both build and push an image use the `dockerBuildAndPush` task.
+
+The `imageName in docker` key is used to determine which image to push.
 
 ### Custom image name
 
@@ -141,9 +149,10 @@ buildOptions in docker := BuildOptions(noCache = Some(true))
 ### Auto packaging
 
 Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposePorts)` can be used.
-This method defines a dockerfile automatically and uses the `package` task to try to generate an artifact.
+This method defines a Dockerfile automatically and uses the `package` task to try to generate an artifact.
 It's intended purpose is to give a very simple way of creating Docker images for new small projects.
 
 ### Example projects
 
 See [example projects](examples).
+
