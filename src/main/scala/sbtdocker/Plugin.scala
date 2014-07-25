@@ -1,14 +1,16 @@
 package sbtdocker
 
+import sbt.Keys._
 import sbt._
-import Keys._
 
 object Plugin extends sbt.Plugin {
 
-  import DockerKeys._
+  import sbtdocker.Plugin.DockerKeys._
 
   object DockerKeys {
     val docker = taskKey[ImageId]("Creates a Docker image.")
+    val dockerPush = taskKey[Unit]("Pushes a already built image to the registry.")
+    val dockerBuildAndPush = taskKey[ImageId]("Creates a Docker image and pushes it to the registry.")
 
     val dockerfile = taskKey[DockerfileLike[_]]("Definition of the Dockerfile that should be built.")
     val stageDirectory = taskKey[File]("Staging directory used when building the image.")
@@ -34,7 +36,18 @@ object Plugin extends sbt.Plugin {
         ImageName(namespace = Some(organization), repository = name)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    dockerPush <<= (streams, dockerPath in docker, imageName in docker) map {
+      (streams, dockerPath, imageName) =>
+        val log = streams.log
+
+        DockerPush(dockerPath, imageName, log)
+    },
+    dockerBuildAndPush := {
+      val imageId = docker.value
+      dockerPush.value
+      imageId
+    }
   )
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
