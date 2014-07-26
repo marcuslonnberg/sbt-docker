@@ -14,7 +14,35 @@ case class BuildOptions(noCache: Option[Boolean] = None, rm: Option[Boolean] = N
 case class ImageId(id: String)
 
 object ImageName {
-  def apply(repository: String) = new ImageName(repository = repository)
+  /**
+   * Parse a [[sbtdocker.ImageName]] from a string.
+   */
+  def apply(name: String): ImageName = {
+    val (registry, rest) = name.split("/", 3).toList match {
+      case host :: x :: xs if host.contains(".") || host.contains(":") || host == "localhost" =>
+        (Some(host), x :: xs)
+      case xs =>
+        (None, xs)
+    }
+
+    val (namespace, repoAndTag) = rest match {
+      case n :: r :: Nil=>
+        (Some(n), r)
+      case r :: Nil=>
+        (None, r)
+      case _ =>
+        throw new IllegalArgumentException(s"Invalid image name: '$name'")
+    }
+
+    val (repo, tag) = repoAndTag.split(":", 2) match {
+      case Array(r, t) =>
+        (r, Some(t))
+      case Array(r) =>
+        (r, None)
+    }
+
+    ImageName(registry, namespace, repo, tag)
+  }
 }
 
 /**
