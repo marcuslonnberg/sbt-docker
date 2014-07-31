@@ -2,7 +2,7 @@ package sbtdocker
 
 import sbt._
 
-object Docker extends AutoPlugin {
+object DockerPlugin extends AutoPlugin {
   // Automatically enable the plugin
   override def trigger = allRequirements
 
