@@ -2,7 +2,6 @@ package sbtdocker
 
 import sbt._
 import scala.sys.process.{Process, ProcessLogger}
-import sbtdocker.Dockerfile.CopyPath
 
 object DockerBuilder {
   /**
@@ -15,25 +14,26 @@ object DockerBuilder {
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: Dockerfile, stageDir: File, log: Logger): ImageId = {
-    log.info(s"Creating docker image with name: '${imageName.name}'")
+  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: DockerfileLike[_],
+            stageDir: File, log: Logger): ImageId = {
+    log.info(s"Creating docker image with name: '$imageName'")
 
     prepareFiles(dockerFile, stageDir, log)
 
     buildImage(dockerPath, buildOptions, imageName, stageDir, log)
   }
 
-  def prepareFiles(dockerFile: Dockerfile, stageDir: File, log: Logger) = {
+  def prepareFiles(dockerFile: DockerfileLike[_], stageDir: File, log: Logger) = {
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
 
     IO.delete(stageDir)
 
-    IO.write(stageDir / "Dockerfile", dockerFile.toInstructionsString)
-    copyFiles(dockerFile.pathsToCopy, stageDir, log)
+    IO.write(stageDir / "Dockerfile", dockerFile.mkString)
+    copyFiles(dockerFile.stagedFiles, stageDir, log)
   }
 
-  def copyFiles(pathsToCopy: Seq[CopyPath], stageDir: File, log: Logger) = {
-    for (CopyPath(source, targetRelative) <- pathsToCopy) {
+  def copyFiles(files: Seq[StageFile], stageDir: File, log: Logger) = {
+    for (StageFile(source, targetRelative) <- files.distinct) {
       copyFile(source, targetRelative, stageDir, log)
     }
   }
@@ -43,18 +43,18 @@ object DockerBuilder {
     log.debug(s"Copying '${source.getPath}' to '${target.getPath}'")
 
     if (source == target) {
-      log.debug(s"Source is already in stage directory '${source.getPath}'")
+      log.debug(s"Source file is already in the stage directory '${source.getPath}'")
     } else {
       if (target.exists()) {
-        log.warn(s"""Path '${target.getPath}' already exists in the stage directory, will be overwritten with '${source.getPath}'""")
+        log.warn(s"""Path "${target.getPath}" already exists in the stage directory""")
       }
 
       if (source.isFile) {
         IO.copyFile(source, target, preserveLastModified = true)
       } else if (source.isDirectory) {
-        IO.copyDirectory(source, target, overwrite = true, preserveLastModified = true)
+        IO.copyDirectory(source, target, overwrite = false, preserveLastModified = true)
       } else {
-        log.error(s"Unknown type of '${source.getPath}'")
+        log.error(s"Unknown type of path '${source.getPath}'")
       }
     }
   }
@@ -70,9 +70,9 @@ object DockerBuilder {
 
     val flags = List(
       buildOptions.noCache.map(value => s"--no-cache=$value"),
-      buildOptions.rm.map(value => s"--rm=$value"))
+      buildOptions.rm.map(value => s"--rm=$value")).flatten
 
-    val command = dockerPath :: "build" :: "-t" :: imageName.name :: flags.flatten ::: "." :: Nil
+    val command = dockerPath :: "build" :: "-t" :: imageName.toString :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLog)
@@ -80,13 +80,13 @@ object DockerBuilder {
       log.info(line)
     }
 
-    val imageId = processOutput.reverse.collectFirst {
+    val imageId = processOutput.collect {
       case SuccessfullyBuilt(id) => ImageId(id)
-    }
+    }.lastOption
 
     imageId match {
       case Some(id) =>
-        log.info(s"Successfully built Docker image: ${imageName.name}")
+        log.info(s"Successfully built Docker image: $imageName")
         id
       case None =>
         sys.error("Could not parse image id")

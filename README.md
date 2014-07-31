@@ -10,18 +10,9 @@ Requirements
 Setup
 -----
 
-Latest version is `0.3.0`.
-
 Add sbt-docker as a dependency in `project/docker.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.3.0")
-```
-
-To use the latest snapshot set the following in `project/docker.sbt`:
-```scala
-resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.3.1-SNAPSHOT")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.5.0")
 ```
 
 Usage
@@ -53,36 +44,36 @@ docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
 
 ### Defining a Dockerfile
 
-A Dockerfile is defined at the `dockerfile` key.
-It expects an instance of type [sbtdocker.Dockerfile](src/main/scala/sbtdocker/Dockerfile.scala) as result.
-The `sbtdocker.Dockerfile` have similar methods to the instructions of a Dockerfile.
+In order to produce a Docker image a Dockerfile must be defined.
+It should be defined at the `dockerfile in docker` key.
+There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
+The mutable class is default and is used in the examples below.
 
 Example with the sbt `package` task.
 ```scala
 import DockerKeys._
-import sbtdocker.Dockerfile
+import sbtdocker.mutable.Dockerfile
 
-dockerfile in docker <<= (artifactPath.in(Compile, packageBin), managedClasspath in Compile, mainClass.in(Compile, packageBin)) map {
-  case (jarFile, classpath, Some(mainClass)) =>
-    new Dockerfile {
-      // Base image
-      from("dockerfile/java")
-      // Add all files on the classpath
-      val files = classpath.files.map { file =>
-        val target = "/app/" + file.getName
-        add(file, target)
-        target
-      }
-      // Add the generated JAR file
-      val jarTarget = s"/app/${jarFile.getName}"
-      add(jarFile, jarTarget)
-	  // Make a colon separated classpath with the JAR file
-      val classpathString = files.mkString(":") + ":" + jarTarget
-      // On launch run Java with the classpath and the found main class
-      entryPoint("java", "-cp", classpathString, mainClass)
+dockerfile in docker := {
+  val jarFile = artifactPath.in(Compile, packageBin).value
+  val classpath = (managedClasspath in Compile).value
+  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+  val jarTarget = s"/app/${jarFile.getName}"
+  // Make a colon separated classpath with the JAR file
+  val classpathString = classpath.files.map("/app/" + _.getName)
+    .mkString(":") + ":" + jarTarget
+  new Dockerfile {
+    // Base image
+    from("dockerfile/java")
+    // Add all files on the classpath
+    classpath.files.foreach { file =>
+      add(file, "/app/")
     }
-  case (_, _, None) =>
-    sys.error("Expected exactly one main class")
+    // Add the JAR file
+    add(jarFile, jarTarget)
+    // On launch run Java with the classpath and the main class
+    entryPoint("java", "-cp", classpathString, mainclass)
+  }
 }
 ```
 
@@ -90,7 +81,7 @@ Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
 import AssemblyKeys._
 import DockerKeys._
-import sbtdocker.Dockerfile
+import sbtdocker.mutable.Dockerfile
 
 dockerSettings
 
@@ -110,11 +101,19 @@ dockerfile in docker := {
 }
 ```
 
-[DockerfileExamples](examples/DockerfileExamples.scala) shows different ways of defining a Dockerfile.
+Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
 ### Building an image
 
+To build an image use the `docker` task.
 Simply run `sbt docker` from your prompt or `docker` in the sbt console.
+
+### Pushing an image
+
+An image that have already been built can be pushed with the `dockerPush` task.
+To both build and push an image use the `dockerBuildAndPush` task.
+
+The `imageName in docker` key is used to determine which image to push.
 
 ### Custom image name
 
@@ -150,9 +149,10 @@ buildOptions in docker := BuildOptions(noCache = Some(true))
 ### Auto packaging
 
 Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposePorts)` can be used.
-This method defines a dockerfile automatically and uses the `package` task to try to generate an artifact.
+This method defines a Dockerfile automatically and uses the `package` task to try to generate an artifact.
 It's intended purpose is to give a very simple way of creating Docker images for new small projects.
 
 ### Example projects
 
 See [example projects](examples).
+

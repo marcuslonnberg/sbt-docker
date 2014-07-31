@@ -5,6 +5,8 @@ import sbt._
 import sbtdocker.Instructions.Add
 
 class DockerBuilderSpec extends FreeSpec with Matchers {
+  import sbtdocker.immutable.Dockerfile
+
   "prepareFiles" - {
     "Add multiple files to different paths" - {
       IO.withTemporaryDirectory { origDir =>
@@ -18,11 +20,10 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
           val fileC = origDir / "x" / "y" / "a"
           val fileCData = createFile(fileC)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/a/b")
-            add(fileB, "/")
-            add(fileC, "/x/y")
-          }
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/a/b")
+            .add(fileB, "/")
+            .add(fileC, "/x/y")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
@@ -37,20 +38,19 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
       }
     }
 
-    "Add two different files to same path" - {
+    "Add two different files to same destination path" - {
       IO.withTemporaryDirectory { origDir =>
         IO.withTemporaryDirectory { stageDir =>
           val fileA = origDir / "a"
-          createFile(fileA)
+          val fileAData = createFile(fileA)
 
           val fileB = origDir / "b"
           val fileBData = createFile(fileB)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/file")
-            // Here could be RUN mv /file /other/path
-            add(fileB, "/file")
-          }
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/dest")
+            // Here could be RUN mv /dest /other/path
+            .add(fileB, "/dest")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 
@@ -64,17 +64,18 @@ class DockerBuilderSpec extends FreeSpec with Matchers {
       }
     }
 
-    "Add same file twice to same path" - {
+    "Add same file twice to same dest" - {
       IO.withTemporaryDirectory { origDir =>
         IO.withTemporaryDirectory { stageDir =>
           val fileA = origDir / "a"
-          val fileAData = createFile(fileA)
+          val fileAData = "a"
+          assume(fileA.createNewFile())
+          IO.write(fileA, fileAData)
 
-          val dockerfile = new Dockerfile {
-            add(fileA, "/file")
-            // Here could be RUN mv /file /other/path
-            add(fileA, "/file")
-          }
+          val dockerfile = Dockerfile.empty
+            .add(fileA, "/dest")
+            // Here could be RUN mv /dest /other/path
+            .add(fileA, "/dest")
 
           DockerBuilder.prepareFiles(dockerfile, stageDir, ConsoleLogger())
 

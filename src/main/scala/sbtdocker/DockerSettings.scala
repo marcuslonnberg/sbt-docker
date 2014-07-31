@@ -15,9 +15,21 @@ object DockerSettings {
       val imageName = (DockerKeys.imageName in docker).value
 
       log.debug("Dockerfile:")
-      log.debug(dockerfile.toInstructionsString)
+      log.debug(dockerfile.mkString)
 
       DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+    },
+    dockerPush := {
+      val log = Keys.streams.value.log
+      val dockerCmd = (DockerKeys.dockerCmd in docker).value
+      val imageName = (DockerKeys.imageName in docker).value
+
+      DockerPush(dockerCmd, imageName, log)
+    },
+    dockerBuildAndPush := {
+      val imageId = docker.value
+      dockerPush.value
+      imageId
     },
     dockerfile in docker := {
       sys.error(

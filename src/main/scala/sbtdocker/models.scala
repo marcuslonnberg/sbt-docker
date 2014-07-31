@@ -14,7 +14,35 @@ case class BuildOptions(noCache: Option[Boolean] = None, rm: Option[Boolean] = N
 case class ImageId(id: String)
 
 object ImageName {
-  def apply(repository: String) = new ImageName(repository = repository)
+  /**
+   * Parse a [[sbtdocker.ImageName]] from a string.
+   */
+  def apply(name: String): ImageName = {
+    val (registry, rest) = name.split("/", 3).toList match {
+      case host :: x :: xs if host.contains(".") || host.contains(":") || host == "localhost" =>
+        (Some(host), x :: xs)
+      case xs =>
+        (None, xs)
+    }
+
+    val (namespace, repoAndTag) = rest match {
+      case n :: r :: Nil=>
+        (Some(n), r)
+      case r :: Nil=>
+        (None, r)
+      case _ =>
+        throw new IllegalArgumentException(s"Invalid image name: '$name'")
+    }
+
+    val (repo, tag) = repoAndTag.split(":", 2) match {
+      case Array(r, t) =>
+        (r, Some(t))
+      case Array(r) =>
+        (r, None)
+    }
+
+    ImageName(registry, namespace, repo, tag)
+  }
 }
 
 /**
@@ -27,10 +55,13 @@ object ImageName {
  * @param tag Tag, for example a version number.
  */
 case class ImageName(registry: Option[String] = None, namespace: Option[String] = None, repository: String, tag: Option[String] = None) {
-  def name = {
+  override def toString = {
     val registryString = registry.fold("")(_ + "/")
     val namespaceString = namespace.fold("")(_ + "/")
     val tagString = tag.fold("")(":" + _)
     registryString + namespaceString + repository + tagString
   }
+
+  @deprecated("Use toString instead.", "0.4.0")
+  def name = toString
 }

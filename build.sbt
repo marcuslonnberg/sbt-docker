@@ -6,7 +6,7 @@ organization := "se.marcuslonnberg"
 
 organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
-version := "0.3.1-SNAPSHOT"
+version := "0.5.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
 
@@ -16,6 +16,7 @@ homepage := Some(url("https://github.com/marcuslonnberg/sbt-docker"))
 
 scmInfo := Some(ScmInfo(url("https://github.com/marcuslonnberg/sbt-docker"), "scm:git:git://github.com:marcuslonnberg/sbt-docker.git"))
 
+scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
 
 publishMavenStyle := true
 
