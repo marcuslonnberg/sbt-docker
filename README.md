@@ -12,7 +12,7 @@ Setup
 
 Add sbt-docker as a dependency in `project/docker.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.4.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.5.0")
 ```
 
 Usage
