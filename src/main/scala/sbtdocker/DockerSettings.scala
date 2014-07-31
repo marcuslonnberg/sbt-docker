@@ -43,11 +43,10 @@ object DockerSettings {
         """.stripMargin)
     },
     target in docker := target.value / "docker",
-    imageName in docker <<= (Keys.organization, Keys.name) map {
-      case ("", name) =>
-        ImageName(name)
-      case (organization, name) =>
-        ImageName(namespace = Some(organization), repository = name)
+    imageName in docker := {
+      val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
+      val name = Keys.normalizedName.value
+      ImageName(namespace = organisation, repository = name)
     },
     dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()
