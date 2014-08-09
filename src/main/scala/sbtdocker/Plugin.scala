@@ -43,10 +43,8 @@ object Plugin extends sbt.Plugin {
 
         DockerPush(dockerPath, imageName, log)
     },
-    dockerBuildAndPush := {
-      val imageId = docker.value
-      dockerPush.value
-      imageId
+    dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
+      build.doFinally(push)
     }
   )
 
