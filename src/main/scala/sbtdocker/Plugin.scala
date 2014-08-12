@@ -44,7 +44,9 @@ object Plugin extends sbt.Plugin {
         DockerPush(dockerPath, imageName, log)
     },
     dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
-      build.doFinally(push)
+      build.flatMap { id =>
+         push.map(_ => id)
+      }
     }
   )
 
