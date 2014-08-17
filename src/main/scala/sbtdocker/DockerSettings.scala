@@ -27,7 +27,9 @@ object DockerSettings {
       DockerPush(dockerCmd, imageName, log)
     },
     dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
-      build.doFinally(push)
+      build.flatMap { id =>
+        push.map(_ => id)
+      }
     },
     dockerfile in docker := {
       sys.error(

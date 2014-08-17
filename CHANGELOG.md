@@ -1,3 +1,7 @@
+## 0.5.2
+
+- Fixed execution order of task `dockerBuildAndPush`
+
 ## 0.5.0
 
 - Added new tasks to push Docker images to a registry: `dockerPush` and `dockerBuildAndPush`
