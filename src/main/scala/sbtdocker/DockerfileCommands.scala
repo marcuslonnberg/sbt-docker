@@ -99,6 +99,8 @@ trait DockerfileCommands {
 
   def runShell(args: String*) = addInstruction(Instructions.Run.shell(args: _*))
 
+  def runRaw(command: String) = addInstruction(Instructions.Run.raw(command))
+
   def cmd(args: String*) = addInstruction(Cmd(args: _*))
 
   def cmdShell(args: String*) = addInstruction(Cmd.shell(args: _*))
