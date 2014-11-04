@@ -62,7 +62,7 @@ object Plugin extends sbt.Plugin {
       }
 
       val appPath = "/app"
-      val libsPath = s"$appPath/libs"
+      val libsPath = s"$appPath/libs/"
       val jarPath = s"$appPath/${jar.name}"
 
       val libFiles = classpath.files.map(libFile => StageFile(libFile, libsPath))
