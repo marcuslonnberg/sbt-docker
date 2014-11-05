@@ -1,5 +1,5 @@
 import sbtdocker._
-import DockerKeys._
+import sbtdocker.Plugin.DockerKeys._
 
 name := "scripted-simple"
 

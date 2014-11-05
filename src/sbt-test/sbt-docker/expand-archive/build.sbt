@@ -1,5 +1,5 @@
 import sbtdocker._
-import DockerKeys._
+import sbtdocker.Plugin.DockerKeys._
 
 name := "scripted-expand-archive"
 
@@ -12,7 +12,7 @@ dockerSettings
 dockerfile in docker := {
   val archive = file("archive.tgz")
   immutable.Dockerfile.empty
-    .from("ubuntu:14.04")
+    .from("busybox")
     .add(archive, "/")
     .cmd("ls", "dir")
 }
