@@ -26,9 +26,9 @@ object ImageName {
     }
 
     val (namespace, repoAndTag) = rest match {
-      case n :: r :: Nil=>
+      case n :: r :: Nil =>
         (Some(n), r)
-      case r :: Nil=>
+      case r :: Nil =>
         (None, r)
       case _ =>
         throw new IllegalArgumentException(s"Invalid image name: '$name'")
@@ -48,9 +48,9 @@ object ImageName {
 /**
  * Name of a Docker image.
  * Format: [registry/][namespace/]repository[:tag]
- * Examples: docker-registry.company.com/scala:2.11 or company/scala:2.11
+ * Examples: `docker-registry.example.com/scala:2.11` or `example/scala:2.11`
  * @param repository Name of the repository.
- * @param registry Registry domain.
+ * @param registry Host and optionally port of the registry, example `docker-registry.example.com:5000`.
  * @param namespace Namespace name.
  * @param tag Tag, for example a version number.
  */
