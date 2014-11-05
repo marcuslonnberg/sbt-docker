@@ -24,8 +24,8 @@ object StageFile {
  */
 case class StageFile(source: File, target: File)
 
-trait DockerfileLike[T <: DockerfileLike[T]] extends DockerfileCommands[T] {
-  this: T =>
+trait DockerfileLike extends DockerfileCommands {
+  type T <: DockerfileLike
 
   def instructions: Seq[Instruction]
 
@@ -34,8 +34,8 @@ trait DockerfileLike[T <: DockerfileLike[T]] extends DockerfileCommands[T] {
   def mkString = instructions.mkString("\n")
 }
 
-trait DockerfileCommands[T <: DockerfileCommands[T]] {
-  this: T =>
+trait DockerfileCommands {
+  type T <: DockerfileCommands
 
   def addInstruction(instruction: Instruction): T
 

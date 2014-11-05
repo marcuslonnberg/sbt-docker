@@ -14,7 +14,7 @@ object DockerBuilder {
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: DockerfileLike[_],
+  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: DockerfileLike,
             stageDir: File, log: Logger): ImageId = {
     log.info(s"Creating docker image with name: '$imageName'")
 
@@ -23,7 +23,7 @@ object DockerBuilder {
     buildImage(dockerPath, buildOptions, imageName, stageDir, log)
   }
 
-  def prepareFiles(dockerFile: DockerfileLike[_], stageDir: File, log: Logger) = {
+  def prepareFiles(dockerFile: DockerfileLike, stageDir: File, log: Logger) = {
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
 
     IO.delete(stageDir)

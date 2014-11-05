@@ -20,7 +20,8 @@ import sbtdocker.{StageFile, DockerfileLike, Instruction}
  * @param stagedFiles Files and directories that should be copied to the stage directory.
  */
 case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty,
-                      var stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike[Dockerfile] {
+                      var stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike {
+  type T = Dockerfile
 
   def addInstruction(instruction: Instruction) = {
     instructions :+= instruction

@@ -23,7 +23,8 @@ object Dockerfile {
  * @param stagedFiles Files and directories that should be copied to the stage directory.
  */
 case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
-                      stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike[Dockerfile] {
+                      stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike {
+  type T = Dockerfile
 
   def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction, stagedFiles)
 
