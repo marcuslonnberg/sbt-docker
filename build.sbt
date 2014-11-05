@@ -8,7 +8,7 @@ organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
 version := "0.5.3-SNAPSHOT"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.0" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % "test"
 
 licenses := Seq("MIT License" -> url("https://github.com/marcuslonnberg/sbt-docker/blob/master/LICENSE"))
 
