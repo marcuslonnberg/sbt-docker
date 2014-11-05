@@ -1,6 +1,3 @@
-import DockerKeys._
-import sbtdocker.Dockerfile
-
 name := "example-package-spray"
 
 organization := "sbtdocker"
@@ -18,8 +15,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-actor" % akkaV
   )
 }
-
-dockerSettings
 
 // Make docker depend on the package task, which generates a jar file of the application code
 docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))

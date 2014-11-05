@@ -1,13 +1,10 @@
-import sbtdocker._
-import sbtdocker.Plugin.DockerKeys._
+import sbtdocker.immutable
 
 name := "scripted-expand-archive"
 
 organization := "sbtdocker"
 
 version := "0.1.0"
-
-dockerSettings
 
 dockerfile in docker := {
   val archive = file("archive.tgz")

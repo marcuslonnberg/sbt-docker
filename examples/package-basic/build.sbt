@@ -1,13 +1,8 @@
-import sbtdocker.{ImageName, Dockerfile}
-import DockerKeys._
-
 name := "example-package-basic"
 
 organization := "sbtdocker"
 
 version := "0.1.0"
-
-dockerSettings
 
 // Make docker depend on the package task, which generates a jar file of the application code
 docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
