@@ -119,13 +119,25 @@ trait DockerfileCommands {
       .stageFile(source, destination)
   }
 
-  def add(source: URL, destination: String) = addInstruction(Add(source.toString, destination))
+  @deprecated("Use addRaw instead.", "todo")
+  def add(source: URL, destination: String) = addRaw(source, destination)
 
-  def add(source: URL, destination: File) = addInstruction(Add(source.toString, destination.toString))
+  @deprecated("Use addRaw instead.", "todo")
+  def add(source: URL, destination: File) = addRaw(source, destination)
 
-  def add(source: String, destination: String) = addInstruction(Add(source, destination))
+  @deprecated("Use addRaw instead.", "todo")
+  def add(source: String, destination: String) = addRaw(source, destination)
 
-  def add(source: String, destination: File) = addInstruction(Add(source, destination.toString))
+  @deprecated("Use addRaw instead.", "todo")
+  def add(source: String, destination: File) = addRaw(source, destination)
+
+  def addRaw(source: URL, destination: String) = addInstruction(Add(source.toString, destination))
+
+  def addRaw(source: URL, destination: File) = addInstruction(Add(source.toString, destination.toString))
+
+  def addRaw(source: String, destination: String) = addInstruction(Add(source, destination))
+
+  def addRaw(source: String, destination: File) = addInstruction(Add(source, destination.toString))
 
   def copy(source: File, destination: String) = {
     addInstruction(Copy(expandPath(source, destination).toString, destination))
@@ -137,13 +149,25 @@ trait DockerfileCommands {
       .stageFile(source, destination)
   }
 
-  def copy(source: URL, destination: String) = addInstruction(Copy(source.toString, destination))
+  @deprecated("Use copyRaw instead.", "todo")
+  def copy(source: URL, destination: String) = copyRaw(source, destination)
 
-  def copy(source: URL, destination: File) = addInstruction(Copy(source.toString, destination.toString))
+  @deprecated("Use copyRaw instead.", "todo")
+  def copy(source: URL, destination: File) = copyRaw(source, destination)
 
-  def copy(source: String, destination: String) = addInstruction(Copy(source, destination))
+  @deprecated("Use copyRaw instead.", "todo")
+  def copy(source: String, destination: String) = copyRaw(source, destination)
 
-  def copy(source: String, destination: File) = addInstruction(Copy(source, destination.toString))
+  @deprecated("Use copyRaw instead.", "todo")
+  def copy(source: String, destination: File) = copyRaw(source, destination)
+
+  def copyRaw(source: URL, destination: String) = addInstruction(Copy(source.toString, destination))
+
+  def copyRaw(source: URL, destination: File) = addInstruction(Copy(source.toString, destination.toString))
+
+  def copyRaw(source: String, destination: String) = addInstruction(Copy(source, destination))
+
+  def copyRaw(source: String, destination: File) = addInstruction(Copy(source, destination.toString))
 
   def entryPoint(args: String*) = addInstruction(EntryPoint(args: _*))
 
