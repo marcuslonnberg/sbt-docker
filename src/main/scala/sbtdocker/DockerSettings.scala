@@ -1,24 +1,14 @@
 package sbtdocker
 
-import sbt.Keys.target
+import sbt.Keys._
 import sbt._
 import sbtdocker.DockerKeys._
+import sbtdocker.Instructions.Add
 
 object DockerSettings {
   lazy val baseDockerSettings = Seq(
-    docker := {
-      val log = Keys.streams.value.log
-      val dockerCmd = (DockerKeys.dockerCmd in docker).value
-      val buildOptions = (DockerKeys.buildOptions in docker).value
-      val stageDir = (target in docker).value
-      val dockerfile = (DockerKeys.dockerfile in docker).value
-      val imageName = (DockerKeys.imageName in docker).value
-
-      log.debug("Dockerfile:")
-      log.debug(dockerfile.mkString)
-
-      DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
-    },
+    docker <<= buildDockerImage(docker),
+    baseDockerImage <<= buildDockerImage(baseDockerImage),
     dockerPush := {
       val log = Keys.streams.value.log
       val dockerCmd = (DockerKeys.dockerCmd in docker).value
@@ -42,15 +32,80 @@ object DockerSettings {
           |}
         """.stripMargin)
     },
+    dockerfile in baseDockerImage := {
+      sys.error(
+        """A Dockerfile is not defined. Please define it with `dockerfile in docker`
+          |
+          |Example:
+          |dockerfile in docker := new Dockerfile {
+          | from("ubuntu")
+          | ...
+          |}
+        """.stripMargin)
+    },
     target in docker := target.value / "docker",
     imageName in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
       ImageName(namespace = organisation, repository = name)
     },
-    dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    imageName in baseDockerImage := {
+      val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
+      val name = Keys.normalizedName.value + "-base"
+      ImageName(namespace = organisation, repository = name)
+    },
+    dockerCmd := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
+    buildOptions in docker := BuildOptions(),
+    buildOptions in baseDockerImage := BuildOptions()
   )
+
+  def buildDockerImage(dockerTask: TaskKey[_]): Def.Initialize[Task[ImageId]] = Def.task {
+    val log = Keys.streams.value.log
+    val dockerCmd = DockerKeys.dockerCmd.value
+    val buildOptions = (DockerKeys.buildOptions in dockerTask).value
+    val stageDir = (target in docker).value
+    val dockerfile = (DockerKeys.dockerfile in dockerTask).value
+    val imageName = (DockerKeys.imageName in dockerTask).value
+    val cacheDir = target.value / s"docker-image-cache" / imageName.toString
+    val cacheFile = cacheDir/ name.value
+
+    log.debug("Dockerfile:")
+    log.debug(dockerfile.mkString)
+
+    /* Wrap actual function in a function that provides basic caching . */
+    val cachedFun = FileFunction.cached(cacheDir, FilesInfo.lastModified, FilesInfo.exists) {
+      (inFiles: Set[File]) => {
+        val imageId = DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+        IO.write(cacheFile, imageId.id)
+        Set(cacheFile)
+      }
+    }
+
+    /** Recursively list all directories so caching will detect changes in subdirectories */
+    def findDirs(file: File): Seq[File] = file.isDirectory match {
+      case true => file +: file.listFiles().flatMap(findDirs)
+      case false => Nil
+    }
+
+    // Normalize instructions that include our temporary tgz files since these change every run.
+    // Changes to these files will be detected by changes to StagedArchive directories.
+    val userInstructions = dockerfile.instructions.map {
+      case Add(src, dest) if src.contains("dockerbuild") => Add("archive", dest)
+      case other => other
+    }
+
+    // To detect changes in the docker file itself we create a fake file based on the hash
+    // of the docker file description.
+    // TODO: use a better hash function here...
+    val fakeDockerFile = target.value / (userInstructions.hashCode.toString + ".docker.hash")
+    log.debug(s"dockerfile caching hashcode: $fakeDockerFile")
+
+    val stagedArchives = dockerfile.stagedArchives.flatMap(d => findDirs(d.file))
+    val stagedFiles = dockerfile.stagedFiles.map(_.source)
+    val fileDependencies = (Seq(fakeDockerFile) ++ stagedArchives ++ stagedFiles).toSet
+
+    ImageId(IO.read(cachedFun(fileDependencies).head))
+  }
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
     docker <<= docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)),

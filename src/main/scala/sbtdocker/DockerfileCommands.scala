@@ -1,5 +1,7 @@
 package sbtdocker
 
+import java.io.File
+
 import sbt._
 import sbtdocker.Instructions._
 import sbtdocker.Utils._
@@ -24,12 +26,36 @@ object StageFile {
  */
 case class StageFile(source: File, target: File)
 
+/**
+ * Container for a directory that should be copied to a path in the stage directory in the form
+ * of a tar.gz file.
+ *
+ * @param file The path that should be compressed.
+ * @param dest Path in the stage directory.
+ */
+case class StagedArchive(file: File, dest: String) {
+  val tempFile = java.io.File.createTempFile("dockerbuild", ".tgz")
+
+  // We lazily build the actual tar ball, only when the SBT caching detects that the contents have
+  // changed.
+  lazy val outputFile = {
+    val parentDir = file.getParent
+    val command = s"tar czvf $tempFile -C $parentDir ${file.getName}"
+    println(command)
+    command.!!
+
+    StageFile(tempFile, expandPath(tempFile, "/"))
+  }
+}
+
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike
 
   def instructions: Seq[Instruction]
 
   def stagedFiles: Seq[StageFile]
+
+  def stagedArchives: Seq[StagedArchive]
 
   def mkString = instructions.mkString("\n")
 }
@@ -81,6 +107,14 @@ trait DockerfileCommands {
   }
 
   /**
+   * Adds an directory that will be transmitted to the docker daemon in the form of a tar.gz file.
+   * This format is convenient when you want to preserve symlinks.
+   * @param archive
+   */
+  def stageArchive(archive: StagedArchive): T
+
+
+  /**
    * Stage multiple files.
    */
   def stageFiles(files: TraversableOnce[StageFile]): T
@@ -115,6 +149,12 @@ trait DockerfileCommands {
   def add(source: File, destination: File) = {
     addInstruction(Add(destination.toString, destination.toString))
       .stageFile(source, destination)
+  }
+
+  def addCompressed(file: File, dest: String): T = {
+    val archive = StagedArchive(file, dest)
+    stageArchive(archive)
+    addInstruction(Add(archive.tempFile.getName, dest))
   }
 
   def add(source: URL, destination: String) = addInstruction(Add(source.toString, destination))

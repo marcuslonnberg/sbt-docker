@@ -30,6 +30,7 @@ object DockerBuilder {
 
     IO.write(stageDir / "Dockerfile", dockerFile.mkString)
     copyFiles(dockerFile.stagedFiles, stageDir, log)
+    copyFiles(dockerFile.stagedArchives.map(_.outputFile), stageDir, log)
   }
 
   def copyFiles(files: Seq[StageFile], stageDir: File, log: Logger) = {
