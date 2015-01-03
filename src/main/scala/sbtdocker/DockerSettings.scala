@@ -3,12 +3,13 @@ package sbtdocker
 import sbt.Keys._
 import sbt._
 import sbtdocker.DockerKeys._
-import sbtdocker.Instructions.Add
+import sbtdocker.Instructions.{From, Add}
 
 object DockerSettings {
   lazy val baseDockerSettings = Seq(
-    docker <<= buildDockerImage(docker),
-    baseDockerImage <<= buildDockerImage(baseDockerImage),
+    docker <<= buildDockerImage(docker, cache = true),
+    dockerNoCache <<= buildDockerImage(docker, cache = false),
+    baseDockerImage <<= buildDockerImage(baseDockerImage, cache = true),
     dockerPush := {
       val log = Keys.streams.value.log
       val dockerCmd = (DockerKeys.dockerCmd in docker).value
@@ -59,7 +60,7 @@ object DockerSettings {
     buildOptions in baseDockerImage := BuildOptions()
   )
 
-  def buildDockerImage(dockerTask: TaskKey[_]): Def.Initialize[Task[ImageId]] = Def.task {
+  def buildDockerImage(dockerTask: TaskKey[_], cache: Boolean): Def.Initialize[Task[ImageId]] = Def.task {
     val log = Keys.streams.value.log
     val dockerCmd = DockerKeys.dockerCmd.value
     val buildOptions = (DockerKeys.buildOptions in dockerTask).value
@@ -71,40 +72,55 @@ object DockerSettings {
 
     log.debug("Dockerfile:")
     log.debug(dockerfile.mkString)
-
-    /* Wrap actual function in a function that provides basic caching . */
-    val cachedFun = FileFunction.cached(cacheDir, FilesInfo.lastModified, FilesInfo.exists) {
-      (inFiles: Set[File]) => {
-        val imageId = DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
-        IO.write(cacheFile, imageId.id)
-        Set(cacheFile)
+    if (cache) {
+      /* Wrap actual function in a function that provides basic caching . */
+      val cachedFun = FileFunction.cached(cacheDir, FilesInfo.lastModified, FilesInfo.exists) {
+        (inFiles: Set[File]) => {
+          val imageId = DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+          IO.write(cacheFile, imageId.id)
+          Set(cacheFile)
+        }
       }
+
+      /** Recursively list all directories so caching will detect changes in subdirectories */
+      def findDirs(file: File): Seq[File] = file.isDirectory match {
+        case true => file +: file.listFiles().flatMap(findDirs)
+        case false => Nil
+      }
+
+      // Normalize instructions that include our temporary tgz files since these change every run.
+      // Changes to these files will be detected by changes to StagedArchive directories.
+      // Also, convert names of the base image to ids to detect changes better.
+      val userInstructions = dockerfile.instructions.map {
+        case Add(src, dest) if src.contains("dockerbuild") => Add("archive", dest)
+        case From(baseImageName) => From(s"$dockerCmd history -q $baseImageName".!!.split("\n").head)
+        case other => other
+      }
+
+      // To detect changes in the docker file itself we create a fake file based on the hash
+      // of the docker file description.
+      // TODO: use a better hash function here...
+      val fakeDockerFile = target.value / (userInstructions.hashCode.toString + ".docker.hash")
+      log.debug(s"dockerfile caching hashcode: $fakeDockerFile")
+
+      val stagedArchives = dockerfile.stagedArchives.flatMap(d => findDirs(d.file))
+      val stagedFiles = dockerfile.stagedFiles.map(_.source)
+      val fileDependencies = (Seq(fakeDockerFile) ++ stagedArchives ++ stagedFiles).toSet
+
+      val cachedId = IO.read(cachedFun(fileDependencies).head)
+      val imageExists = try { s"docker history $cachedId".!!; true} catch {
+        case _: Exception => false
+      }
+
+      if (imageExists) {
+        // The cached image stil exists, return it.
+        ImageId(cachedId)
+      } else {
+        DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+      }
+    } else {
+      DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
     }
-
-    /** Recursively list all directories so caching will detect changes in subdirectories */
-    def findDirs(file: File): Seq[File] = file.isDirectory match {
-      case true => file +: file.listFiles().flatMap(findDirs)
-      case false => Nil
-    }
-
-    // Normalize instructions that include our temporary tgz files since these change every run.
-    // Changes to these files will be detected by changes to StagedArchive directories.
-    val userInstructions = dockerfile.instructions.map {
-      case Add(src, dest) if src.contains("dockerbuild") => Add("archive", dest)
-      case other => other
-    }
-
-    // To detect changes in the docker file itself we create a fake file based on the hash
-    // of the docker file description.
-    // TODO: use a better hash function here...
-    val fakeDockerFile = target.value / (userInstructions.hashCode.toString + ".docker.hash")
-    log.debug(s"dockerfile caching hashcode: $fakeDockerFile")
-
-    val stagedArchives = dockerfile.stagedArchives.flatMap(d => findDirs(d.file))
-    val stagedFiles = dockerfile.stagedFiles.map(_.source)
-    val fileDependencies = (Seq(fakeDockerFile) ++ stagedArchives ++ stagedFiles).toSet
-
-    ImageId(IO.read(cachedFun(fileDependencies).head))
   }
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
