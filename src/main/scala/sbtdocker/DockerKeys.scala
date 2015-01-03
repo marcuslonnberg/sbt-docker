@@ -4,6 +4,8 @@ import sbt._
 
 object DockerKeys {
   val docker = taskKey[ImageId]("Build a Docker image.")
+  val dockerNoCache = taskKey[ImageId]("Build a Docker image avoiding sbt's cache.")
+  val baseDockerImage = taskKey[ImageId]("Build the base Docker image.")
   val dockerBuildAndPush = taskKey[ImageId]("Build a Docker image and pushes it to a registry.")
   val dockerPush = taskKey[Unit]("Push a already built Docker image to a registry.")
 
