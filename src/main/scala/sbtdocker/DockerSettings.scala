@@ -78,7 +78,7 @@ object DockerSettings {
         }
         val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
 
-        dockerfile.add(libsPath, libsPath)
+        dockerfile.addRaw(libsPath, libsPath)
         dockerfile.add(artifact, artifactPath)
         dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
 
