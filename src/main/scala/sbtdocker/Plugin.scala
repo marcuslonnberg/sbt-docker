@@ -54,7 +54,7 @@ object Plugin extends sbt.Plugin {
     docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin)),
     mainClass in docker <<= mainClass in docker or mainClass.in(Compile, packageBin),
     dockerfile in docker := {
-      val classpath = (managedClasspath in Compile).value
+      val classpath = (managedClasspath in Runtime).value
       val jar = artifactPath.in(Compile, packageBin).value
       val mainclass = (mainClass in docker).value.getOrElse {
         sys.error("No main class found or multiple main classes exists. " +
@@ -65,7 +65,7 @@ object Plugin extends sbt.Plugin {
       val libsPath = s"$appPath/libs"
       val jarPath = s"$appPath/${jar.name}"
 
-      val libFiles = classpath.files.map(libFile => StageFile(libFile, libsPath))
+      val libFiles = classpath.files.map(libFile => StageFile(libFile, libsPath + "/" + libFile.getName))
       val classpathString = s"${libFiles.map(_.target).mkString(":")}:$jarPath"
 
       new Dockerfile {
