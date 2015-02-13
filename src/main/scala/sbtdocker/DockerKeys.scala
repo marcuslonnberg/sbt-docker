@@ -11,4 +11,5 @@ object DockerKeys {
   val imageName = taskKey[ImageName]("Name of the built image.")
   val dockerCmd = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
+  val additionalTags = settingKey[AdditionalTags]("Additional tags for the built image.")
 }

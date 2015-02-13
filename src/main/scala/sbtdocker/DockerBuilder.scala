@@ -15,12 +15,12 @@ object DockerBuilder {
    * @param log logger
    */
   def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: DockerfileLike,
-            stageDir: File, log: Logger): ImageId = {
+            stageDir: File, log: Logger, additionalTags: AdditionalTags): ImageId = {
     log.info(s"Creating docker image with name: '$imageName'")
 
     prepareFiles(dockerFile, stageDir, log)
 
-    buildImage(dockerPath, buildOptions, imageName, stageDir, log)
+    buildImage(dockerPath, buildOptions, imageName, stageDir, log, additionalTags)
   }
 
   def prepareFiles(dockerFile: DockerfileLike, stageDir: File, log: Logger) = {
@@ -61,7 +61,7 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: File, log: Logger): ImageId = {
+  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: File, log: Logger, additionalTags: AdditionalTags): ImageId = {
     val processLog = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
@@ -87,6 +87,15 @@ object DockerBuilder {
     imageId match {
       case Some(id) =>
         log.info(s"Successfully built Docker image: $imageName")
+        log.info(s"Created image has id: ${id.id}")
+        additionalTags.tags.foreach { tag =>
+          log.info(s"Adding tag '$tag' to image")
+          val command = dockerPath :: "tag" :: "-f" :: id.id :: imageName.registry.map(_ + "/").getOrElse("") + imageName.repository + ":" + tag :: Nil
+          val processOutput = Process(command).lines(processLog)
+          processOutput.foreach { line =>
+            log.info(line)
+          }
+        }
         id
       case None =>
         sys.error("Could not parse image id")

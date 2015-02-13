@@ -13,11 +13,12 @@ object DockerSettings {
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
       val imageName = (DockerKeys.imageName in docker).value
+      val additionalTags = (DockerKeys.additionalTags in docker).value
 
       log.debug("Dockerfile:")
       log.debug(dockerfile.mkString)
 
-      DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+      DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log, additionalTags)
     },
     dockerPush := {
       val log = Keys.streams.value.log
@@ -49,7 +50,8 @@ object DockerSettings {
       ImageName(namespace = organisation, repository = name)
     },
     dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    additionalTags in docker := AdditionalTags(Seq())
   )
 
   def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
