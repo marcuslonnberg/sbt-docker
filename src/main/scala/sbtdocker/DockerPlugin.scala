@@ -12,9 +12,8 @@ object DockerPlugin extends AutoPlugin {
     val docker = DockerKeys.docker
     val dockerfile = DockerKeys.dockerfile
     val dockerCmd = DockerKeys.dockerCmd
-    val imageName = DockerKeys.imageName
+    val imageNames = DockerKeys.imageNames
     val buildOptions = DockerKeys.buildOptions
-    val additionalTags = DockerKeys.additionalTags
 
     type Dockerfile = sbtdocker.Dockerfile
     val ImageId = sbtdocker.ImageId
@@ -23,8 +22,6 @@ object DockerPlugin extends AutoPlugin {
     type ImageName = sbtdocker.ImageName
     val BuildOptions = sbtdocker.BuildOptions
     type BuildOptions = sbtdocker.BuildOptions
-    val AdditionalTags = sbtdocker.AdditionalTags
-    type AdditionalTags = sbtdocker.AdditionalTags
 
     def dockerAutoPackage(fromImage: String = "dockerfile/java",
                           exposePorts: Seq[Int] = Seq.empty): Seq[sbt.Def.Setting[_]] = {

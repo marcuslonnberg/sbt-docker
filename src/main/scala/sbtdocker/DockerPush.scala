@@ -9,24 +9,27 @@ object DockerPush {
    * Push an image to a registry or docker hub
    *
    * @param dockerPath path to the docker binary
-   * @param imageName name of the image to push
+   * @param imageNames names of the images to push
    * @param log logger
    */
-  def apply(dockerPath: String, imageName: ImageName, log: Logger) {
-    log.info(s"Pushing docker image with name: '$imageName'")
+  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger) {
+    imageNames.foreach {
+      imageName =>
+        log.info(s"Pushing docker image with name: '$imageName'")
 
-    val processLog = ProcessLogger({ line =>
-      log.info(line)
-    }, { line =>
-      log.info(line)
-    })
+        val processLog = ProcessLogger({ line =>
+          log.info(line)
+        }, { line =>
+          log.info(line)
+        })
 
-    val command = dockerPath :: "push" :: imageName.toString :: Nil
-    log.debug(s"Running command: '${command.mkString(" ")}'")
+        val command = dockerPath :: "push" :: imageName.toString :: Nil
+        log.debug(s"Running command: '${command.mkString(" ")}'")
 
-    val processOutput = Process(command).lines(processLog)
-    processOutput.foreach { line =>
-      log.info(line)
+        val processOutput = Process(command).lines(processLog)
+        processOutput.foreach { line =>
+          log.info(line)
+        }
     }
   }
 }

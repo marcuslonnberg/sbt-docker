@@ -65,5 +65,3 @@ case class ImageName(registry: Option[String] = None, namespace: Option[String] 
   @deprecated("Use toString instead.", "0.4.0")
   def name = toString
 }
-
-case class AdditionalTags(tags: Seq[String])

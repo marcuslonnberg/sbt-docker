@@ -8,8 +8,7 @@ object DockerKeys {
   val dockerPush = taskKey[Unit]("Push a already built Docker image to a registry.")
 
   val dockerfile = taskKey[DockerfileLike]("Definition of the Dockerfile that should be built.")
-  val imageName = taskKey[ImageName]("Name of the built image.")
+  val imageNames = taskKey[Seq[ImageName]]("Names of the built image.")
   val dockerCmd = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
-  val additionalTags = settingKey[AdditionalTags]("Additional tags for the built image.")
 }
