@@ -1,6 +1,6 @@
 package sbtdocker.mutable
 
-import sbtdocker.{StageFile, DockerfileLike, Instruction}
+import sbtdocker.{DockerfileLike, Instruction}
 
 /**
  * Mutable Dockerfile.
@@ -16,11 +16,9 @@ import sbtdocker.{StageFile, DockerfileLike, Instruction}
  *  }
  *  }}}
  *
- * @param instructions Ordered sequence of Dockerfile instructions.
- * @param stagedFiles Files and directories that should be copied to the stage directory.
+ * @param instructions Ordered sequence of instructions.
  */
-case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty,
-                      var stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike {
+case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty) extends DockerfileLike {
   type T = Dockerfile
 
   def addInstruction(instruction: Instruction) = {
@@ -28,13 +26,8 @@ case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty,
     this
   }
 
-  def stageFile(file: StageFile) = {
-    stagedFiles :+= file
-    this
-  }
-
-  def stageFiles(files: TraversableOnce[StageFile]) = {
-    stagedFiles ++= files
+  def addInstructions(instructions: TraversableOnce[Instruction]) = {
+    this.instructions ++= instructions
     this
   }
 }

@@ -1,3 +1,5 @@
+enablePlugins(DockerPlugin)
+
 name := "scripted-auto-package"
 
 organization := "sbtdocker"

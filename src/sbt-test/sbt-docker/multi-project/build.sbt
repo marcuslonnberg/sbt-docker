@@ -2,6 +2,7 @@ organization in ThisBuild := "sbtdocker"
 
 lazy val alfa = project.in(file("alfa"))
   .settings(name := "scripted-multi-project-alfa")
+  .enablePlugins(DockerPlugin)
   .settings(dockerfile in docker := new Dockerfile {
     from("busybox")
     entryPoint("echo", "alfa")
@@ -9,6 +10,7 @@ lazy val alfa = project.in(file("alfa"))
 
 lazy val bravo = project.in(file("bravo"))
   .settings(name := "scripted-multi-project-bravo")
+  .enablePlugins(DockerPlugin)
   .settings(dockerfile in docker := new Dockerfile {
     from("busybox")
     entryPoint("echo", "bravo")

@@ -15,9 +15,9 @@ object DockerSettings {
       val imageNames = (DockerKeys.imageNames in docker).value
 
       log.debug("Dockerfile:")
-      log.debug(dockerfile.mkString)
+      // TODO: log.debug(dockerfile.mkString)
 
-      DockerBuilder(dockerCmd, buildOptions, imageNames, dockerfile, stageDir, log)
+      DockerBuilder(dockerfile, DefaultDockerfileProcessor, imageNames, stageDir, dockerCmd, buildOptions, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log

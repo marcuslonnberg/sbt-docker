@@ -8,26 +8,26 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
     From("image"),
     Maintainer("marcus"),
-    Run("echo", "docker"),
-    Run.shell("echo", "docker"),
-    Cmd("cmd", "arg"),
-    Cmd.shell("cmd", "arg"),
-    Expose(80, 8080),
+    Run.exec(Seq("echo","docker")),
+    Run.shell(Seq("echo", "docker")),
+    Cmd.exec(Seq("cmd", "arg")),
+    Cmd.shell(Seq("cmd", "arg")),
+    Expose(Seq(80, 8080)),
     Env("key", "value"),
-    Add("a", "b"),
-    Copy("a", "b"),
-    EntryPoint("entrypoint", "arg"),
-    EntryPoint.shell("entrypoint", "arg"),
+    AddRaw("a", "b"),
+    CopyRaw("a", "b"),
+    EntryPoint.exec(Seq("entrypoint", "arg")),
+    EntryPoint.shell(Seq("entrypoint", "arg")),
     Volume("mountpoint"),
     User("marcus"),
     WorkDir("path"),
-    OnBuild(Run("echo", "123"))
+    OnBuild(Run.exec(Seq("echo", "123")))
   )
 
-  test("Instructions string is in sequence and matches instructions") {
+  test("Instructions string is in correct order and matches instructions") {
     val dockerfile = immutable.Dockerfile(allInstructions)
 
-    dockerfile.mkString shouldEqual
+    staged(dockerfile).instructionsString shouldEqual
       """FROM image
         |MAINTAINER marcus
         |RUN ["echo", "docker"]
@@ -35,15 +35,19 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
         |CMD ["cmd", "arg"]
         |CMD cmd arg
         |EXPOSE 80 8080
-        |ENV key value
+        |ENV key=value
         |ADD a b
         |COPY a b
         |ENTRYPOINT ["entrypoint", "arg"]
         |ENTRYPOINT entrypoint arg
-        |VOLUME mountpoint
+        |VOLUME ["mountpoint"]
         |USER marcus
         |WORKDIR path
         |ONBUILD RUN ["echo", "123"]""".stripMargin
+  }
+
+  def staged(dockerfile: immutable.Dockerfile): StagedDockerfile = {
+    DefaultDockerfileProcessor(dockerfile, file("/"))
   }
 
   test("addInstruction changes the Dockerfile by adding a instruction to the end") {
@@ -76,7 +80,7 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .volume("mountpoint")
       .user("marcus")
       .workDir("path")
-      .onBuild(Run("echo", "123"))
+      .onBuild(Run.exec(Seq("echo", "123")))
 
     withMethods shouldEqual predefined
   }
@@ -90,13 +94,13 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .entryPoint("echo", "arg \"with\t\nspaces")
       .entryPointShell("echo", "arg \"with\t\nspaces")
 
-    dockerfile.mkString shouldEqual
+    staged(dockerfile).instructionsString shouldEqual
       """RUN ["echo", "arg \"with\t\nspaces"]
-        |RUN echo "arg \"with\t\nspaces"
+        |RUN echo arg\ \"with\t\nspaces
         |CMD ["echo", "arg \"with\t\nspaces"]
-        |CMD echo "arg \"with\t\nspaces"
+        |CMD echo arg\ \"with\t\nspaces
         |ENTRYPOINT ["echo", "arg \"with\t\nspaces"]
-        |ENTRYPOINT echo "arg \"with\t\nspaces"""".stripMargin
+        |ENTRYPOINT echo arg\ \"with\t\nspaces""".stripMargin
   }
 
   test("Add and copy a file to /") {
@@ -106,25 +110,8 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .copy(sourceFile, "/")
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
-      Add("/xyz", "/"),
-      Copy("/xyz", "/"))
-    dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
-      StageFile(sourceFile, file("/xyz")),
-      StageFile(sourceFile, file("/xyz")))
-  }
-
-  test("Add and copy a file to a specified destination") {
-    val sourceFile = file("/tmp/xyz")
-    val d = immutable.Dockerfile.empty
-      .add(sourceFile, "abc")
-      .copy(sourceFile, "xyz")
-
-    d.instructions should contain theSameElementsInOrderAs Seq(
-      Add("abc", "abc"),
-      Copy("xyz", "xyz"))
-    d.stagedFiles should contain theSameElementsInOrderAs Seq(
-      StageFile(sourceFile, file("abc")),
-      StageFile(sourceFile, file("xyz")))
+      Add(Seq(CopyFile(sourceFile)), "/"),
+      Copy(Seq(CopyFile(sourceFile)), "/"))
   }
 
   test("Adding a single source file to multiple paths") {
@@ -138,36 +125,32 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .copy(sourceFile, "/z")
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
-      Add("/x/y", "/x/y"),
-      Add("/z", "/z"),
-      Add("/z", "/z"),
-      Copy("/x/y", "/x/y"),
-      Copy("/z", "/z"),
-      Copy("/z", "/z"))
-    dockerfile.stagedFiles should contain theSameElementsInOrderAs Seq(
-      StageFile(sourceFile, file("/x/y")),
-      StageFile(sourceFile, file("/z")),
-      StageFile(sourceFile, file("/z")),
-      StageFile(sourceFile, file("/x/y")),
-      StageFile(sourceFile, file("/z")),
-      StageFile(sourceFile, file("/z")))
+      Add(Seq(CopyFile(sourceFile)), "/x/y"),
+      Add(Seq(CopyFile(sourceFile)), "/z"),
+      Add(Seq(CopyFile(sourceFile)), "/z"),
+      Copy(Seq(CopyFile(sourceFile)), "/x/y"),
+      Copy(Seq(CopyFile(sourceFile)), "/z"),
+      Copy(Seq(CopyFile(sourceFile)), "/z"))
   }
 
+  // TODO: move
   test("OnBuild instruction should correctly generate instruction string") {
-    val onBuild = OnBuild(Run("echo", "123"))
+    val onBuild = OnBuild(Run.exec(Seq("echo", "123")))
 
     onBuild.toString shouldEqual """ONBUILD RUN ["echo", "123"]"""
   }
 
+  // TODO: move
   test("Run, EntryPoint and Cmd should support shell format") {
-    Run.shell("a", "b", "\"c\"").toString shouldEqual """RUN a b \"c\""""
-    EntryPoint.shell("a", "b", "\"c\"").toString shouldEqual """ENTRYPOINT a b \"c\""""
-    Cmd.shell("a", "b", "\"c\"").toString shouldEqual """CMD a b \"c\""""
+    Run.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """RUN a b \"c\""""
+    EntryPoint.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """ENTRYPOINT a b \"c\""""
+    Cmd.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """CMD a b \"c\""""
   }
 
+  // TODO: move
   test("Run, EntryPoint and Cmd should support exec format") {
-    Run("a", "b", "\"c\"").toString shouldEqual """RUN ["a", "b", "\"c\""]"""
-    EntryPoint("a", "b", "\"c\"").toString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
-    Cmd("a", "b", "\"c\"").toString shouldEqual """CMD ["a", "b", "\"c\""]"""
+    Run.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """RUN ["a", "b", "\"c\""]"""
+    EntryPoint.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
+    Cmd.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """CMD ["a", "b", "\"c\""]"""
   }
 }

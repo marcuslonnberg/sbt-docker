@@ -4,7 +4,7 @@ import java.net.URL
 
 import org.scalatest.{FlatSpec, Matchers}
 import sbt.file
-import sbtdocker.{ImageName, StageFile}
+import sbtdocker.{CopyFile, ImageName}
 
 class ImmutableDockerfileSpec extends FlatSpec with Matchers {
 
@@ -49,50 +49,34 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       .volume("/srv")
       .user("marcus")
       .workDir("/srv")
-      .onBuild(Run("echo", "text"))
+      .onBuild(Run.exec(Seq("echo", "text")))
 
     val instructions = Seq(
       From("image"),
       From("ubuntu"),
       Maintainer("marcus"),
       Maintainer("marcus <marcus@domain.tld>"),
-      Run("echo", "1"),
-      Run.shell("echo", "2"),
-      Cmd("echo", "1"),
-      Cmd.shell("echo", "2"),
-      Expose(80, 443),
+      Run.exec(Seq("echo", "1")),
+      Run.shell(Seq("echo", "2")),
+      Cmd.exec(Seq("echo", "1")),
+      Cmd.shell(Seq("echo", "2")),
+      Expose(Seq(80, 443)),
       Env("key", "value"),
-      Add(file1.toString, "/"),
-      Add(file2.toString, file2.toString),
-      Add(url1.toString, "/"),
-      Add(url2.toString, file2.toString),
-      Copy(file1.toString, "/"),
-      Copy(file2.toString, file2.toString),
-      Copy(url1.toString, "/"),
-      Copy(url2.toString, file2.toString),
-      EntryPoint("echo", "1"),
-      EntryPoint.shell("echo", "2"),
+      Add(Seq(CopyFile(file1)), "/"),
+      Add(Seq(CopyFile(file2)), file2.toString),
+      AddRaw(url1.toString, "/"),
+      AddRaw(url2.toString, file2.toString),
+      Copy(Seq(CopyFile(file1)), "/"),
+      Copy(Seq(CopyFile(file2)), file2.toString),
+      CopyRaw(url1.toString, "/"),
+      CopyRaw(url2.toString, file2.toString),
+      EntryPoint.exec(Seq("echo", "1")),
+      EntryPoint.shell(Seq("echo", "2")),
       Volume("/srv"),
       User("marcus"),
       WorkDir("/srv"),
-      OnBuild(Run("echo", "text")))
+      OnBuild(Run.exec(Seq("echo", "text"))))
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
-  }
-
-  it should "stage files on Add and Copy instructions" in {
-    val src = file("src")
-    val dest = file("dest")
-
-    val Empty = Dockerfile.empty
-
-    def test(df: Dockerfile) = {
-      df.stagedFiles should contain theSameElementsAs Seq(StageFile(src, dest))
-    }
-
-    test(Empty.add(src, dest))
-    test(Empty.add(src, "dest"))
-    test(Empty.copy(src, dest))
-    test(Empty.copy(src, "dest"))
   }
 }

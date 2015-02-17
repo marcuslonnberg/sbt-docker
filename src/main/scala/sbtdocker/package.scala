@@ -1,11 +1,9 @@
 package object sbtdocker {
-  type Instruction = Instructions.Instruction
-
   val Dockerfile = mutable.Dockerfile
   type Dockerfile = mutable.Dockerfile
 
-  @deprecated("Renamed to StageFile.", "0.4.0")
-  val CopyPath = StageFile
-  @deprecated("Renamed to StageFile.", "0.4.0")
-  type CopyPath = StageFile
+  @deprecated("Use instruction with same name instead", "0.6.0")
+  type StageFile = Instructions.StageFile
+  @deprecated("Use instruction with same name instead", "0.6.0")
+  val StageFile = Instructions.StageFile
 }

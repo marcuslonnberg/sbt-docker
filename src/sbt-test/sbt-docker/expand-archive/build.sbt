@@ -1,5 +1,7 @@
 import sbtdocker.immutable
 
+enablePlugins(DockerPlugin)
+
 name := "scripted-expand-archive"
 
 organization := "sbtdocker"

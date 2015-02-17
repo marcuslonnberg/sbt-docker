@@ -1,6 +1,6 @@
 package sbtdocker.immutable
 
-import sbtdocker.{StageFile, DockerfileLike, Instruction}
+import sbtdocker.{DockerfileLike, Instruction}
 
 object Dockerfile {
   def empty = Dockerfile()
@@ -19,16 +19,12 @@ object Dockerfile {
  *    .cmd("java", "-jar", "app.jar")
  *  }}}
  *
- * @param instructions Ordered sequence of Dockerfile instructions.
- * @param stagedFiles Files and directories that should be copied to the stage directory.
+ * @param instructions Ordered sequence of instructions.
  */
-case class Dockerfile(instructions: Seq[Instruction] = Seq.empty,
-                      stagedFiles: Seq[StageFile] = Seq.empty) extends DockerfileLike {
+case class Dockerfile(instructions: Seq[Instruction] = Seq.empty) extends DockerfileLike {
   type T = Dockerfile
 
-  def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction, stagedFiles)
+  def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction)
 
-  def stageFile(file: StageFile) = Dockerfile(instructions, stagedFiles :+ file)
-
-  def stageFiles(files: TraversableOnce[StageFile]) = Dockerfile(instructions, stagedFiles ++ files)
+  def addInstructions(instructions: TraversableOnce[Instruction]) = Dockerfile(this.instructions ++ instructions)
 }

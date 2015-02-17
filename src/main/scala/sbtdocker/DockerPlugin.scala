@@ -3,7 +3,6 @@ package sbtdocker
 import sbt._
 
 object DockerPlugin extends AutoPlugin {
-  // Automatically enable the plugin
   override def trigger = allRequirements
 
   object autoImport {

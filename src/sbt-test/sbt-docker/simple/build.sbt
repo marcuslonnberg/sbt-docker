@@ -1,3 +1,5 @@
+enablePlugins(DockerPlugin)
+
 name := "scripted-simple"
 
 organization := "sbtdocker"
