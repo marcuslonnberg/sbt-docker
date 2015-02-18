@@ -3,6 +3,7 @@ package sbtdocker
 import sbt.Keys.target
 import sbt._
 import sbtdocker.DockerKeys._
+import staging.DefaultDockerfileProcessor
 
 object DockerSettings {
   lazy val baseDockerSettings = Seq(

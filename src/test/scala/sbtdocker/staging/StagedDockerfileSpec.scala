@@ -1,7 +1,8 @@
-package sbtdocker
+package sbtdocker.staging
 
 import org.scalatest.{FlatSpec, Matchers}
 import sbt._
+import sbtdocker.CopyFile
 import sbtdocker.Instructions.{Expose, From, Maintainer}
 
 class StagedDockerfileSpec extends FlatSpec with Matchers {

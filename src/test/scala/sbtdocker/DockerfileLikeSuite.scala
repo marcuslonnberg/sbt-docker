@@ -3,6 +3,7 @@ package sbtdocker
 import org.scalatest.{FunSuite, Matchers}
 import sbt.file
 import sbtdocker.Instructions._
+import staging.{DefaultDockerfileProcessor, StagedDockerfile}
 
 class DockerfileLikeSuite extends FunSuite with Matchers {
   val allInstructions = Seq(

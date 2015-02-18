@@ -1,6 +1,7 @@
 package sbtdocker
 
 import sbt._
+import staging.{DockerfileProcessor, StagedDockerfile}
 
 import scala.sys.process.{Process, ProcessLogger}
 
