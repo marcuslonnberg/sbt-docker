@@ -244,6 +244,13 @@ object Instructions {
     def apply(source: SourceFile, destination: String): StageFile = StageFile(Seq(source), destination)
   }
 
+  /**
+   * Stages files. Only adds files and directories to the staging directory, will not yield an
+   * instruction in the Dockerfile.
+   * To use the staged files use the [[sbtdocker.Instructions.AddRaw]] and [[sbtdocker.Instructions.CopyRaw]] instructions.
+   * @param sources Source files.
+   * @param destination Destination path.
+   */
   case class StageFile(sources: Seq[SourceFile], destination: String) extends StagedFileInstruction {
     def dockerInstruction(sources: Seq[String], destination: String) = None
   }
