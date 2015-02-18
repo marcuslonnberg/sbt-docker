@@ -6,30 +6,40 @@ import scala.sys.process.{Process, ProcessLogger}
 
 object DockerPush {
   /**
-   * Push an image to a registry or docker hub
+   * Push Docker images to a registry.
    *
    * @param dockerPath path to the docker binary
    * @param imageNames names of the images to push
    * @param log logger
    */
-  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger) {
-    imageNames.foreach {
-      imageName =>
-        log.info(s"Pushing docker image with name: '$imageName'")
+  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger): Unit = {
+    imageNames.foreach { imageName =>
+      apply(dockerPath, imageName, log)
+    }
+  }
 
-        val processLog = ProcessLogger({ line =>
-          log.info(line)
-        }, { line =>
-          log.info(line)
-        })
+  /**
+   * Push a Docker image to a registry.
+   *
+   * @param dockerPath path to the docker binary
+   * @param imageName name of the image to push
+   * @param log logger
+   */
+  def apply(dockerPath: String, imageName: ImageName, log: Logger): Unit = {
+    log.info(s"Pushing docker image with name: '$imageName'")
 
-        val command = dockerPath :: "push" :: imageName.toString :: Nil
-        log.debug(s"Running command: '${command.mkString(" ")}'")
+    val processLog = ProcessLogger({ line =>
+      log.info(line)
+    }, { line =>
+      log.info(line)
+    })
 
-        val processOutput = Process(command).lines(processLog)
-        processOutput.foreach { line =>
-          log.info(line)
-        }
+    val command = dockerPath :: "push" :: imageName.toString :: Nil
+    log.debug(s"Running command: '${command.mkString(" ")}'")
+
+    val processOutput = Process(command).lines(processLog)
+    processOutput.foreach { line =>
+      log.info(line)
     }
   }
 }
