@@ -43,10 +43,13 @@ object DockerSettings {
         """.stripMargin)
     },
     target in docker := target.value / "docker",
-    imageNames in docker := {
+    imageName in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
-      Seq(ImageName(namespace = organisation, repository = name))
+      ImageName(namespace = organisation, repository = name)
+    },
+    imageNames in docker := {
+      Seq(imageName in docker value)
     },
     dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()

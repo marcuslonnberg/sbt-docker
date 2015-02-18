@@ -33,17 +33,21 @@ dockerfile in docker := {
 }
 
 // Set a custom image name
-imageName in docker := {
-  ImageName(
+imageNames in docker := {
+  val imageName = ImageName(
     namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value))
+  Seq(imageName, imageName.copy(tag = Some("latest")))
 }
 
 val check = taskKey[Unit]("Check")
 
 check := {
-  val process = Process("docker", Seq("run", (imageName in docker).value.toString))
-  val out = process.!!
-  if (out.trim != "Hello World") sys.error("Unexpected output: " + out)
+  val names = (imageNames in docker).value
+  names.foreach { imageName =>
+    val process = Process("docker", Seq("run", imageName.toString))
+    val out = process.!!
+    if (out.trim != "Hello World") sys.error("Unexpected output: " + out)
+  }
 }

@@ -12,6 +12,8 @@ object DockerPlugin extends AutoPlugin {
     val docker = DockerKeys.docker
     val dockerfile = DockerKeys.dockerfile
     val dockerCmd = DockerKeys.dockerCmd
+    @deprecated("Use imageNames instead.", "todo")
+    val imageName = DockerKeys.imageName
     val imageNames = DockerKeys.imageNames
     val buildOptions = DockerKeys.buildOptions
 
