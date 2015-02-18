@@ -11,7 +11,9 @@ case class BuildOptions(noCache: Option[Boolean] = None, rm: Option[Boolean] = N
  * Id of an Docker image.
  * @param id Id as a hexadecimal digit string.
  */
-case class ImageId(id: String)
+case class ImageId(id: String) {
+  override def toString = id
+}
 
 object ImageName {
   /**

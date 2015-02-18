@@ -28,7 +28,7 @@ object DockerBuilder {
     clean(stageDir)
     createDockerfile(staged, stageDir)
     prepareFiles(staged)
-    build(imageNames, stageDir, dockerPath, buildOptions, log)
+    buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log)
   }
 
   def clean(stageDir: File) = {
@@ -48,23 +48,31 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  def build(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
-    val processLog = ProcessLogger({ line =>
+  def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+    val processLogger = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
       log.info(line)
     })
 
+    val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger)
+
+    imageNames.foreach { name =>
+      tag(imageId, name, dockerPath, processLogger, log)
+    }
+    
+    imageId
+  }
+
+  def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
     val flags = List(
       buildOptions.noCache.map(value => s"--no-cache=$value"),
       buildOptions.rm.map(value => s"--rm=$value")).flatten
 
-    val imageName = imageNames.headOption.map(i => List("-t", i.toString)).getOrElse(List())
-    val tags = imageNames.tail
-    val command = dockerPath :: "build" :: imageName ::: flags ::: "." :: Nil
+    val command = dockerPath :: "build" :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
-    val processOutput = Process(command, stageDir).lines(processLog)
+    val processOutput = Process(command, stageDir).lines(processLogger)
     processOutput.foreach { line =>
       log.info(line)
     }
@@ -75,19 +83,18 @@ object DockerBuilder {
 
     imageId match {
       case Some(id) =>
-        log.info(s"Successfully built Docker image: $imageName")
-        log.info(s"Created image has id: ${id.id}")
-        tags.foreach { tag =>
-          log.info(s"Adding tag '$tag' to image")
-          val command = dockerPath :: "tag" :: "-f" :: id.id :: tag.toString :: Nil
-          val processOutput = Process(command).lines(processLog)
-          processOutput.foreach { line =>
-            log.info(line)
-          }
-        }
         id
       case None =>
         sys.error("Could not parse image id")
+    }
+  }
+
+  def tag(id: ImageId, name: ImageName, dockerPath: String, processLogger: ProcessLogger, log: Logger): Unit = {
+    log.info(s"Tagging image $id with name: $name")
+    val command = dockerPath :: "tag" :: "-f" :: id.id :: name.toString :: Nil
+    val processOutput = Process(command).lines(processLogger)
+    processOutput.foreach { line =>
+      log.info(line)
     }
   }
 }
