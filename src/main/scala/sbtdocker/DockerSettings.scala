@@ -12,19 +12,19 @@ object DockerSettings {
       val buildOptions = (DockerKeys.buildOptions in docker).value
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
-      val imageName = (DockerKeys.imageName in docker).value
+      val imageNames = (DockerKeys.imageNames in docker).value
 
       log.debug("Dockerfile:")
       log.debug(dockerfile.mkString)
 
-      DockerBuilder(dockerCmd, buildOptions, imageName, dockerfile, stageDir, log)
+      DockerBuilder(dockerCmd, buildOptions, imageNames, dockerfile, stageDir, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log
       val dockerCmd = (DockerKeys.dockerCmd in docker).value
-      val imageName = (DockerKeys.imageName in docker).value
+      val imageNames = (DockerKeys.imageNames in docker).value
 
-      DockerPush(dockerCmd, imageName, log)
+      DockerPush(dockerCmd, imageNames, log)
     },
     dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
       build.flatMap { id =>
@@ -43,10 +43,10 @@ object DockerSettings {
         """.stripMargin)
     },
     target in docker := target.value / "docker",
-    imageName in docker := {
+    imageNames in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
-      ImageName(namespace = organisation, repository = name)
+      Seq(ImageName(namespace = organisation, repository = name))
     },
     dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()

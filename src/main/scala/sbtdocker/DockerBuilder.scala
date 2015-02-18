@@ -9,18 +9,18 @@ object DockerBuilder {
    *
    * @param dockerPath path to the docker binary
    * @param buildOptions options for the build command
-   * @param imageName name of the resulting image
+   * @param imageNames names of the resulting image
    * @param dockerFile Dockerfile to build
    * @param stageDir stage dir
    * @param log logger
    */
-  def apply(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, dockerFile: DockerfileLike,
+  def apply(dockerPath: String, buildOptions: BuildOptions, imageNames: Seq[ImageName], dockerFile: DockerfileLike,
             stageDir: File, log: Logger): ImageId = {
-    log.info(s"Creating docker image with name: '$imageName'")
+    log.info(s"Creating docker image with name: '${imageNames.headOption.map(_.toString).getOrElse("<no name>")}'")
 
     prepareFiles(dockerFile, stageDir, log)
 
-    buildImage(dockerPath, buildOptions, imageName, stageDir, log)
+    buildImage(dockerPath, buildOptions, imageNames, stageDir, log)
   }
 
   def prepareFiles(dockerFile: DockerfileLike, stageDir: File, log: Logger) = {
@@ -61,7 +61,7 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageName: ImageName, stageDir: File, log: Logger): ImageId = {
+  def buildImage(dockerPath: String, buildOptions: BuildOptions, imageNames: Seq[ImageName], stageDir: File, log: Logger): ImageId = {
     val processLog = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
@@ -72,7 +72,9 @@ object DockerBuilder {
       buildOptions.noCache.map(value => s"--no-cache=$value"),
       buildOptions.rm.map(value => s"--rm=$value")).flatten
 
-    val command = dockerPath :: "build" :: "-t" :: imageName.toString :: flags ::: "." :: Nil
+    val imageName = imageNames.headOption.map(i => List("-t", i.toString)).getOrElse(List())
+    val tags = imageNames.tail
+    val command = dockerPath :: "build" :: imageName ::: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLog)
@@ -87,6 +89,15 @@ object DockerBuilder {
     imageId match {
       case Some(id) =>
         log.info(s"Successfully built Docker image: $imageName")
+        log.info(s"Created image has id: ${id.id}")
+        tags.foreach { tag =>
+          log.info(s"Adding tag '$tag' to image")
+          val command = dockerPath :: "tag" :: "-f" :: id.id :: tag.toString :: Nil
+          val processOutput = Process(command).lines(processLog)
+          processOutput.foreach { line =>
+            log.info(line)
+          }
+        }
         id
       case None =>
         sys.error("Could not parse image id")
