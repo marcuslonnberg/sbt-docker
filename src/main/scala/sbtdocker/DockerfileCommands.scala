@@ -158,6 +158,6 @@ trait DockerfileCommands {
 
   def workDir(path: String): T = addInstruction(WorkDir(path))
 
-  def onBuild(instruction: DockerInstruction): T = addInstruction(Instructions.OnBuild(instruction))
+  def onBuild(instruction: DockerfileInstruction): T = addInstruction(Instructions.OnBuild(instruction))
 
 }

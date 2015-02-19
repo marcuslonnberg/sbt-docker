@@ -2,9 +2,12 @@ package sbtdocker
 
 import org.apache.commons.lang3.StringEscapeUtils
 
-trait Instruction
+sealed trait Instruction
 
-trait DockerInstruction extends Instruction {
+/**
+ * A real dockerfile instruction. Contains a instruction name and arguments.
+ */
+trait DockerfileInstruction extends Instruction {
   def arguments: String
 
   def instructionName: String
@@ -15,14 +18,21 @@ trait DockerInstruction extends Instruction {
   def toInstructionString = toString
 }
 
-trait ProductDockerInstruction extends DockerInstruction {
+/**
+ * Helper for product classes.
+ * Sets instruction name from the class name and uses product values as arguments.
+ */
+trait ProductDockerfileInstruction extends DockerfileInstruction {
   this: Product =>
   def arguments = productIterator.mkString(" ")
 
   def instructionName = productPrefix.toUpperCase
 }
 
-trait FileInstruction extends Instruction {
+/**
+ * Instruction that stages files to the staging directory.
+ */
+trait FileStagingInstruction extends Instruction {
   require(sources.nonEmpty, "Must have at least one source path")
   require(sources.length == 1 || destination.endsWith("/"),
     "When multiple source files are specified the destination must end with a slash \"/\".")
@@ -30,11 +40,23 @@ trait FileInstruction extends Instruction {
   def sources: Seq[SourceFile]
 
   def destination: String
-
-  def dockerInstruction(sources: Seq[String], destination: String): Option[DockerInstruction]
 }
 
-trait StagedFileInstruction extends FileInstruction
+/**
+ * Instruction that both stages files to the staging directory and adds a Dockerfile instruction.
+ *
+ * A [[sbtdocker.staging.DockerfileProcessor]] is used to stage files in the staging directory,
+ * which also requests the Dockerfile instruction when the file paths have been finalized.
+ */
+trait FileStagingDockerfileInstruction extends FileStagingInstruction {
+  /**
+   * Creates a Dockerfile instruction given the final paths of the sources.
+   *
+   * @param sources Paths to the sources in the staging directory.
+   * @return Dockerfile instruction.
+   */
+  def dockerInstruction(sources: Seq[String]): DockerfileInstruction
+}
 
 object Instructions {
 
@@ -48,13 +70,13 @@ object Instructions {
    * Sets the base image for the image.
    * @param image Name of the image.
    */
-  case class From(image: String) extends ProductDockerInstruction
+  case class From(image: String) extends ProductDockerfileInstruction
 
   /**
    * Author of the image.
    * @param name Author name.
    */
-  case class Maintainer(name: String) extends ProductDockerInstruction
+  case class Maintainer(name: String) extends ProductDockerfileInstruction
 
   object Run {
     /**
@@ -74,7 +96,7 @@ object Instructions {
    * Executes a command when building the image.
    * @param command Command which should be executed.
    */
-  case class Run(command: String) extends ProductDockerInstruction
+  case class Run(command: String) extends ProductDockerfileInstruction
 
   object EntryPoint {
     /**
@@ -94,7 +116,7 @@ object Instructions {
    * Command to execute when the image starts.
    * @param command Command.
    */
-  case class EntryPoint(command: String) extends ProductDockerInstruction
+  case class EntryPoint(command: String) extends ProductDockerfileInstruction
 
   object Cmd {
     /**
@@ -117,13 +139,13 @@ object Instructions {
    * If an entry point is not specified `CMD` will be the default command for the image.
    * @param command Command.
    */
-  case class Cmd(command: String) extends ProductDockerInstruction
+  case class Cmd(command: String) extends ProductDockerfileInstruction
 
   /**
    * Exposes network ports at runtime.
    * @param ports Port numbers to expose.
    */
-  case class Expose(ports: Seq[Int]) extends ProductDockerInstruction {
+  case class Expose(ports: Seq[Int]) extends ProductDockerfileInstruction {
     require(ports.nonEmpty, "Must expose at least one port")
 
     override def arguments = ports.mkString(" ")
@@ -148,7 +170,7 @@ object Instructions {
    * Example: "A=1 B=2 C=3"
    * @param variables Environment variables.
    */
-  case class Env(variables: String) extends ProductDockerInstruction
+  case class Env(variables: String) extends ProductDockerfileInstruction
 
   object Add {
     def apply(source: SourceFile, destination: String): Add = Add(Seq(source), destination)
@@ -160,8 +182,8 @@ object Instructions {
    * @param sources Source files.
    * @param destination Destination path inside the container.
    */
-  case class Add(sources: Seq[SourceFile], destination: String) extends FileInstruction {
-    def dockerInstruction(sources: Seq[String], destination: String) = Some(AddRaw(sources, destination))
+  case class Add(sources: Seq[SourceFile], destination: String) extends FileStagingDockerfileInstruction {
+    def dockerInstruction(sources: Seq[String]) = AddRaw(sources, destination)
   }
 
   object AddRaw {
@@ -174,7 +196,7 @@ object Instructions {
    * @param sources Source path inside the staging directory.
    * @param destination Destination path inside the container.
    */
-  case class AddRaw(sources: Seq[String], destination: String) extends ProductDockerInstruction {
+  case class AddRaw(sources: Seq[String], destination: String) extends ProductDockerfileInstruction {
     override def instructionName = "ADD"
 
     override def arguments = sources.mkString(" ") + " " + destination
@@ -189,8 +211,8 @@ object Instructions {
    * @param sources Source files. Cannot be empty.
    * @param destination Destination path inside the container.
    */
-  case class Copy(sources: Seq[SourceFile], destination: String) extends FileInstruction {
-    def dockerInstruction(sources: Seq[String], destination: String) = Some(CopyRaw(sources, destination))
+  case class Copy(sources: Seq[SourceFile], destination: String) extends FileStagingDockerfileInstruction {
+    def dockerInstruction(sources: Seq[String]) = CopyRaw(sources, destination)
   }
 
   object CopyRaw {
@@ -202,7 +224,7 @@ object Instructions {
    * @param sources Source path inside the staging directory. Cannot be empty.
    * @param destination Destination path inside the container.
    */
-  case class CopyRaw(sources: Seq[String], destination: String) extends ProductDockerInstruction {
+  case class CopyRaw(sources: Seq[String], destination: String) extends ProductDockerfileInstruction {
     override def instructionName = "COPY"
 
     override def arguments = sources.mkString(" ") + " " + destination
@@ -216,7 +238,7 @@ object Instructions {
    * Add mount points inside the container.
    * @param paths Paths inside the container. Cannot be empty.
    */
-  case class Volume(paths: Seq[String]) extends ProductDockerInstruction {
+  case class Volume(paths: Seq[String]) extends ProductDockerfileInstruction {
     require(paths.nonEmpty, "Must have at least one volume path")
 
     override def arguments = jsonArrayString(paths)
@@ -226,19 +248,19 @@ object Instructions {
    * Sets the user inside the container that should be used for the next instructions.
    * @param username Name of the user.
    */
-  case class User(username: String) extends ProductDockerInstruction
+  case class User(username: String) extends ProductDockerfileInstruction
 
   /**
    * Sets the current working directory for the instructions that follow.
    * @param path Path inside the container.
    */
-  case class WorkDir(path: String) extends ProductDockerInstruction
+  case class WorkDir(path: String) extends ProductDockerfileInstruction
 
   /**
    * Adds a trigger of a instruction that will be run when the image is used as a base image (`FROM`).
    * @param instruction Instruction to run.
    */
-  case class OnBuild(instruction: DockerInstruction) extends ProductDockerInstruction
+  case class OnBuild(instruction: DockerfileInstruction) extends ProductDockerfileInstruction
 
   object StageFile {
     def apply(source: SourceFile, destination: String): StageFile = StageFile(Seq(source), destination)
@@ -251,9 +273,7 @@ object Instructions {
    * @param sources Source files.
    * @param destination Destination path.
    */
-  case class StageFile(sources: Seq[SourceFile], destination: String) extends StagedFileInstruction {
-    def dockerInstruction(sources: Seq[String], destination: String) = None
-  }
+  case class StageFile(sources: Seq[SourceFile], destination: String) extends FileStagingInstruction
 
   /**
    * This class allows the user to specify a raw Dockerfile instruction.
@@ -266,7 +286,7 @@ object Instructions {
    * @param instructionName Name of the instruction.
    * @param arguments Argument string.
    */
-  case class Raw(instructionName: String, arguments: String) extends DockerInstruction
+  case class Raw(instructionName: String, arguments: String) extends DockerfileInstruction
 
 }
 

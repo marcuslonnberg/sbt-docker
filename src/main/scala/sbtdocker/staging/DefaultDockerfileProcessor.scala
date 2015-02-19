@@ -11,29 +11,23 @@ object DefaultDockerfileProcessor extends DockerfileProcessor {
 
   private[sbtdocker] def handleInstruction(stageDir: File)(context: StagedDockerfile, instruction: Instruction): StagedDockerfile = {
     instruction match {
-      case i: DockerInstruction =>
+      case i: DockerfileInstruction =>
         context.addInstruction(i)
 
-      case i: StagedFileInstruction =>
-        val files = i.sources.map(source => source -> stageDir / expandPath(i.destination, source).getPath)
-        context.stageFiles(files.toSet)
-
-      case i: FileInstruction =>
-        // TODO: handle stagefile correctly
+      case i: FileStagingDockerfileInstruction =>
         val count = context.stageFiles.size.toString
-        // TODO: handle file patterns  - http://golang.org/pkg/path/filepath/#Match
         val files = i.sources.map(source => source -> stageDir / count / source.filename)
         val sourcesInStaging = i.sources.map(source => s"$count/${source.filename}")
 
         val contextWithStagedFile =
           context.stageFiles(files.toSet)
 
-        i.dockerInstruction(sourcesInStaging, i.destination) match {
-          case Some(outInstruction) =>
-            contextWithStagedFile.addInstruction(outInstruction)
-          case None =>
-            contextWithStagedFile
-        }
+        val dockerInstruction = i.dockerInstruction(sourcesInStaging)
+        contextWithStagedFile.addInstruction(dockerInstruction)
+
+      case i: FileStagingInstruction =>
+        val files = i.sources.map(source => source -> stageDir / expandPath(i.destination, source).getPath)
+        context.stageFiles(files.toSet)
     }
   }
 
