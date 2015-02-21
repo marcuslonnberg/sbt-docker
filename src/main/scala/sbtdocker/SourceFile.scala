@@ -19,13 +19,3 @@ case class CopyFile(file: File) extends SourceFile {
     }
   }
 }
-
-object CopyTree {
-  def exact(base: File) = CopyTree(base, keepSymlinks = true, keepFileFlags = true)
-}
-
-case class CopyTree(base: File, keepSymlinks: Boolean = false, keepFileFlags: Boolean = false) extends SourceFile {
-  def filename = ???
-
-  def stage(stageDir: File) = ???
-}
