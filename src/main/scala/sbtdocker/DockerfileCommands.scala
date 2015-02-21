@@ -22,16 +22,6 @@ trait DockerfileCommands {
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
    *
-   * The target file must be unique for this Dockerfile. Otherwise files that are staged later with the same target
-   * will overwrite this file.
-   */
-  def stageFile(file: StageFile): T = {
-    addInstruction(file)
-  }
-
-  /**
-   * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
-   *
    * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
    * files on the same target.
    *
@@ -39,7 +29,7 @@ trait DockerfileCommands {
    * @param target Path to copy file to, should be relative to the stage dir.
    */
   def stageFile(source: File, target: File): T = {
-    stageFile(StageFile(CopyFile(source), target.getPath))
+    addInstruction(Instructions.StageFile(CopyFile(source), target.getPath))
   }
 
   /**
@@ -54,11 +44,11 @@ trait DockerfileCommands {
    * @param target Path to copy file to, should be relative to the stage dir.
    */
   def stageFile(source: File, target: String): T = {
-    stageFile(StageFile(CopyFile(source), target))
+    addInstruction(Instructions.StageFile(CopyFile(source), target))
   }
 
   def stageFiles(sources: Seq[File], target: String): T = {
-    addInstruction(StageFile(sources.map(CopyFile), target))
+    addInstruction(Instructions.StageFile(sources.map(CopyFile), target))
   }
 
   /**
