@@ -133,25 +133,4 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       Copy(Seq(CopyFile(sourceFile)), "/z"),
       Copy(Seq(CopyFile(sourceFile)), "/z"))
   }
-
-  // TODO: move
-  test("OnBuild instruction should correctly generate instruction string") {
-    val onBuild = OnBuild(Run.exec(Seq("echo", "123")))
-
-    onBuild.toString shouldEqual """ONBUILD RUN ["echo", "123"]"""
-  }
-
-  // TODO: move
-  test("Run, EntryPoint and Cmd should support shell format") {
-    Run.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """RUN a b \"c\""""
-    EntryPoint.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """ENTRYPOINT a b \"c\""""
-    Cmd.shell(Seq("a", "b", "\"c\"")).toString shouldEqual """CMD a b \"c\""""
-  }
-
-  // TODO: move
-  test("Run, EntryPoint and Cmd should support exec format") {
-    Run.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """RUN ["a", "b", "\"c\""]"""
-    EntryPoint.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """ENTRYPOINT ["a", "b", "\"c\""]"""
-    Cmd.exec(Seq("a", "b", "\"c\"")).toString shouldEqual """CMD ["a", "b", "\"c\""]"""
-  }
 }

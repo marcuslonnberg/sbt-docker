@@ -10,7 +10,7 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
 
   import sbtdocker.Instructions._
 
-  "A Dockerfile" should "be immutable" in {
+  "Dockerfile" should "be immutable" in {
     val empty = Dockerfile()
     val nonEmpty = empty
       .run("echo")

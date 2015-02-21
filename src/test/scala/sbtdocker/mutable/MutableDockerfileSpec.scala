@@ -8,7 +8,7 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
 
   import sbtdocker.Instructions._
 
-  "A Dockerfile" should "be mutable" in {
+  "Dockerfile" should "be mutable" in {
     val dockerfile = new Dockerfile()
     dockerfile
       .from("arch")
