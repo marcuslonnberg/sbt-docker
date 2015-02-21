@@ -1,6 +1,7 @@
 package sbtdocker
 
 import org.apache.commons.lang3.StringEscapeUtils
+import staging.SourceFile
 
 sealed trait Instruction
 

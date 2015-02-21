@@ -2,7 +2,8 @@ package sbtdocker.mutable
 
 import org.scalatest.{FlatSpec, Matchers}
 import sbt._
-import sbtdocker.{CopyFile, ImageName}
+import sbtdocker.ImageName
+import sbtdocker.staging.CopyFile
 
 class MutableDockerfileSpec extends FlatSpec with Matchers {
 

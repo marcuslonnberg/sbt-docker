@@ -2,6 +2,7 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
+import staging.CopyFile
 
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike

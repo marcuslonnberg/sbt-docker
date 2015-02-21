@@ -1,7 +1,7 @@
 package sbtdocker.staging
 
 import sbt._
-import sbtdocker.{SourceFile, DockerfileInstruction}
+import sbtdocker.DockerfileInstruction
 
 object StagedDockerfile {
   def empty = StagedDockerfile(Seq.empty, Set.empty)

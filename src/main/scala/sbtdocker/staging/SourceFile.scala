@@ -1,4 +1,4 @@
-package sbtdocker
+package sbtdocker.staging
 
 import sbt._
 
