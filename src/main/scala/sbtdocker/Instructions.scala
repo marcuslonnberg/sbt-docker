@@ -263,8 +263,8 @@ object Instructions {
    */
   case class OnBuild(instruction: DockerfileInstruction) extends ProductDockerfileInstruction
 
-  object StageFile {
-    def apply(source: SourceFile, destination: String): StageFile = StageFile(Seq(source), destination)
+  object StageFiles {
+    def apply(source: SourceFile, destination: String): StageFiles = StageFiles(Seq(source), destination)
   }
 
   /**
@@ -274,7 +274,7 @@ object Instructions {
    * @param sources Source files.
    * @param destination Destination path.
    */
-  case class StageFile(sources: Seq[SourceFile], destination: String) extends FileStagingInstruction
+  case class StageFiles(sources: Seq[SourceFile], destination: String) extends FileStagingInstruction
 
   /**
    * This class allows the user to specify a raw Dockerfile instruction.

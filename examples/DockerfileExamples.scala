@@ -57,7 +57,7 @@ val instructions = Seq(
 )
 
 val stagedFiles = Seq(
-  StageFile(source = new File("/path/to/app.jar"), target = new File("app.jar"))
+  StageFiles(source = new File("/path/to/app.jar"), target = new File("app.jar"))
 )
 
 Dockerfile(instructions, stagedFiles)

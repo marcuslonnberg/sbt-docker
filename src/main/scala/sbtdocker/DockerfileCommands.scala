@@ -2,7 +2,7 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
-import staging.CopyFile
+import staging.{SourceFile, CopyFile}
 
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike
@@ -26,11 +26,11 @@ trait DockerfileCommands {
    * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
    * files on the same target.
    *
-   *@param source File to copy into stage dir.
+   * @param source File to copy into stage dir.
    * @param target Path to copy file to, should be relative to the stage dir.
    */
   def stageFile(source: File, target: File): T = {
-    addInstruction(Instructions.StageFile(CopyFile(source), target.getPath))
+    addInstruction(Instructions.StageFiles(CopyFile(source), target.getPath))
   }
 
   /**
@@ -45,19 +45,26 @@ trait DockerfileCommands {
    * @param target Path to copy file to, should be relative to the stage dir.
    */
   def stageFile(source: File, target: String): T = {
-    addInstruction(Instructions.StageFile(CopyFile(source), target))
-  }
-
-  def stageFiles(sources: Seq[File], target: String): T = {
-    addInstruction(Instructions.StageFile(sources.map(CopyFile), target))
+    addInstruction(Instructions.StageFiles(CopyFile(source), target))
   }
 
   /**
-   * Stage multiple files.
+   * Stages a multiple files.
+   *
+   * @param sources What to stage.
+   * @param target Destination directory in the staging directory.
    */
-  def stageFiles(files: TraversableOnce[StageFile]): T = {
-    addInstructions(files)
+  def stageFiles(sources: Seq[File], target: String): T = {
+    addInstruction(Instructions.StageFiles(sources.map(CopyFile), target))
   }
+
+  /**
+   * Stages a single source.
+   *
+   * @param source What to stage.
+   * @param target Destination path in the staging directory.
+   */
+  def stageFile(source: SourceFile, target: String): T = addInstruction(StageFiles(source, target))
 
   // Instructions
 
