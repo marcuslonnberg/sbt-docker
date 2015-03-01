@@ -14,15 +14,12 @@ dockerfile in docker := {
   val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
   val jarTarget = s"/app/${jarFile.getName}"
   // Make a colon separated classpath with the JAR file
-  val classpathString = classpath.files.map("/app/" + _.getName)
-    .mkString(":") + ":" + jarTarget
+  val classpathString = classpath.files.map("/app/" + _.getName).mkString(":") + ":" + jarTarget
   new Dockerfile {
     // Base image
     from("dockerfile/java")
     // Add all files on the classpath
-    classpath.files.foreach { file =>
-      add(file, "/app/")
-    }
+    add(classpath.files, "/app/")
     // Add the JAR file
     add(jarFile, jarTarget)
     // On launch run Java with the classpath and the main class
@@ -30,9 +27,9 @@ dockerfile in docker := {
   }
 }
 
-// Set a custom image name
-imageName in docker := {
+// Set names for the image
+imageNames in docker := Seq(
+  ImageName("sbtdocker/basic:stable"),
   ImageName(namespace = Some(organization.value),
     repository = name.value,
-    tag = Some("v" + version.value))
-}
+    tag = Some("v" + version.value)))

@@ -52,7 +52,7 @@ object DockerSettings {
     buildOptions in docker := BuildOptions()
   )
 
-  def packageDockerSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
+  def autoPackageJavaApplicationSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
     docker <<= docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)),
     Keys.mainClass in docker <<= Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin),
     dockerfile in docker <<= (Keys.managedClasspath in Compile, Keys.artifactPath.in(Compile, Keys.packageBin), Keys.mainClass in docker) map {

@@ -27,9 +27,9 @@ object DockerPlugin extends AutoPlugin {
     val CopyFile = sbtdocker.staging.CopyFile
     type CopyFile = sbtdocker.staging.CopyFile
 
-    def dockerAutoPackage(fromImage: String = "dockerfile/java",
-                          exposePorts: Seq[Int] = Seq.empty): Seq[sbt.Def.Setting[_]] = {
-      DockerSettings.packageDockerSettings(fromImage, exposePorts)
+    def dockerAutoPackageJavaApplication(fromImage: String = "dockerfile/java",
+                                         exposePorts: Seq[Int] = Seq.empty): Seq[sbt.Def.Setting[_]] = {
+      DockerSettings.autoPackageJavaApplicationSettings(fromImage, exposePorts)
     }
   }
 

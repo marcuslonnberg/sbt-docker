@@ -1,7 +1,3 @@
-import AssemblyKeys._
-
-assemblySettings
-
 name := "example-sbt-assembly"
 
 organization := "sbtdocker"
@@ -12,15 +8,16 @@ version := "0.1.0"
 docker <<= (docker dependsOn assembly)
 
 dockerfile in docker := {
-  val artifact = (outputPath in assembly).value
+  val jarFile = (outputPath in assembly).value
   val appDirPath = "/app"
-  val artifactTargetPath = s"$appDirPath/${artifact.name}"
+  val jarTargetPath = s"$appDirPath/${jarFile.name}"
+  
   new Dockerfile {
     from("dockerfile/java")
-    add(artifact, artifactTargetPath)
+    add(jarFile, jarTargetPath)
     workDir(appDirPath)
-    entryPoint("java", "-jar", artifactTargetPath)
+    entryPoint("java", "-jar", jarTargetPath)
   }
 }
 
-buildOptions in docker := BuildOptions(noCache = Some(true))
+buildOptions in docker := BuildOptions(cache = false)
