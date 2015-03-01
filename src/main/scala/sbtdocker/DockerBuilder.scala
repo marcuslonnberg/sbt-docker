@@ -65,10 +65,7 @@ object DockerBuilder {
   }
 
   def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
-    val flags = List(
-      buildOptions.noCache.map(value => s"--no-cache=$value"),
-      buildOptions.rm.map(value => s"--rm=$value")).flatten
-
+    val flags = buildFlags(buildOptions)
     val command = dockerPath :: "build" :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
@@ -87,6 +84,29 @@ object DockerBuilder {
       case None =>
         sys.error("Could not parse image id")
     }
+  }
+
+  def buildFlags(buildOptions: BuildOptions): List[String] = {
+    val cacheFlag = "--no-cache=" + !buildOptions.cache
+    val removeFlag = {
+      buildOptions.removeIntermediateContainers match {
+        case BuildOptions.Remove.Always =>
+          "--force-rm=true"
+        case BuildOptions.Remove.Never =>
+          "--rm=false"
+        case BuildOptions.Remove.OnSuccess =>
+          "--rm=true"
+      }
+    }
+    val pullFlag = {
+      val value = buildOptions.pullBaseImage match {
+        case BuildOptions.Pull.Always => true
+        case BuildOptions.Pull.IfMissing => false
+      }
+      "--pull=" + value
+    }
+
+    cacheFlag :: removeFlag :: pullFlag :: Nil
   }
 
   def tag(id: ImageId, name: ImageName, dockerPath: String, processLogger: ProcessLogger, log: Logger): Unit = {

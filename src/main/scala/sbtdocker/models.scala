@@ -1,11 +1,41 @@
 package sbtdocker
 
+object BuildOptions {
+
+  object Remove {
+
+    sealed trait Option
+
+    case object Always extends Option
+
+    case object OnSuccess extends Option
+
+    case object Never extends Option
+
+  }
+
+
+  object Pull {
+
+    sealed trait Option
+
+    case object Always extends Option
+
+    case object IfMissing extends Option
+
+  }
+
+}
+
 /**
- * Options for the docker build command.
- * @param noCache Do not use cache when building the image.
- * @param rm Remove intermediate containers after a successful build.
+ * Options for when building a Docker image.
+ * @param cache Use cache when building the image.
+ * @param removeIntermediateContainers Remove intermediate containers after a build.
+ * @param pullBaseImage Always attempts to pull a newer version of the base image.
  */
-case class BuildOptions(noCache: Option[Boolean] = None, rm: Option[Boolean] = None)
+case class BuildOptions(cache: Boolean = true,
+                        removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
+                        pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing)
 
 /**
  * Id of an Docker image.

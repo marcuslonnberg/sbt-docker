@@ -135,15 +135,13 @@ imageName in docker := {
 ### Build options
 
 Use the key `buildOptions in docker` to set build options.
-The expected type is `sbtdocker.BuildOptions` which have flags to disable caching and removal of intermediate
-containers.
 
 Example:
 ```scala
-import DockerKeys._
-import sbtdocker.BuildOptions
-
-buildOptions in docker := BuildOptions(noCache = Some(true))
+buildOptions in docker := BuildOptions(
+  cache = false,
+  removeIntermediateContainers = BuildOptions.Remove.Always,
+  alwaysPullBaseImage = BuildOptions.Pull.Always)
 ```
 
 ### Auto packaging
