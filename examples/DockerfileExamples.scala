@@ -2,10 +2,10 @@ import java.io.File
 
 import sbtdocker.Instructions._
 import sbtdocker._
+import staging.CopyFile
 
 // There is both a mutable and an immutable Dockerfile.
-// Both share the same API where all Dockerfile instructions have a corresponding method and it keeps track of files
-// that should be copied to the staging directory.
+// Both share the same API where all Dockerfile instructions have a corresponding method.
 
 val jarFile: File = ???
 
@@ -16,7 +16,7 @@ immutable.Dockerfile.empty
   .run("apt-get", "-y", "install", "openjdk-7-jre-headless")
   .add(jarFile, "/srv/app.jar")
   .workDir("/srv")
-  .cmd("java", "-jar", "app.jar")
+  .cmdRaw("java -jar app.jar")
 
 // A mutable Dockerfile (which does the same as the immutable example)
 
@@ -25,11 +25,11 @@ new mutable.Dockerfile {
   run("apt-get", "-y", "install", "openjdk-7-jre-headless")
   add(jarFile, "/srv/app.jar")
   workDir("/srv")
-  cmd("java", "-jar", "app.jar")
+  cmdRaw("java -jar app.jar")
 }
 
-// Benefits of the mutable Dockerfile is that it is easy to conditionally include instructions and adding repeated
-// instructions with values from a collection.
+// Some benefits of the mutable Dockerfile is that it is easy to conditionally include instructions
+// and adding instructions given a collection.
 
 val numbers = List(1, 1, 2, 3, 5, 8)
 val earthIsRound = true
@@ -46,18 +46,13 @@ new mutable.Dockerfile {
   }
 }
 
-// A Dockerfile can also be created with a sequence of instructions and a sequence of files that should exist in the
-// stage dir.
+// A Dockerfile can also be created with a sequence of instructions
 
 val instructions = Seq(
   From("ubuntu"),
-  Run("apt-get", "-y", "install", "openjdk-7-jre-headless"),
-  Add("app.jar", "app.jar"),
-  Cmd("java", "-jar", "app.jar")
+  Run.exec(Seq("apt-get", "-y", "install", "openjdk-7-jre-headless")),
+  Add(CopyFile(jarFile), "app.jar"),
+  Cmd("java -jar app.jar")
 )
 
-val stagedFiles = Seq(
-  StageFiles(source = new File("/path/to/app.jar"), target = new File("app.jar"))
-)
-
-Dockerfile(instructions, stagedFiles)
+Dockerfile(instructions)
