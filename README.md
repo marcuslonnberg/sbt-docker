@@ -1,6 +1,6 @@
 sbt-docker
 ==========
-sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin which creates [Docker](http://www.docker.io/) images with your artifacts.
+sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin which builds [Docker](http://www.docker.io/) images for your projects.
 
 Requirements
 ------------
@@ -15,20 +15,18 @@ Add sbt-docker as a dependency in `project/plugins.sbt`:
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.5.2")
 ```
 
+sbt-docker is an [auto plugin](http://www.scala-sbt.org/0.13/docs/Plugins.html), this means that sbt 0.13.5 or newer is required.
+
 Usage
 -----
 
-Start by adding the following to your `build.sbt` file:
+Start by enabling the plugin in your `build.sbt` file:
 ```scala
-import DockerKeys._
-
-dockerSettings
-
-// add your sbt-docker settings here
+enablePlugins(DockerPlugin)
 ```
 
-This sets up some settings with default values and adds the `docker` task which builds the Docker image.
-The only setting that is left for you to define is `dockerfile in docker`.
+This sets up some settings with default values and adds the `docker` task which builds a Docker image.
+The only setting that required to be defined is `dockerfile in docker`.
 
 ### Artifacts
 
@@ -51,9 +49,6 @@ The mutable class is default and is used in the examples below.
 
 Example with the sbt `package` task.
 ```scala
-import DockerKeys._
-import sbtdocker.mutable.Dockerfile
-
 dockerfile in docker := {
   val jarFile = artifactPath.in(Compile, packageBin).value
   val classpath = (managedClasspath in Compile).value
@@ -79,14 +74,6 @@ dockerfile in docker := {
 
 Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
-import AssemblyKeys._
-import DockerKeys._
-import sbtdocker.mutable.Dockerfile
-
-dockerSettings
-
-assemblySettings
-
 // Make the docker task depend on the assembly task, which generates a fat JAR file
 docker <<= (docker dependsOn assembly)
 
@@ -113,23 +100,21 @@ Simply run `sbt docker` from your prompt or `docker` in the sbt console.
 An image that have already been built can be pushed with the `dockerPush` task.
 To both build and push an image use the `dockerBuildAndPush` task.
 
-The `imageName in docker` key is used to determine which image to push.
+The `imageNames in docker` key is used to determine which image names to push.
 
-### Custom image name
+### Custom image names
 
-Set `imageName in docker` of type `sbtdocker.ImageName`.
+Set `imageNames in docker` of type `Seq[sbtdocker.ImageName]`.
 
 Example:
 ```scala
-import DockerKeys._
-import sbtdocker.ImageName
-
-imageName in docker := {
+imageNames in docker := Seq(
+  ImageName("organization/name:tag"),
   ImageName(
   	namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value))
-}
+)
 ```
 
 ### Build options
@@ -144,13 +129,14 @@ buildOptions in docker := BuildOptions(
   alwaysPullBaseImage = BuildOptions.Pull.Always)
 ```
 
-### Auto packaging
+### Auto packaging JVM applications
 
-Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposePorts)` can be used.
+If you quickly just want to
+If you just want to run a JVM application in an Docker image
+Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposedPorts)` can be used.
 This method defines a Dockerfile automatically and uses the `package` task to try to generate an artifact.
 It's intended purpose is to give a very simple way of creating Docker images for new small projects.
 
 ### Example projects
 
 See [example projects](examples).
-
