@@ -1,3 +1,5 @@
+enablePlugins(DockerPlugin)
+
 organization in ThisBuild := "sbtdocker"
 
 lazy val alfa = project.in(file("alfa"))

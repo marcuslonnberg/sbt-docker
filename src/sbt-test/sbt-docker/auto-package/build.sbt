@@ -10,7 +10,7 @@ scalaVersion := "2.11.5"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.7"
 
-dockerAutoPackage()
+dockerAutoPackageJavaApplication()
 
 val check = taskKey[Unit]("Check")
 

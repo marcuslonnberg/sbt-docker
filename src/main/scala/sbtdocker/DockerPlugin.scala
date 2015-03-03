@@ -3,8 +3,6 @@ package sbtdocker
 import sbt._
 
 object DockerPlugin extends AutoPlugin {
-  override def trigger = allRequirements
-
   object autoImport {
     val DockerKeys = sbtdocker.DockerKeys
 

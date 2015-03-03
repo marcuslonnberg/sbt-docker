@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
   "io.spray" % "spray-routing" % "1.2.0",
   "com.typesafe.akka" %% "akka-actor" % "2.2.3")
 
+enablePlugins(DockerPlugin)
+
 // Make docker depend on the package task, which generates a jar file of the application code
 docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
 

@@ -4,6 +4,8 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
+enablePlugins(DockerPlugin)
+
 // Make docker depend on the assembly task, which generates a fat jar file
 docker <<= (docker dependsOn assembly)
 
