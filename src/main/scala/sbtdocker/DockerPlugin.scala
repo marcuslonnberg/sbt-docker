@@ -25,9 +25,18 @@ object DockerPlugin extends AutoPlugin {
     val CopyFile = sbtdocker.staging.CopyFile
     type CopyFile = sbtdocker.staging.CopyFile
 
+    /**
+     * Settings to automatically build a Docker image for a JVM application.
+     * @param fromImage Base image to use. Should have a JVM on the $PATH.
+     * @param exposedPorts List of ports to expose.
+     * @param exposedVolumes List of volumes to expose.
+     * @param username Username that should run the Java process.
+     */
     def dockerAutoPackageJavaApplication(fromImage: String = "dockerfile/java",
-                                         exposePorts: Seq[Int] = Seq.empty): Seq[sbt.Def.Setting[_]] = {
-      DockerSettings.autoPackageJavaApplicationSettings(fromImage, exposePorts)
+                                         exposedPorts: Seq[Int] = Seq.empty,
+                                         exposedVolumes: Seq[String] = Seq.empty,
+                                         username: Option[String] = None): Seq[sbt.Def.Setting[_]] = {
+      DockerSettings.autoPackageJavaApplicationSettings(fromImage, exposedPorts, exposedVolumes, username)
     }
   }
 

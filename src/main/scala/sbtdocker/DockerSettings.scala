@@ -52,12 +52,15 @@ object DockerSettings {
     buildOptions in docker := BuildOptions()
   )
 
-  def autoPackageJavaApplicationSettings(fromImage: String, exposePorts: Seq[Int]) = Seq(
+  def autoPackageJavaApplicationSettings(fromImage: String,
+                                         exposedPorts: Seq[Int],
+                                         exposedVolumes: Seq[String],
+                                         username: Option[String]) = Seq(
     docker <<= docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)),
     Keys.mainClass in docker <<= Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin),
     dockerfile in docker <<= (Keys.managedClasspath in Compile, Keys.artifactPath.in(Compile, Keys.packageBin), Keys.mainClass in docker) map {
       case (_, _, None) =>
-        sys.error("No main class found or multiple main classes exists. " +
+        sys.error("Either there are no main class or there exist several. " +
           "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
       case (classpath, artifact, Some(mainClass)) =>
         val appPath = "/app"
@@ -67,10 +70,6 @@ object DockerSettings {
         val dockerfile = Dockerfile()
         dockerfile.from(fromImage)
 
-        if (exposePorts.nonEmpty) {
-          dockerfile.expose(exposePorts: _*)
-        }
-
         val libPaths = classpath.files.map { libFile =>
           val toPath = file(libsPath) / libFile.name
           dockerfile.stageFile(libFile, toPath)
@@ -78,9 +77,18 @@ object DockerSettings {
         }
         val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
 
+        dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
+
+        if (exposedPorts.nonEmpty) {
+          dockerfile.expose(exposedPorts: _*)
+        }
+        if (exposedVolumes.nonEmpty) {
+          dockerfile.volume(exposedVolumes: _*)
+        }
+        username.foreach(dockerfile.user)
+
         dockerfile.addRaw(libsPath, libsPath)
         dockerfile.add(artifact, artifactPath)
-        dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
 
         dockerfile
     }
