@@ -12,10 +12,11 @@ Setup
 
 Add sbt-docker as a dependency in `project/plugins.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "0.5.2")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.0.0")
 ```
 
-sbt-docker is an [auto plugin](http://www.scala-sbt.org/0.13/docs/Plugins.html), this means that sbt 0.13.5 or newer is required.
+sbt-docker is an [auto plugin](http://www.scala-sbt.org/0.13/docs/Plugins.html),
+this means that sbt version 0.13.5 or higher is required.
 
 Usage
 -----
@@ -25,30 +26,33 @@ Start by enabling the plugin in your `build.sbt` file:
 enablePlugins(DockerPlugin)
 ```
 
-This sets up some settings with default values and adds the `docker` task which builds a Docker image.
-The only setting that required to be defined is `dockerfile in docker`.
+This sets up some settings with default values and adds tasks such as `docker` which builds a Docker image.
+The only required setting that is left to define is `dockerfile in docker`.
 
 ### Artifacts
 
-Typically you rely on some sbt task to generate one or several artifacts that you want inside your Docker image.
-For example the `package` task could be used to generate JAR files, or tasks from plugins such as `sbt-assembly`.
-In those cases you may want to set the `docker` task to depend on those other tasks.
-So that the artifacts are always up to date when building a Docker image.
+If you want your Dockerfile to contain one or several artifacts (such as JAR files) that your
+project generates, then you must make the `docker` task depend on the tasks that generate them.
+It could for example be with the `package` task or with tasks from plugins such as
+[sbt-assembly](https://github.com/sbt/sbt-assembly).
 
 Here is how to make the docker task depend on the sbt `package` task:
 ```scala
-docker <<= docker.dependsOn(Keys.`package`.in(Compile, packageBin))
+docker <<= docker.dependsOn(`package`.in(Compile, packageBin))
 ```
 
 ### Defining a Dockerfile
 
 In order to produce a Docker image a Dockerfile must be defined.
 It should be defined at the `dockerfile in docker` key.
-There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
-The mutable class is default and is used in the examples below.
+There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles
+the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
+The mutable class is default and is used in the following examples.
 
 Example with the sbt `package` task.
 ```scala
+docker <<= docker.dependsOn(`package`.in(Compile, packageBin))
+
 dockerfile in docker := {
   val jarFile = artifactPath.in(Compile, packageBin).value
   val classpath = (managedClasspath in Compile).value
@@ -61,9 +65,7 @@ dockerfile in docker := {
     // Base image
     from("dockerfile/java")
     // Add all files on the classpath
-    classpath.files.foreach { file =>
-      add(file, "/app/")
-    }
+    add(classpath.files, "/app/")
     // Add the JAR file
     add(jarFile, jarTarget)
     // On launch run Java with the classpath and the main class
@@ -113,7 +115,8 @@ imageNames in docker := Seq(
   ImageName(
   	namespace = Some(organization.value),
     repository = name.value,
-    tag = Some("v" + version.value))
+    tag = Some("v" + version.value)
+  )
 )
 ```
 
@@ -126,16 +129,15 @@ Example:
 buildOptions in docker := BuildOptions(
   cache = false,
   removeIntermediateContainers = BuildOptions.Remove.Always,
-  alwaysPullBaseImage = BuildOptions.Pull.Always)
+  pullBaseImage = BuildOptions.Pull.Always)
 ```
 
 ### Auto packaging JVM applications
 
-If you quickly just want to
-If you just want to run a JVM application in an Docker image
-Instead of `dockerSettings` the method `dockerSettingsAutoPackage(fromImage, exposedPorts)` can be used.
-This method defines a Dockerfile automatically and uses the `package` task to try to generate an artifact.
-It's intended purpose is to give a very simple way of creating Docker images for new small projects.
+If you have a standalone JVM application that you want a simple Docker image for.
+Then you can use `dockerAutoPackageJavaApplication(fromImage, exposedPorts, exposedVolumes, username)`
+which will setup some settings for you, including a Dockerfile.
+Its very basic, so if you have more advanced needs then define your own Dockerfile.
 
 ### Example projects
 
