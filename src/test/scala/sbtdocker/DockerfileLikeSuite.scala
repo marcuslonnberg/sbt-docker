@@ -140,6 +140,7 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .runShell()
       .cmd()
       .cmdShell()
+      .env()
       .expose()
       .entryPoint()
       .entryPointShell()

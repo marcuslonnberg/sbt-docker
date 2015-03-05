@@ -109,6 +109,13 @@ trait DockerfileCommands {
 
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
+  def env(variables: (String, String)*) = {
+    if (variables.nonEmpty) addInstruction(Env(variables.toMap))
+    else self
+  }
+
+  def env(variables: Map[String, String]) = addInstruction(Env(variables))
+
   def add(source: File, destination: String): T = addInstruction(Add(CopyFile(source), destination))
 
   def add(sources: Seq[File], destination: String): T = addInstruction(Add(sources.map(CopyFile), destination))
