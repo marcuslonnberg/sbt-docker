@@ -31,7 +31,7 @@ object DefaultDockerfileProcessor extends DockerfileProcessor {
     }
   }
 
-  def expandPath(destination: String, source: SourceFile): File = {
+  private[sbtdocker] def expandPath(destination: String, source: SourceFile): File = {
     if (destination.endsWith("/")) {
       file(destination) / source.filename
     } else {
