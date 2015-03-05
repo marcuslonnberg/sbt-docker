@@ -5,7 +5,7 @@ import staging.{DockerfileProcessor, StagedDockerfile}
 
 import scala.sys.process.{Process, ProcessLogger}
 
-object DockerBuilder {
+object DockerBuild {
   /**
    * Build a Dockerfile using a provided docker binary.
    *
@@ -31,15 +31,15 @@ object DockerBuilder {
     buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log)
   }
 
-  def clean(stageDir: File) = {
+  private[sbtdocker] def clean(stageDir: File) = {
     IO.delete(stageDir)
   }
 
-  def createDockerfile(staged: StagedDockerfile, stageDir: File) = {
+  private[sbtdocker] def createDockerfile(staged: StagedDockerfile, stageDir: File) = {
     IO.write(stageDir / "Dockerfile", staged.instructionsString)
   }
 
-  def prepareFiles(staged: StagedDockerfile) = {
+  private[sbtdocker] def prepareFiles(staged: StagedDockerfile) = {
     staged.stageFiles.foreach {
       case (source, destination) =>
         source.stage(destination)
@@ -48,7 +48,7 @@ object DockerBuilder {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
     val processLogger = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
@@ -58,13 +58,13 @@ object DockerBuilder {
     val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger)
 
     imageNames.foreach { name =>
-      tag(imageId, name, dockerPath, processLogger, log)
+      DockerTag(imageId, name, dockerPath, log)
     }
     
     imageId
   }
 
-  def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
+  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
     val flags = buildFlags(buildOptions)
     val command = dockerPath :: "build" :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
@@ -86,7 +86,7 @@ object DockerBuilder {
     }
   }
 
-  def buildFlags(buildOptions: BuildOptions): List[String] = {
+  private[sbtdocker] def buildFlags(buildOptions: BuildOptions): List[String] = {
     val cacheFlag = "--no-cache=" + !buildOptions.cache
     val removeFlag = {
       buildOptions.removeIntermediateContainers match {
@@ -107,14 +107,5 @@ object DockerBuilder {
     }
 
     cacheFlag :: removeFlag :: pullFlag :: Nil
-  }
-
-  def tag(id: ImageId, name: ImageName, dockerPath: String, processLogger: ProcessLogger, log: Logger): Unit = {
-    log.info(s"Tagging image $id with name: $name")
-    val command = dockerPath :: "tag" :: "-f" :: id.id :: name.toString :: Nil
-    val processOutput = Process(command).lines(processLogger)
-    processOutput.foreach { line =>
-      log.info(line)
-    }
   }
 }
