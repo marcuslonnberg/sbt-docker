@@ -122,16 +122,16 @@ trait DockerfileCommands {
 
   def add(source: File, destination: File): T = addInstruction(Add(CopyFile(source), destination.getPath))
 
-  @deprecated("Use addRaw instead.", "todo")
+  @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: URL, destination: String): T = addRaw(source, destination)
 
-  @deprecated("Use addRaw instead.", "todo")
+  @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: URL, destination: File): T = addRaw(source, destination)
 
-  @deprecated("Use addRaw instead.", "todo")
+  @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: String, destination: String): T = addRaw(source, destination)
 
-  @deprecated("Use addRaw instead.", "todo")
+  @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: String, destination: File): T = addRaw(source, destination)
 
   def addRaw(source: URL, destination: String): T = addInstruction(AddRaw(source.toString, destination))
@@ -148,16 +148,16 @@ trait DockerfileCommands {
 
   def copy(source: File, destination: File): T = addInstruction(Copy(CopyFile(source), destination.toString))
 
-  @deprecated("Use copyRaw instead.", "todo")
+  @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: URL, destination: String): T = copyRaw(source, destination)
 
-  @deprecated("Use copyRaw instead.", "todo")
+  @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: URL, destination: File): T = copyRaw(source, destination)
 
-  @deprecated("Use copyRaw instead.", "todo")
+  @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: String, destination: String): T = copyRaw(source, destination)
 
-  @deprecated("Use copyRaw instead.", "todo")
+  @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: String, destination: File): T = copyRaw(source, destination)
 
   def copyRaw(source: URL, destination: String): T = addInstruction(CopyRaw(source.toString, destination))

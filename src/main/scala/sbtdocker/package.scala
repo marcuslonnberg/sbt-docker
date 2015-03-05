@@ -5,8 +5,8 @@ package object sbtdocker {
   type ImmutableDockerfile = immutable.Dockerfile
   val ImmutableDockerfile = immutable.Dockerfile
 
-  @deprecated("Use sbtdocker.Instructions.StageFiles", "0.6.0")
+  @deprecated("Use sbtdocker.Instructions.StageFiles", "1.0.0")
   type StageFile = Instructions.StageFiles
-  @deprecated("Use sbtdocker.Instructions.StageFiles", "0.6.0")
+  @deprecated("Use sbtdocker.Instructions.StageFiles", "1.0.0")
   val StageFile = Instructions.StageFiles
 }
