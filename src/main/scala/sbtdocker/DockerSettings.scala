@@ -14,7 +14,7 @@ object DockerSettings {
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
       val imageNames = (DockerKeys.imageNames in docker).value
-      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, stageDir, dockerCmd, buildOptions, log)
+      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerCmd, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log

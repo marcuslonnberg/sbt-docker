@@ -18,9 +18,23 @@ object DockerBuild {
    * @param log logger
    */
   def apply(dockerfile: DockerfileLike, processor: DockerfileProcessor, imageNames: Seq[ImageName],
-            stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger) = {
+            buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
     val staged = processor(dockerfile, stageDir)
 
+    apply(staged, imageNames, buildOptions, stageDir, dockerPath, log)
+  }
+
+  /**
+   * Build a Dockerfile using a provided docker binary.
+   *
+   * @param staged a staged Dockerfile to build.
+   * @param imageNames names of the resulting image
+   * @param stageDir stage dir
+   * @param dockerPath path to the docker binary
+   * @param buildOptions options for the build command
+   * @param log logger
+   */
+  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
     log.debug("Building Dockerfile:\n" + staged.instructionsString)
 
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
