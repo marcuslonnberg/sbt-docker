@@ -30,7 +30,7 @@ object DockerSettings {
     },
     dockerfile in docker := {
       sys.error(
-        """A Dockerfile is not defined. Please define it with `dockerfile in docker`
+        """A Dockerfile is not defined. Please define one with `dockerfile in docker`
           |
           |Example:
           |dockerfile in docker := new Dockerfile {
@@ -79,12 +79,8 @@ object DockerSettings {
 
         dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
 
-        if (exposedPorts.nonEmpty) {
-          dockerfile.expose(exposedPorts: _*)
-        }
-        if (exposedVolumes.nonEmpty) {
-          dockerfile.volume(exposedVolumes: _*)
-        }
+        dockerfile.expose(exposedPorts: _*)
+        dockerfile.volume(exposedVolumes: _*)
         username.foreach(dockerfile.user)
 
         dockerfile.addRaw(libsPath, libsPath)
