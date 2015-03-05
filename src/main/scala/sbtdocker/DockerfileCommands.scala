@@ -2,7 +2,7 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
-import staging.{SourceFile, CopyFile}
+import staging.{CopyFile, SourceFile}
 
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike
@@ -16,6 +16,8 @@ trait DockerfileCommands {
   def addInstruction(instruction: Instruction): T
 
   def addInstructions(instructions: TraversableOnce[Instruction]): T
+
+  protected def self: T
 
   @deprecated("Use stageFile instead.", "0.4.0")
   def copyToStageDir(source: File, targetRelativeToStageDir: File): T = stageFile(source, targetRelativeToStageDir)
@@ -76,19 +78,34 @@ trait DockerfileCommands {
 
   def maintainer(name: String, email: String): T = addInstruction(Maintainer(s"$name <$email>"))
 
-  def run(args: String*): T = addInstruction(Instructions.Run.exec(args))
+  def run(args: String*): T = {
+    if (args.nonEmpty) addInstruction(Instructions.Run.exec(args))
+    else self
+  }
 
-  def runShell(args: String*): T = addInstruction(Instructions.Run.shell(args))
+  def runShell(args: String*): T = {
+    if (args.nonEmpty) addInstruction(Instructions.Run.shell(args))
+    else self
+  }
 
   def runRaw(command: String): T = addInstruction(Instructions.Run(command))
 
-  def cmd(args: String*): T = addInstruction(Cmd.exec(args))
+  def cmd(args: String*): T = {
+    if (args.nonEmpty) addInstruction(Cmd.exec(args))
+    else self
+  }
 
-  def cmdShell(args: String*): T = addInstruction(Cmd.shell(args))
+  def cmdShell(args: String*): T = {
+    if (args.nonEmpty) addInstruction(Cmd.shell(args))
+    else self
+  }
 
   def cmdRaw(command: String): T = addInstruction(Cmd(command))
 
-  def expose(ports: Int*): T = addInstruction(Expose(ports))
+  def expose(ports: Int*): T = {
+    if (ports.nonEmpty) addInstruction(Expose(ports))
+    else self
+  }
 
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
@@ -144,13 +161,25 @@ trait DockerfileCommands {
 
   def copyRaw(source: String, destination: File): T = addInstruction(CopyRaw(source, destination.toString))
 
-  def entryPoint(args: String*): T = addInstruction(EntryPoint.exec(args))
+  def entryPoint(args: String*): T = {
+    if (args.nonEmpty) addInstruction(EntryPoint.exec(args))
+    else self
+  }
 
-  def entryPointShell(args: String*): T = addInstruction(EntryPoint.shell(args))
-  
-  def entryPointRaw(command: String): T = addInstruction(EntryPoint(command))
+  def entryPointShell(args: String*): T = {
+    if (args.nonEmpty) addInstruction(EntryPoint.shell(args))
+    else self
+  }
 
-  def volume(mountPoints: String*): T = addInstruction(Volume(mountPoints))
+  def entryPointRaw(command: String): T = {
+    if (command.nonEmpty) addInstruction(EntryPoint(command))
+    else self
+  }
+
+  def volume(mountPoints: String*): T = {
+    if (mountPoints.nonEmpty) addInstruction(Volume(mountPoints))
+    else self
+  }
 
   def user(username: String): T = addInstruction(User(username))
 

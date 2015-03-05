@@ -133,4 +133,19 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       Copy(Seq(CopyFile(sourceFile)), "/z"),
       Copy(Seq(CopyFile(sourceFile)), "/z"))
   }
+
+  test("Instruction methods with varags should be ignore instruction when zero args") {
+    val dockerfile = immutable.Dockerfile.empty
+      .run()
+      .runShell()
+      .cmd()
+      .cmdShell()
+      .expose()
+      .entryPoint()
+      .entryPointShell()
+      .volume()
+      .maintainer("test")
+
+    dockerfile shouldEqual immutable.Dockerfile.empty.maintainer("test")
+  }
 }

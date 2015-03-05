@@ -27,4 +27,6 @@ case class Dockerfile(instructions: Seq[Instruction] = Seq.empty) extends Docker
   def addInstruction(instruction: Instruction) = Dockerfile(instructions :+ instruction)
 
   def addInstructions(instructions: TraversableOnce[Instruction]) = Dockerfile(this.instructions ++ instructions)
+
+  protected def self = this
 }

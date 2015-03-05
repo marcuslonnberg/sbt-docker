@@ -30,4 +30,6 @@ case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty) extends Do
     this.instructions ++= instructions
     this
   }
+
+  protected def self = this
 }
