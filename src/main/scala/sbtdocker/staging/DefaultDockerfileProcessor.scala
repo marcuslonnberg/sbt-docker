@@ -3,6 +3,10 @@ package sbtdocker.staging
 import sbt._
 import sbtdocker._
 
+/**
+ * DockerfileProcessor that stages all files in the docker staging directory as `/{index}/file`.
+ * Where index is a counter that increases for each file that is staged.
+ */
 object DefaultDockerfileProcessor extends DockerfileProcessor {
   def apply(dockerfile: DockerfileLike, stageDir: File) = {
     dockerfile.instructions
@@ -11,22 +15,35 @@ object DefaultDockerfileProcessor extends DockerfileProcessor {
 
   private[sbtdocker] def handleInstruction(stageDir: File)(context: StagedDockerfile, instruction: Instruction): StagedDockerfile = {
     instruction match {
-      case i: DockerfileInstruction =>
-        context.addInstruction(i)
+      case instruction: DockerfileInstruction =>
+        context.addInstruction(instruction)
 
-      case i: FileStagingDockerfileInstruction =>
-        val count = context.stageFiles.size.toString
-        val files = i.sources.map(source => source -> stageDir / count / source.filename)
-        val sourcesInStaging = i.sources.map(source => s"$count/${source.filename}")
+      case instruction: FileStagingDockerfileInstruction =>
+        val count = context.stageFiles.size
 
-        val contextWithStagedFile =
+        def fileStagePath(source: SourceFile, index: Int): String = (count + index) + "/" + source.filename
+
+        val contextWithStagedFiles = {
+          val files = instruction.sources.zipWithIndex.map {
+            case (source, index) =>
+              source -> stageDir / fileStagePath(source, index)
+          }
           context.stageFiles(files.toSet)
+        }
 
-        val dockerInstruction = i.dockerInstruction(sourcesInStaging)
-        contextWithStagedFile.addInstruction(dockerInstruction)
+        val dockerInstruction = {
+          val sourcesInStaging = instruction.sources.zipWithIndex.map {
+            case (source, index) => fileStagePath(source, index)
+          }
+          instruction.dockerInstruction(sourcesInStaging)
+        }
 
-      case i: FileStagingInstruction =>
-        val files = i.sources.map(source => source -> stageDir / expandPath(i.destination, source).getPath)
+        contextWithStagedFiles.addInstruction(dockerInstruction)
+
+      case instruction: FileStagingInstruction =>
+        val files = instruction.sources.map { source =>
+          source -> stageDir / expandPath(instruction.destination, source).getPath
+        }
         context.stageFiles(files.toSet)
     }
   }

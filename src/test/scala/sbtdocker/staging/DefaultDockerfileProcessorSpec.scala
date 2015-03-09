@@ -57,25 +57,26 @@ class DefaultDockerfileProcessorSpec extends FlatSpec with Matchers {
     val dockerfile = ImmutableDockerfile.empty
       .copy(file("/a/b/c"), "/b/c")
       .stageFile(file("dir"), "dir")
-      .add(file("/file"), "/x/")
+      .add(Seq(file("/file1"), file("/file2")), "/x/")
       .add(file("/other/file"), "/x/")
 
     val stagedDockerfile = DefaultDockerfileProcessor(dockerfile, stageDir)
 
     stagedDockerfile.instructions should contain theSameElementsAs Seq(
       CopyRaw("0/c", "/b/c"),
-      AddRaw("2/file", "/x/"),
-      AddRaw("3/file", "/x/")
+      AddRaw(Seq("2/file1", "3/file2"), "/x/"),
+      AddRaw("4/file", "/x/")
     )
     stagedDockerfile.instructionsString shouldEqual
       """COPY 0/c /b/c
-        |ADD 2/file /x/
-        |ADD 3/file /x/""".stripMargin
+        |ADD 2/file1 3/file2 /x/
+        |ADD 4/file /x/""".stripMargin
     stagedDockerfile.stageFiles should contain theSameElementsAs Seq(
       CopyFile(file("/a/b/c")) -> (stageDir / "0" / "c"),
       CopyFile(file("dir")) -> (stageDir / "dir"),
-      CopyFile(file("/file")) -> (stageDir / "2" / "file"),
-      CopyFile(file("/other/file")) -> (stageDir / "3" / "file")
+      CopyFile(file("/file1")) -> (stageDir / "2" / "file1"),
+      CopyFile(file("/file2")) -> (stageDir / "3" / "file2"),
+      CopyFile(file("/other/file")) -> (stageDir / "4" / "file")
     )
   }
 }
