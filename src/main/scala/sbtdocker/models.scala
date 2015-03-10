@@ -33,9 +33,11 @@ object BuildOptions {
  * @param removeIntermediateContainers Remove intermediate containers after a build.
  * @param pullBaseImage Always attempts to pull a newer version of the base image.
  */
-case class BuildOptions(cache: Boolean = true,
-                        removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
-                        pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing)
+case class BuildOptions(
+  cache: Boolean = true,
+  removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
+  pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing
+)
 
 /**
  * Id of an Docker image.
@@ -86,7 +88,12 @@ object ImageName {
  * @param namespace Namespace name.
  * @param tag Tag, for example a version number.
  */
-case class ImageName(registry: Option[String] = None, namespace: Option[String] = None, repository: String, tag: Option[String] = None) {
+case class ImageName(
+  registry: Option[String] = None,
+  namespace: Option[String] = None,
+  repository: String,
+  tag: Option[String] = None
+) {
   override def toString = {
     val registryString = registry.fold("")(_ + "/")
     val namespaceString = namespace.fold("")(_ + "/")
