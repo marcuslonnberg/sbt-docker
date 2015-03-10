@@ -1,0 +1,45 @@
+### Changes
+
+* Now an auto plugin
+
+sbt version 0.13.5 or higher is required.
+Instead of adding `dockerSettings` you need to enable `DockerPlugin` in your project.
+
+* Support for multiple image names.
+
+The key `imageNames` supersedes `imageName`.
+
+Example:
+
+    imageNames in docker := Seq(
+      ImageName("organization/name:tag"),
+      ImageName(
+      	namespace = Some(organization.value),
+        repository = name.value,
+        tag = Some("v" + version.value)
+      )
+    )
+
+* Multiple values in instructions
+
+Instructions `Add`, `Copy`, `Env` and `Volume` can now handle multiple values.
+
+Example:
+
+    new Dockerfile {
+      add(Seq(fileA, fileB), destinationPath)
+      env("KEY1" -> "X", "KEY2" -> "Y")
+      volume("/abc", "/xyz")
+    }
+
+* Raw instructions
+
+New methods have been added to `Dockerfile` to add raw instructions:
+`addRaw`, `copyRaw`, `entryPointRaw`, `cmdRaw` and `runRaw`.
+These methods allow you to enter the raw Dockerfile instruction value as a string.
+
+Example:
+
+    new Dockerfile {
+      runRaw("echo 123")
+    }
