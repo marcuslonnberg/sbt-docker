@@ -46,7 +46,7 @@ object DockerSettings {
       ImageName(namespace = organisation, repository = name)
     },
     imageNames in docker := {
-      Seq(imageName in docker value)
+      Seq((imageName in docker).value)
     },
     dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()
