@@ -42,8 +42,6 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
       addRaw(url2, file2)
       copy(file1, "/")
       copy(file2, file2)
-      copyRaw(url1, "/")
-      copyRaw(url2, file2)
       entryPoint("echo", "1")
       entryPointShell("echo", "2")
       volume("/srv")
@@ -69,8 +67,6 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
       AddRaw(url2.toString, file2.toString),
       Copy(Seq(CopyFile(file1)), "/"),
       Copy(Seq(CopyFile(file2)), file2.toString),
-      CopyRaw(url1.toString, "/"),
-      CopyRaw(url2.toString, file2.toString),
       EntryPoint.exec(Seq("echo", "1")),
       EntryPoint.shell(Seq("echo", "2")),
       Volume("/srv"),

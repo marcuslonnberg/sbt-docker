@@ -162,8 +162,10 @@ trait DockerfileCommands {
   @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: String, destination: File): T = copyRaw(source, destination)
 
+  @deprecated("Invalid instruction, use addRaw instead", "1.0.1")
   def copyRaw(source: URL, destination: String): T = addInstruction(CopyRaw(source.toString, destination))
 
+  @deprecated("Invalid instruction, use addRaw instead", "1.0.1")
   def copyRaw(source: URL, destination: File): T = addInstruction(CopyRaw(source.toString, destination.toString))
 
   def copyRaw(source: String, destination: String): T = addInstruction(CopyRaw(source, destination))
