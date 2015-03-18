@@ -2,7 +2,7 @@ package sbtdocker
 
 import sbt._
 import sbtdocker.Instructions._
-import staging.{CopyFile, SourceFile}
+import sbtdocker.staging.{CopyFile, SourceFile}
 
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike
@@ -116,6 +116,8 @@ trait DockerfileCommands {
 
   def env(variables: Map[String, String]) = addInstruction(Env(variables))
 
+  def envRaw(variables: String): T = addInstruction(Env(variables))
+
   def add(source: File, destination: String): T = addInstruction(Add(CopyFile(source), destination))
 
   def add(sources: Seq[File], destination: String): T = addInstruction(Add(sources.map(CopyFile), destination))
@@ -143,7 +145,7 @@ trait DockerfileCommands {
   def addRaw(source: String, destination: File): T = addInstruction(AddRaw(source, destination.toString))
 
   def copy(source: File, destination: String): T = addInstruction(Copy(CopyFile(source), destination))
-  
+
   def copy(sources: Seq[File], destination: String): T = addInstruction(Copy(sources.map(CopyFile), destination))
 
   def copy(source: File, destination: File): T = addInstruction(Copy(CopyFile(source), destination.toString))
