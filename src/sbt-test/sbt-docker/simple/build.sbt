@@ -48,7 +48,7 @@ val check = taskKey[Unit]("Check")
 check := {
   val names = (imageNames in docker).value
   names.foreach { imageName =>
-    val process = Process("docker", Seq("run", imageName.toString))
+    val process = Process("docker", Seq("run", "--rm", imageName.toString))
     val out = process.!!
     if (out.trim != "Hello World") sys.error("Unexpected output: " + out)
   }
