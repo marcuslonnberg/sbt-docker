@@ -162,7 +162,7 @@ object Instructions {
     }
 
     def formatKeyValue(key: String, value: String): String = {
-      escapeEnvironmentVariable(key) + "=" + escapeEnvironmentVariable(value)
+      key + "=" + escapeEnvironmentVariable(value)
     }
   }
 
@@ -294,17 +294,15 @@ object Instructions {
 private[sbtdocker] object InstructionUtils {
   def escapeEnvironmentVariable(value: String) = {
     value
-      .replace(" ", "\\ ")
-      .replaceAll("\\t", "\\\\t")
-      .replaceAll("\\n", "\\\\n")
-      .replace("=", "\\\\=")
+      .replace(" ", """\ """)
+      .replace("=", """\=""")
   }
 
   def shellCommandString(commands: Seq[String]) = {
     def escape(str: String) = {
-      str.replace(" ", "\\ ")
-        .replaceAll("\\t", "\\\\t")
-        .replaceAll("\\n", "\\\\n")
+      str.replace(" ", """\ """)
+        .replaceAll("\\t", """\\t""")
+        .replaceAll("\\n", """\\n""")
         .replace("\"", "\\\"")
     }
 

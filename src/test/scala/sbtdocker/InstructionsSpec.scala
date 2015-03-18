@@ -38,6 +38,8 @@ class InstructionsSpec extends FlatSpec with Matchers {
 
   "Env" should "create a correct string" in {
     Env("key", "value").toString shouldEqual "ENV key=value"
+    Env("key", "-Dconfig.resource=docker.conf").toString shouldEqual """ENV key=-Dconfig.resource\=docker.conf"""
+    Env("a", "b=c d&e").toString shouldEqual """ENV a=b\=c\ d&e"""
     Env(Map("key1" -> "value1", "key2" -> "value2")).toString shouldEqual "ENV key1=value1 key2=value2"
     Env("key=value").toString shouldEqual "ENV key=value"
   }
