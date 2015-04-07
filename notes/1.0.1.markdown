@@ -1,0 +1,5 @@
+### Maintenance release
+
+- Fix bad formatting of environment variables [#23](https://github.com/marcuslonnberg/sbt-docker/issues/23).
+- Deprecate invalid `CMD` instructions.
+- Change the default Docker image in `dockerAutoPackageJavaApplication` to `java:8-jre`.
