@@ -39,6 +39,3 @@ pomExtra := {
 }
 
 useGpg := true
-
-releaseSettings
-publishArtifactsAction := PgpKeys.publishSigned.value
