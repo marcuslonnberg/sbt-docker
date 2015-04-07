@@ -1,5 +1,3 @@
-import sbtrelease.ReleasePlugin.ReleaseKeys.publishArtifactsAction
-
 sbtPlugin := true
 
 name := "sbt-docker"

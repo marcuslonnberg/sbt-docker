@@ -4,10 +4,10 @@ import ReleaseKeys._
 
 releaseSettings
 
-publishArtifactsAction := PgpKeys.publishSigned.value
+publishArtifactsAction <<= PgpKeys.publishSigned
 
 lazy val runScriptedTests = taskKey[Unit]("Run all scripted tests")
-runScriptedTests := scripted.toTask("").value
+runScriptedTests in Global <<= scripted.toTask("")
 lazy val runScripted: ReleaseStep = releaseTask(runScriptedTests in ThisProject)
 
 releaseProcess := Seq[ReleaseStep](
