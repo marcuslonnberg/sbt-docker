@@ -32,7 +32,7 @@ object DockerPlugin extends AutoPlugin {
      * @param exposedVolumes List of volumes to expose.
      * @param username Username that should run the Java process.
      */
-    def dockerAutoPackageJavaApplication(fromImage: String = "dockerfile/java",
+    def dockerAutoPackageJavaApplication(fromImage: String = "java:8-jre",
                                          exposedPorts: Seq[Int] = Seq.empty,
                                          exposedVolumes: Seq[String] = Seq.empty,
                                          username: Option[String] = None): Seq[sbt.Def.Setting[_]] = {
