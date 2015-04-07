@@ -27,7 +27,7 @@ object DockerPlugin extends AutoPlugin {
 
     /**
      * Settings to automatically build a Docker image for a JVM application.
-     * @param fromImage Base image to use. Should have a JVM on the $PATH.
+     * @param fromImage Base image to use. Should have a JVM on the PATH.
      * @param exposedPorts List of ports to expose.
      * @param exposedVolumes List of volumes to expose.
      * @param username Username that should run the Java process.
