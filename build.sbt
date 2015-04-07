@@ -8,7 +8,7 @@ organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.apache.commons" % "commons-lang3" % "3.3.2"
+  "org.apache.commons" % "commons-lang3" % "3.4"
 )
 
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
