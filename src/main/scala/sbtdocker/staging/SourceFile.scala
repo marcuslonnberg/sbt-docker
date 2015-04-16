@@ -13,9 +13,9 @@ case class CopyFile(file: File) extends SourceFile {
 
   def stage(destination: File) = {
     if (file.isDirectory) {
-      IO.copyDirectory(file, destination)
+      IO.copyDirectory(file, destination, preserveLastModified = true)
     } else {
-      IO.copyFile(file, destination)
+      IO.copyFile(file, destination, preserveLastModified = true)
     }
   }
 }
