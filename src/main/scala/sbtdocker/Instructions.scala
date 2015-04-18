@@ -73,6 +73,27 @@ object Instructions {
    */
   case class From(image: String) extends ProductDockerfileInstruction
 
+  object Label {
+
+    def apply(variables: Map[String, String]): Label = {
+      Label(variables.map { case (key, value) => formatKeyValue(key, value)}.mkString(" "))
+    }
+    def apply(key: String, value: String): Label = {
+      Label(formatKeyValue(key, value))
+    }
+
+    def formatKeyValue(key: String, value: String): String = {
+      key + "=" + escapeVariable(value)
+    }
+  }
+
+  /**
+   * Sets label(s) for the image. Docker Version >= 1.6 required.
+   * Example: "A=1 B=2 C=3"
+   * @param labels image labels
+   */
+  case class Label(labels: String) extends ProductDockerfileInstruction
+
   /**
    * Author of the image.
    * @param name Author name.
@@ -162,7 +183,7 @@ object Instructions {
     }
 
     def formatKeyValue(key: String, value: String): String = {
-      key + "=" + escapeEnvironmentVariable(value)
+      key + "=" + escapeVariable(value)
     }
   }
 
@@ -176,7 +197,7 @@ object Instructions {
   object Add {
     def apply(source: SourceFile, destination: String): Add = Add(Seq(source), destination)
   }
-  
+
   /**
    * Adds files to the image.
    * If a source file is a tar file it will be extracted as a directory.
@@ -292,7 +313,7 @@ object Instructions {
 }
 
 private[sbtdocker] object InstructionUtils {
-  def escapeEnvironmentVariable(value: String) = {
+  def escapeVariable(value: String) = {
     value
       .replace(" ", """\ """)
       .replace("=", """\=""")

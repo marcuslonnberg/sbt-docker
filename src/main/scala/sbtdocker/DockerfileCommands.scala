@@ -74,6 +74,17 @@ trait DockerfileCommands {
 
   def from(image: ImageName): T = addInstruction(From(image.toString))
 
+  def label(labelName: String, labelValue: String): T = addInstruction(Label(labelName, labelValue))
+
+  def label(lables: (String, String)*) = {
+    if (lables.nonEmpty) addInstruction(Label(lables.toMap))
+    else self
+  }
+
+  def label(lables: Map[String, String]) = addInstruction(Label(lables))
+
+  def labelRaw(labels: String): T = addInstruction(Label(labels))
+
   def maintainer(name: String): T = addInstruction(Maintainer(name))
 
   def maintainer(name: String, email: String): T = addInstruction(Maintainer(s"$name <$email>"))

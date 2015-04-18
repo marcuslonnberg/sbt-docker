@@ -77,4 +77,12 @@ class InstructionsSpec extends FlatSpec with Matchers {
   "OnBuild" should "create a correct string" in {
     OnBuild(Run.exec(Seq("echo", "123"))).toString shouldEqual "ONBUILD RUN [\"echo\", \"123\"]"
   }
+
+  "Label" should "create a correct label string" in {
+    Label("foo", "bar").toString shouldEqual "LABEL foo=bar"
+    Label("com.example.bar", "foo").toString shouldEqual """LABEL com.example.bar=foo"""
+    Label("com.example.bar", "foo=bar d&e").toString shouldEqual """LABEL com.example.bar=foo\=bar\ d&e"""
+    Label(Map("com.example.bar" -> "foo", "com.example.bor" -> "boz")).toString shouldEqual "LABEL com.example.bar=foo com.example.bor=boz"
+    Label("foo=bar").toString shouldEqual "LABEL foo=bar"
+  }
 }
