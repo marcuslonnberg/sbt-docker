@@ -6,12 +6,12 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
-val environmentValue = "b=c d&e"
+val environmentValue = "b=c 'd|!@#$%^&*(\")e"
 
 dockerfile in docker := {
   new Dockerfile {
     from("busybox")
-    env("a", environmentValue)
+    env("a"-> environmentValue, "b" -> "value")
     entryPointRaw("echo $a")
   }
 }

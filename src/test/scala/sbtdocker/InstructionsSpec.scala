@@ -37,10 +37,10 @@ class InstructionsSpec extends FlatSpec with Matchers {
   }
 
   "Env" should "create a correct string" in {
-    Env("key", "value").toString shouldEqual "ENV key=value"
-    Env("key", "-Dconfig.resource=docker.conf").toString shouldEqual """ENV key=-Dconfig.resource\=docker.conf"""
-    Env("a", "b=c d&e").toString shouldEqual """ENV a=b\=c\ d&e"""
-    Env(Map("key1" -> "value1", "key2" -> "value2")).toString shouldEqual "ENV key1=value1 key2=value2"
+    Env("key", "value").toString shouldEqual """ENV key="value""""
+    Env("key", "-Dconfig.resource=docker.conf").toString shouldEqual """ENV key="-Dconfig.resource=docker.conf""""
+    Env("a", "b=c d&e").toString shouldEqual """ENV a="b=c d&e""""
+    Env(Map("key1" -> "value1", "key2" -> "value2")).toString shouldEqual """ENV key1="value1" key2="value2""""
     Env("key=value").toString shouldEqual "ENV key=value"
   }
 
@@ -79,10 +79,11 @@ class InstructionsSpec extends FlatSpec with Matchers {
   }
 
   "Label" should "create a correct label string" in {
-    Label("foo", "bar").toString shouldEqual "LABEL foo=bar"
-    Label("com.example.bar", "foo").toString shouldEqual """LABEL com.example.bar=foo"""
-    Label("com.example.bar", "foo=bar d&e").toString shouldEqual """LABEL com.example.bar=foo\=bar\ d&e"""
-    Label(Map("com.example.bar" -> "foo", "com.example.bor" -> "boz")).toString shouldEqual "LABEL com.example.bar=foo com.example.bor=boz"
+    Label("foo", "bar").toString shouldEqual """LABEL foo="bar""""
+    Label("com.example.bar", "foo").toString shouldEqual """LABEL com.example.bar="foo""""
+    Label("com.example.bar", "foo=bar d&e").toString shouldEqual """LABEL com.example.bar="foo=bar d&e""""
+    Label(Map("com.example.bar" -> "foo", "com.example.bor" -> "boz")).toString shouldEqual
+      """LABEL com.example.bar="foo" com.example.bor="boz""""
     Label("foo=bar").toString shouldEqual "LABEL foo=bar"
   }
 }

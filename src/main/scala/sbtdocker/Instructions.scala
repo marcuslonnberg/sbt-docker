@@ -1,7 +1,7 @@
 package sbtdocker
 
 import org.apache.commons.lang3.StringEscapeUtils
-import staging.SourceFile
+import sbtdocker.staging.SourceFile
 
 sealed trait Instruction
 
@@ -76,8 +76,9 @@ object Instructions {
   object Label {
 
     def apply(variables: Map[String, String]): Label = {
-      Label(variables.map { case (key, value) => formatKeyValue(key, value)}.mkString(" "))
+      Label(variables.map { case (key, value) => formatKeyValue(key, value) }.mkString(" "))
     }
+
     def apply(key: String, value: String): Label = {
       Label(formatKeyValue(key, value))
     }
@@ -175,7 +176,7 @@ object Instructions {
 
   object Env {
     def apply(variables: Map[String, String]): Env = {
-      Env(variables.map { case (key, value) => formatKeyValue(key, value)}.mkString(" "))
+      Env(variables.map { case (key, value) => formatKeyValue(key, value) }.mkString(" "))
     }
 
     def apply(key: String, value: String): Env = {
@@ -314,9 +315,8 @@ object Instructions {
 
 private[sbtdocker] object InstructionUtils {
   def escapeVariable(value: String) = {
-    value
-      .replace(" ", """\ """)
-      .replace("=", """\=""")
+    val escapedValue = value.replace("\"", "\\\"")
+    '"' + escapedValue + '"'
   }
 
   def shellCommandString(commands: Seq[String]) = {

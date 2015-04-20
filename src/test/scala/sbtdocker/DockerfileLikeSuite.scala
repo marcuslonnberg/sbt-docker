@@ -15,6 +15,7 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
     Cmd.shell(Seq("cmd", "arg")),
     Expose(Seq(80, 8080)),
     Env("key", "value"),
+    Label("key", "value"),
     AddRaw("a", "b"),
     CopyRaw("a", "b"),
     EntryPoint.exec(Seq("entrypoint", "arg")),
@@ -36,7 +37,8 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
         |CMD ["cmd", "arg"]
         |CMD cmd arg
         |EXPOSE 80 8080
-        |ENV key=value
+        |ENV key="value"
+        |LABEL key="value"
         |ADD a b
         |COPY a b
         |ENTRYPOINT ["entrypoint", "arg"]
@@ -74,6 +76,7 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .cmdShell("cmd", "arg")
       .expose(80, 8080)
       .env("key", "value")
+      .label("key", "value")
       .addRaw("a", "b")
       .copyRaw("a", "b")
       .entryPoint("entrypoint", "arg")
