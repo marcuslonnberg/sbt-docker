@@ -15,7 +15,7 @@ dockerfile in docker := {
   val jarTargetPath = s"$appDirPath/${jarFile.name}"
   
   new Dockerfile {
-    from("dockerfile/java")
+    from("java")
     add(jarFile, jarTargetPath)
     workDir(appDirPath)
     entryPoint("java", "-jar", jarTargetPath)

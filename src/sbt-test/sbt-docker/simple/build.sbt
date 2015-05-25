@@ -22,7 +22,7 @@ dockerfile in docker := {
   // Make a colon separated classpath with the JAR file
   val classpathString = files.values.mkString(":") + ":" + jarTarget
   new Dockerfile {
-    from("dockerfile/java")
+    from("java")
     // Add all files that is on the classpath
     files.foreach {
       case (source, destination) =>

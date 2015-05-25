@@ -63,7 +63,7 @@ dockerfile in docker := {
     .mkString(":") + ":" + jarTarget
   new Dockerfile {
     // Base image
-    from("dockerfile/java")
+    from("java")
     // Add all files on the classpath
     add(classpath.files, "/app/")
     // Add the JAR file
@@ -83,7 +83,7 @@ dockerfile in docker := {
   val artifact = (outputPath in assembly).value
   val artifactTargetPath = s"/app/${artifact.name}"
   new Dockerfile {
-    from("dockerfile/java")
+    from("java")
     add(artifact, artifactTargetPath)
     entryPoint("java", "-jar", artifactTargetPath)
   }
