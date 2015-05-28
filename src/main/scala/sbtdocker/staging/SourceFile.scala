@@ -1,5 +1,7 @@
 package sbtdocker.staging
 
+import java.nio.file.{Files, StandardCopyOption}
+
 import sbt._
 
 trait SourceFile {
@@ -11,11 +13,21 @@ trait SourceFile {
 case class CopyFile(file: File) extends SourceFile {
   def filename = file.getName
 
-  def stage(destination: File) = {
-    if (file.isDirectory) {
-      IO.copyDirectory(file, destination, preserveLastModified = true)
-    } else {
-      IO.copyFile(file, destination, preserveLastModified = true)
+  def stage(destination: File): Unit = {
+    val paths = (PathFinder(file) ***) pair Path.rebase(file, destination)
+    paths.foreach((copy _).tupled)
+  }
+
+  private def copy(sourceDir: File, destinationDir: File): Unit = {
+    if (!destinationDir.getParentFile.exists()) {
+      sourceDir.getParentFile match {
+        case null =>
+          destinationDir.getParentFile.mkdirs()
+        case sourceDirParent =>
+          copy(sourceDirParent, destinationDir.getParentFile)
+      }
     }
+
+    Files.copy(sourceDir.toPath, destinationDir.toPath, StandardCopyOption.COPY_ATTRIBUTES)
   }
 }
