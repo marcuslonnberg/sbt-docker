@@ -17,10 +17,10 @@ dockerfile in docker := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val imagesWithLabel = Process("docker", Seq("images", "--filter", s"""label=com.example.key="${labelValue.replace("\"", "\\\"")}""""))
+  val imagesWithLabel = Process("docker", Seq("images", "--filter", s"""label=com.example.key=$labelValue"""))
   val out = imagesWithLabel.!!
   val firstImageName = (imageNames in docker).value.head
-  if (out.toString.contains(firstImageName.toString)) {
-    sys.error("Unexpected output: " + out)
+  if (!out.toString.contains(firstImageName.toString)) {
+    sys.error(s"Expected to find '${firstImageName.toString}' in: " + out)
   }
 }
