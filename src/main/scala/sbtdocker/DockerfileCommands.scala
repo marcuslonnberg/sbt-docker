@@ -89,16 +89,51 @@ trait DockerfileCommands {
 
   def maintainer(name: String, email: String): T = addInstruction(Maintainer(s"$name <$email>"))
 
+  /**
+   * Execute a command in the image.
+   * Uses exec form. Which means the command will not be executed in a shell.
+   *
+   * Example:
+   * {{{
+   *   run("executable", "parameter1", "parameter 2")
+   * }}}
+   * this will yield the raw instruction `RUN ["executable", "parameter1", "parameter 2"]`.
+   *
+   * @param args An executable followed by eventual parameters.
+   */
   def run(args: String*): T = {
     if (args.nonEmpty) addInstruction(Instructions.Run.exec(args))
     else self
   }
 
+  /**
+   * Execute a command in the image.
+   * The command will be executed through a shell (`/bin/sh`).
+   *
+   * Example:
+   * {{{
+   *   runShell("executable", "parameter1", "parameter 2")
+   * }}}
+   * this will yield the raw instruction `RUN executable parameter1 parameter\ 2`.
+   *
+   * @param args A command followed by eventual parameters.
+   */
   def runShell(args: String*): T = {
     if (args.nonEmpty) addInstruction(Instructions.Run.shell(args))
     else self
   }
 
+  /**
+   * Execute a command in the image.
+   *
+   * Example:
+   * {{{
+   *   runRaw("executable parameter1 parameter 2")
+   * }}}
+   * this will yield the raw instruction `RUN executable parameter1 parameter 2`.
+   *
+   * @param command A command including parameters (on shell or exec form).
+   */
   def runRaw(command: String): T = addInstruction(Instructions.Run(command))
 
   def cmd(args: String*): T = {
