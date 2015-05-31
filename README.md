@@ -18,6 +18,8 @@ addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.1.0")
 sbt-docker is an [auto plugin](http://www.scala-sbt.org/0.13/docs/Plugins.html),
 this means that sbt version 0.13.5 or higher is required.
 
+Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
+
 Usage
 -----
 
