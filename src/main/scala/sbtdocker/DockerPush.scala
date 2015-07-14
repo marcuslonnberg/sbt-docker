@@ -37,9 +37,8 @@ object DockerPush {
     val command = dockerPath :: "push" :: imageName.toString :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}'")
 
-    val processOutput = Process(command).lines(processLog)
-    processOutput.foreach { line =>
-      log.info(line)
-    }
+    val process = Process(command)
+    val exitValue = process ! processLog
+    if (exitValue != 0) sys.error("Failed to push")
   }
 }
