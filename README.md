@@ -22,7 +22,7 @@ Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
 
 ### Getting started
 
-Below are some documentation on the most common sbt tasks and settings in the plugin.
+Below are some documentation on the sbt tasks and settings in the plugin.
 
 This blog post gives a good introduction to the basics of sbt-docker: [Dockerizing your Scala apps with sbt-docker](https://velvia.github.io/Docker-Scala-Sbt/)
 
