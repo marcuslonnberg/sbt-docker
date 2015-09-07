@@ -116,17 +116,17 @@ The `imageNames in docker` key is used to determine which image names to push.
 
 ### Custom image names
 
-Set `imageNames in docker` of type `Seq[sbtdocker.ImageName]`.
+You can specify the names / tags you want your image to get after a successful build with the `imageNames in docker` key of type `Seq[sbtdocker.ImageName]`.
 
 Example:
 ```scala
 imageNames in docker := Seq(
-  ImageName("organization/name:tag"),
+  ImageName(s"${organization.value}/${name.value}:latest"), // Sets the latest tag
   ImageName(
   	namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value)
-  )
+  ) // Sets a name with a tag that contains the project version
 )
 ```
 
