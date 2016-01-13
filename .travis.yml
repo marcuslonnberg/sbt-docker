@@ -1,12 +1,9 @@
-sudo: required
-services:
-  - docker
+# Only the ScalaTest tests will be run!
+# The scripted tests require Docker which travis does not support
 language: scala
 scala:
-  - 2.10.6
+  - 2.10.4
 jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION test scripted
