@@ -48,7 +48,7 @@ It could for example be with the `package` task or with tasks from plugins such 
 
 Here is how to make the docker task depend on the sbt `package` task:
 ```scala
-docker <<= docker.dependsOn(`package`.in(Compile, packageBin))
+docker <<= docker.dependsOn(sbt.Keys.`package`.in(Compile, packageBin))
 ```
 
 ### Defining a Dockerfile
@@ -61,7 +61,7 @@ The mutable class is default and is used in the following examples.
 
 Example with the sbt `package` task.
 ```scala
-docker <<= docker.dependsOn(`package`.in(Compile, packageBin))
+docker <<= docker.dependsOn(sbt.Keys.`package`.in(Compile, packageBin))
 
 dockerfile in docker := {
   val jarFile = artifactPath.in(Compile, packageBin).value
