@@ -1,0 +1,2 @@
+- The `dockerPush` task will now fail on Docker image push failure.
+- Rename `dockerCmd` to `dockerPath`, this gives better compatibility with sbt-native-packager.
