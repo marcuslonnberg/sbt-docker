@@ -99,6 +99,22 @@ dockerfile in docker := {
 }
 ```
 
+Example with [sbt-native-packager](https://github.com/sbt/sbt-native-packager):
+```scala
+enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+
+dockerfile in docker := {
+  val appDir = stage.value
+  val targetDir = "/app"
+
+  new Dockerfile {
+    from("java")
+    entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+    copy(appDir, targetDir)
+  }
+}
+```
+
 Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
 ### Building an image
