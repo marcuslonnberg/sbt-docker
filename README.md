@@ -1,9 +1,11 @@
 sbt-docker
 ==========
-sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin which builds [Docker](http://www.docker.io/) images for your projects.
+
+sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin that builds and pushes [Docker](https://www.docker.com/) images for your project.
 
 Requirements
 ------------
+
 * sbt
 * Docker
 
@@ -46,11 +48,6 @@ project generates, then you must make the `docker` task depend on the tasks that
 It could for example be with the `package` task or with tasks from plugins such as
 [sbt-assembly](https://github.com/sbt/sbt-assembly).
 
-Here is how to make the docker task depend on the sbt `package` task:
-```scala
-docker <<= docker.dependsOn(sbt.Keys.`package`.in(Compile, packageBin))
-```
-
 ### Defining a Dockerfile
 
 In order to produce a Docker image a Dockerfile must be defined.
@@ -58,31 +55,6 @@ It should be defined at the `dockerfile in docker` key.
 There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles
 the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
 The mutable class is default and is used in the following examples.
-
-Example with the sbt `package` task.
-```scala
-docker <<= docker.dependsOn(sbt.Keys.`package`.in(Compile, packageBin))
-
-dockerfile in docker := {
-  val jarFile = artifactPath.in(Compile, packageBin).value
-  val classpath = (managedClasspath in Compile).value
-  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
-  val jarTarget = s"/app/${jarFile.getName}"
-  // Make a colon separated classpath with the JAR file
-  val classpathString = classpath.files.map("/app/" + _.getName)
-    .mkString(":") + ":" + jarTarget
-  new Dockerfile {
-    // Base image
-    from("java")
-    // Add all files on the classpath
-    add(classpath.files, "/app/")
-    // Add the JAR file
-    add(jarFile, jarTarget)
-    // On launch run Java with the classpath and the main class
-    entryPoint("java", "-cp", classpathString, mainclass)
-  }
-}
-```
 
 Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
@@ -104,13 +76,36 @@ Example with [sbt-native-packager](https://github.com/sbt/sbt-native-packager):
 enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
 
 dockerfile in docker := {
-  val appDir = stage.value
+  val appDir: File = stage.value
   val targetDir = "/app"
 
   new Dockerfile {
     from("java")
     entryPoint(s"$targetDir/bin/${executableScriptName.value}")
     copy(appDir, targetDir)
+  }
+}
+```
+
+Example with the sbt `package` task.
+```scala
+dockerfile in docker := {
+  val jarFile: File = sbt.Keys.`package`.in(Compile, packageBin).value
+  val classpath = (managedClasspath in Compile).value
+  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+  val jarTarget = s"/app/${jarFile.getName}"
+  // Make a colon separated classpath with the JAR file
+  val classpathString = classpath.files.map("/app/" + _.getName)
+    .mkString(":") + ":" + jarTarget
+  new Dockerfile {
+    // Base image
+    from("java")
+    // Add all files on the classpath
+    add(classpath.files, "/app/")
+    // Add the JAR file
+    add(jarFile, jarTarget)
+    // On launch run Java with the classpath and the main class
+    entryPoint("java", "-cp", classpathString, mainclass)
   }
 }
 ```
@@ -136,12 +131,15 @@ You can specify the names / tags you want your image to get after a successful b
 Example:
 ```scala
 imageNames in docker := Seq(
-  ImageName(s"${organization.value}/${name.value}:latest"), // Sets the latest tag
+  // Sets the latest tag
+  ImageName(s"${organization.value}/${name.value}:latest"),
+
+  // Sets a name with a tag that contains the project version
   ImageName(
-  	namespace = Some(organization.value),
+    namespace = Some(organization.value),
     repository = name.value,
     tag = Some("v" + version.value)
-  ) // Sets a name with a tag that contains the project version
+  )
 )
 ```
 
@@ -154,7 +152,8 @@ Example:
 buildOptions in docker := BuildOptions(
   cache = false,
   removeIntermediateContainers = BuildOptions.Remove.Always,
-  pullBaseImage = BuildOptions.Pull.Always)
+  pullBaseImage = BuildOptions.Pull.Always
+)
 ```
 
 ### Auto packaging JVM applications
