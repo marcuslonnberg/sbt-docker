@@ -6,12 +6,9 @@ version := "0.1.0"
 
 enablePlugins(DockerPlugin)
 
-// Make docker depend on the package task, which generates a jar file of the application code
-docker <<= docker.dependsOn(sbt.Keys.`package`.in(Compile, packageBin))
-
 // Define a Dockerfile
 dockerfile in docker := {
-  val jarFile = artifactPath.in(Compile, packageBin).value
+  val jarFile = sbt.Keys.`package`.in(Compile, packageBin).value
   val classpath = (managedClasspath in Compile).value
   val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
   val jarTarget = s"/app/${jarFile.getName}"
@@ -34,4 +31,5 @@ imageNames in docker := Seq(
   ImageName("sbtdocker/basic:stable"),
   ImageName(namespace = Some(organization.value),
     repository = name.value,
-    tag = Some("v" + version.value)))
+    tag = Some("v" + version.value))
+)
