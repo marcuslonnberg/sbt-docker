@@ -12,6 +12,6 @@ object DockerKeys {
 
   val dockerfile = taskKey[DockerfileLike]("Definition of the Dockerfile that should be built.")
   val imageNames = taskKey[Seq[ImageName]]("Names of the built image.")
-  val dockerCmd = settingKey[String]("Path to the Docker binary.")
+  val dockerPath = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
 }

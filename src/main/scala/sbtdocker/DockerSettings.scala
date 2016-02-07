@@ -9,19 +9,19 @@ object DockerSettings {
   lazy val baseDockerSettings = Seq(
     docker := {
       val log = Keys.streams.value.log
-      val dockerCmd = (DockerKeys.dockerCmd in docker).value
+      val dockerPath = (DockerKeys.dockerPath in docker).value
       val buildOptions = (DockerKeys.buildOptions in docker).value
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
       val imageNames = (DockerKeys.imageNames in docker).value
-      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerCmd, log)
+      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log
-      val dockerCmd = (DockerKeys.dockerCmd in docker).value
+      val dockerPath = (DockerKeys.dockerPath in docker).value
       val imageNames = (DockerKeys.imageNames in docker).value
 
-      DockerPush(dockerCmd, imageNames, log)
+      DockerPush(dockerPath, imageNames, log)
     },
     dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
       build.flatMap { id =>
@@ -48,7 +48,7 @@ object DockerSettings {
     imageNames in docker := {
       Seq((imageName in docker).value)
     },
-    dockerCmd in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
+    dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
     buildOptions in docker := BuildOptions()
   )
 
