@@ -6,19 +6,15 @@ version := "0.1.0"
 
 enablePlugins(DockerPlugin)
 
-// Make docker depend on the assembly task, which generates a fat jar file
-docker <<= (docker dependsOn assembly)
-
 dockerfile in docker := {
-  val jarFile = (outputPath in assembly).value
-  val appDirPath = "/app"
-  val jarTargetPath = s"$appDirPath/${jarFile.name}"
-  
+  // The assembly task generates a fat JAR file
+  val artifact: File = assembly.value
+  val artifactTargetPath = s"/app/${artifact.name}"
+
   new Dockerfile {
     from("java")
-    add(jarFile, jarTargetPath)
-    workDir(appDirPath)
-    entryPoint("java", "-jar", jarTargetPath)
+    add(artifact, artifactTargetPath)
+    entryPoint("java", "-jar", artifactTargetPath)
   }
 }
 

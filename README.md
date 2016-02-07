@@ -86,12 +86,11 @@ dockerfile in docker := {
 
 Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
 ```scala
-// Make the docker task depend on the assembly task, which generates a fat JAR file
-docker <<= (docker dependsOn assembly)
-
 dockerfile in docker := {
-  val artifact = (outputPath in assembly).value
+  // The assembly task generates a fat JAR file
+  val artifact: File = assembly.value
   val artifactTargetPath = s"/app/${artifact.name}"
+
   new Dockerfile {
     from("java")
     add(artifact, artifactTargetPath)
