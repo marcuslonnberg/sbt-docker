@@ -1,0 +1,5 @@
+> alfa:docker
+$ exists target/docker-alfa/Dockerfile
+> bravo:docker
+$ exists target/docker-bravo/Dockerfile
+> check
