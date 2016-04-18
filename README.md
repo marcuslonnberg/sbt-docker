@@ -3,6 +3,8 @@ sbt-docker
 
 sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin that builds and pushes [Docker](https://www.docker.com/) images for your project.
 
+[![Build Status](https://travis-ci.org/marcuslonnberg/sbt-docker.svg?branch=master)](https://travis-ci.org/marcuslonnberg/sbt-docker)
+
 Requirements
 ------------
 
