@@ -1,3 +1,7 @@
+## 1.4.0
+
+- Don't use deprecated docker tag flag for versions 1.10 and up of Docker [#39](https://github.com/marcuslonnberg/sbt-docker/issues/39)
+
 ## 1.3.0
 
 - The `dockerPush` task will now fail on Docker image push failure.

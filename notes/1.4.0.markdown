@@ -1,0 +1,3 @@
+- Don't use deprecated docker tag flag for versions 1.10 and up of Docker [#39](https://github.com/marcuslonnberg/sbt-docker/issues/39)
+
+This update is needed to support the next Docker version 1.12.
