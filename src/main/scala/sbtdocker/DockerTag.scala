@@ -15,7 +15,7 @@ object DockerTag {
     log.info(s"Tagging image $id with name: $name")
 
     val version = DockerVersion(dockerPath, log)
-    val flags = if(version.major <= 1 && version.minor < 10) "-f" :: Nil else Nil
+    val flags = if(version.major < 1 || (version.major == 1 && version.minor < 10)) "-f" :: Nil else Nil
     val command = dockerPath :: "tag" :: flags ::: id.id :: name.toString :: Nil
 
     val processOutput = Process(command).lines(processLogger)
