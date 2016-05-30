@@ -85,6 +85,26 @@ class StartOptions
   override def toString = s"StartOptions(containers=$containers)"
 }
 
+class StopOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+  private [sbtdocker] var time: Option[Int] = None
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+  def time(wait: Int): Unit = time = Some(wait)
+
+  override def toString = s"StopOptions(containers=$containers, time=$time)"
+}
+
+class RmOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+
+  override def toString = s"RmOptions(containers=$containers)"
+}
+
 case class PortMap(
   hostIp: Option[IPAddress] = None,
   hostPort: Option[Port] = None,

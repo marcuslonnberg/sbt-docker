@@ -16,7 +16,11 @@ object DockerPlugin extends AutoPlugin {
     val dockerCreate = DockerKeys.dockerCreate
     val createOptions = DockerKeys.createOptions
     val dockerStart = DockerKeys.dockerStart
+    val dockerStop = DockerKeys.dockerStop
+    val dockerRm = DockerKeys.dockerRm
     val startOptions = DockerKeys.startOptions
+    val stopOptions = DockerKeys.stopOptions
+    val rmOptions = DockerKeys.rmOptions
 
     type Dockerfile = sbtdocker.Dockerfile
     val ImageId = sbtdocker.ImageId
@@ -27,6 +31,8 @@ object DockerPlugin extends AutoPlugin {
     type BuildOptions = sbtdocker.BuildOptions
     type CreateOptions = sbtdocker.CreateOptions
     type StartOptions = sbtdocker.StartOptions
+    type StopOptions = sbtdocker.StopOptions
+    type RmOptions = sbtdocker.RmOptions
 
     val CopyFile = sbtdocker.staging.CopyFile
     type CopyFile = sbtdocker.staging.CopyFile

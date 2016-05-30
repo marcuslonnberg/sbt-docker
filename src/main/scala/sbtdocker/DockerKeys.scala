@@ -9,8 +9,7 @@ object DockerKeys {
   val dockerCreate = taskKey[ContainerId]("Create a docker container.")
   val dockerStart = taskKey[ContainerId]("Start a docker container")
   val dockerStop = taskKey[ContainerId]("Stop a docker container")
-  val dockerRestart = taskKey[ContainerId]("Restart a docker container")
-  val dockerRM = taskKey[ContainerId]("Remove a docker container")
+  val dockerRm = taskKey[ContainerId]("Remove a docker container")
 
   @deprecated("Use imageNames instead.", "1.0.0")
   val imageName = taskKey[ImageName]("Name of the built image.")
@@ -19,6 +18,8 @@ object DockerKeys {
   val imageNames = taskKey[Seq[ImageName]]("Names of the built image.")
   val createOptions = taskKey[CreateOptions]("Options for the Docker create command.")
   val startOptions = taskKey[StartOptions]("Options for the docker start command.")
+  val stopOptions = taskKey[StopOptions]("Options for the docker stop command.")
+  val rmOptions = taskKey[RmOptions]("Options for the docker rm command")
   val dockerPath = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
 }

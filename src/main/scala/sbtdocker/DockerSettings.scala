@@ -40,6 +40,18 @@ object DockerSettings {
       val startOptions = (DockerKeys.startOptions in docker).value
       DockerStart(dockerPath, startOptions, log)
     },
+    dockerStop := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val stopOptions = (DockerKeys.stopOptions in docker).value
+      DockerStop(dockerPath, stopOptions, log)
+    },
+    dockerRm := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val rmOptions = (DockerKeys.rmOptions in docker).value
+      DockerRm(dockerPath, rmOptions, log)
+    },
     dockerfile in docker := {
       sys.error(
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
@@ -67,6 +79,8 @@ object DockerSettings {
       )
     },
     startOptions in docker := new StartOptions,
+    stopOptions in docker := new StopOptions,
+    rmOptions in docker := new RmOptions,
     target in docker := target.value / "docker",
     imageName in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
