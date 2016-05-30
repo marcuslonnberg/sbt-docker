@@ -55,6 +55,7 @@ object DockerSettings {
           |  expose(22)
           |  port("0.0.0.0", 3306, 3306)
           |  port("0.0.0.0:9022:22")
+          |  env("MYSQL_RANDOM_ROOT_PASSWORD" -> "true")
           |}
         """.stripMargin
       )

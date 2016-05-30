@@ -43,9 +43,13 @@ class CreateOptions
 {
   import scala.language.implicitConversions
 
+  var imageId: Option[String] = None
   var exposes: Seq[Port] = Seq.empty
   var ports: Seq[PortMap] = Seq.empty
-  var imageId: Option[String] = None
+  var env: Seq[(String, String)] = Seq.empty
+
+
+  def image(id: String): Unit = imageId = Some(id)
 
   def expose(port: Port): Unit = exposes = exposes :+ port
 
@@ -57,7 +61,7 @@ class CreateOptions
   def port(hp: Port, cp: Port): Unit =
     port(PortMap(hostPort = Some(hp), containerPort = cp))
 
-  def image(id: String): Unit = imageId = Some(id)
+  def env(pairs: (String, String)*): Unit = env = env ++ pairs
 
   implicit def intToPort(i: Int): Port = Port(i)
   implicit def stringToIpAddress(s: String): IPAddress = s match {
