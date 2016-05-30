@@ -105,14 +105,23 @@ class RmOptions
   override def toString = s"RmOptions(containers=$containers)"
 }
 
+class PortOptions
+{
+  private [sbtdocker] var container: Option[ContainerId] = None
+
+  def container(cid: ContainerId): Unit = container = Some(cid)
+
+  override def toString = s"PortOptions(containers=$container)"
+}
+
 case class PortMap(
   hostIp: Option[IPAddress] = None,
   hostPort: Option[Port] = None,
   containerPort: Port,
-  isUDP: Boolean = false
+  protocol: Option[IpProtocol] = None
 ) {
   override def toString = {
-    val udp = if(isUDP) "/udb" else ""
+    val udp = protocol map (p => s"/${p.name}") getOrElse ""
     hostIp match {
       case Some(hip) =>
         hostPort match {
@@ -152,13 +161,55 @@ object PortMap {
 
   def unapply(pm: String): Option[PortMap] = {
     pm split "/" match {
-      case Array(ProcessMapping(mapping), "udp") =>
-        Some(mapping.copy(isUDP = true))
+      case Array(ProcessMapping(mapping), IpProtocol(protocol)) =>
+        Some(mapping.copy(protocol = Some(protocol)))
       case Array(ProcessMapping(mapping)) =>
         Some(mapping)
       case _ =>
         None
     }
+  }
+
+  object FromPortCommand {
+    def unapply(mapping: String): Option[PortMap] = mapping split "->" map (_.trim) match {
+      case Array(ContainerPortProtocol(containerPort, protocol), HostAddressPort(hostIp, hostPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), hostPort = Some(hostPort), containerPort = containerPort, protocol = Some(protocol)))
+      case _ => None
+    }
+  }
+
+  object ContainerPortProtocol {
+    def unapply(cpp: String): Option[(Port, IpProtocol)] = cpp split "/" match {
+      case Array(Port(port), IpProtocol(protocol)) => Some(port -> protocol)
+      case _ => None
+    }
+  }
+
+  object HostAddressPort {
+    def unapply(hap: String): Option[(IPAddress, Port)] = hap split ":" match {
+      case Array(IPAddress(ip), Port(p)) => Some(ip -> p)
+    }
+  }
+}
+
+case class PortMapping(maps: Seq[PortMap])
+{
+  def hostPortForContainer(cp: Port): Option[Port] =
+    (maps filter (_.containerPort == cp) flatMap (_.hostPort)).headOption
+}
+
+sealed trait IpProtocol {
+  def name: String
+}
+
+object IpProtocol {
+  case object TCP extends IpProtocol { def name = "tcp" }
+  case object UDP extends IpProtocol { def name = "udp" }
+
+  def unapply(protocol: String): Option[IpProtocol] = protocol.toLowerCase match {
+    case "tcp" => Some(TCP)
+    case "udp" => Some(UDP)
+    case _ => None
   }
 }
 

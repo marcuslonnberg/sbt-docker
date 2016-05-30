@@ -10,6 +10,7 @@ object DockerKeys {
   val dockerStart = taskKey[ContainerId]("Start a docker container")
   val dockerStop = taskKey[ContainerId]("Stop a docker container")
   val dockerRm = taskKey[ContainerId]("Remove a docker container")
+  val dockerPort = taskKey[PortMapping]("List docker container port mappings")
 
   @deprecated("Use imageNames instead.", "1.0.0")
   val imageName = taskKey[ImageName]("Name of the built image.")
@@ -20,6 +21,7 @@ object DockerKeys {
   val startOptions = taskKey[StartOptions]("Options for the docker start command.")
   val stopOptions = taskKey[StopOptions]("Options for the docker stop command.")
   val rmOptions = taskKey[RmOptions]("Options for the docker rm command")
+  val portOptions = taskKey[PortOptions]("Options for the docker port command")
   val dockerPath = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
 }

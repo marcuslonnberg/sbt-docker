@@ -52,6 +52,12 @@ object DockerSettings {
       val rmOptions = (DockerKeys.rmOptions in docker).value
       DockerRm(dockerPath, rmOptions, log)
     },
+    dockerPort := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val portOptions = (DockerKeys.portOptions in docker).value
+      DockerPort(dockerPath, portOptions, log)
+    },
     dockerfile in docker := {
       sys.error(
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
