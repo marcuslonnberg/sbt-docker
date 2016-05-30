@@ -22,7 +22,14 @@ object DockerCreate {
     val e = createOptions.exposes.to[List] flatMap(e => "--expose" :: e.toString :: Nil)
     val p = createOptions.ports.to[List] flatMap(p => "-p" :: p.toString :: Nil)
 
-    val command = dockerPath :: "create" :: p ::: createOptions.imageId :: Nil
+    val imageId = createOptions.imageId match {
+      case Some(id) =>
+        id
+      case None =>
+        sys.error("DockerCreate requires an imageId")
+    }
+
+    val command = dockerPath :: "create" :: p ::: imageId :: Nil
 
     val processOut = Process(command).lines(processLogger)
 

@@ -39,27 +39,34 @@ case class BuildOptions(
   pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing
 )
 
-case class CreateOptions(exposes: Seq[Port],
-                         ports: Seq[PortMap],
-                         imageId: String
-)
+class CreateOptions
+{
+  import scala.language.implicitConversions
 
-object CreateWith {
-  def apply = {
-    var exposes: Seq[Port] = Seq.empty
-    var ports: Seq[PortMap] = Seq.empty
-    var imgId: Option[String] = None
+  var exposes: Seq[Port] = Seq.empty
+  var ports: Seq[PortMap] = Seq.empty
+  var imageId: Option[String] = None
 
-    def expose(port: Port): Unit = exposes = exposes :+ port
-    def port(portMap: PortMap): Unit = ports = ports :+ portMap
-    def imageId(id: String): Unit = imgId = Some(id)
+  def expose(port: Port): Unit = exposes = exposes :+ port
 
-    implicit def toCreateOptions: CreateOptions = imgId match {
-      case Some(id) =>
-        CreateOptions(exposes = exposes, ports = ports, imageId = id)
-      case None =>
-        sys.error("CreateOptions requires an image ID")
-    }
+  def port(portMap: PortMap): Unit = ports = ports :+ portMap
+  def port(ip: IPAddress, hp: Port, cp: Port): Unit =
+    port(PortMap(hostIp = Some(ip), hostPort = Some(hp), containerPort = cp))
+  def port(ip: IPAddress, cp: Port): Unit =
+    port(PortMap(hostIp = Some(ip), hostPort = None, containerPort = cp))
+  def port(hp: Port, cp: Port): Unit =
+    port(PortMap(hostPort = Some(hp), containerPort = cp))
+
+  def image(id: String): Unit = imageId = Some(id)
+
+  implicit def intToPort(i: Int): Port = Port(i)
+  implicit def stringToIpAddress(s: String): IPAddress = s match {
+    case IPAddress(ip) => ip
+    case _ => sys.error(s"Could not parse '$s' as an ip address")
+  }
+  implicit def stringToPortMap(s: String): PortMap = s match {
+    case PortMap(pm) => pm
+    case _ => sys.error(s"Could not parse '$s' as a port mapping")
   }
 }
 

@@ -50,7 +50,7 @@ object DockerSettings {
         """Docker create settings not defined. Please define with `createOptions in docker`
           |
           |Example:
-          |createOptions in docker := CreateWith {
+          |createOptions in docker := new CreateOptions {
           |  image("mysql")
           |  expose(22)
           |  port("0.0.0.0", 3306, 3306)
