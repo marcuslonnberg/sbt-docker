@@ -43,10 +43,10 @@ class CreateOptions
 {
   import scala.language.implicitConversions
 
-  var imageId: Option[String] = None
-  var exposes: Seq[Port] = Seq.empty
-  var ports: Seq[PortMap] = Seq.empty
-  var env: Seq[(String, String)] = Seq.empty
+  private [sbtdocker] var imageId: Option[String] = None
+  private [sbtdocker] var exposes: Seq[Port] = Seq.empty
+  private [sbtdocker] var ports: Seq[PortMap] = Seq.empty
+  private [sbtdocker] var env: Seq[(String, String)] = Seq.empty
 
 
   def image(id: String): Unit = imageId = Some(id)
@@ -72,6 +72,17 @@ class CreateOptions
     case PortMap(pm) => pm
     case _ => sys.error(s"Could not parse '$s' as a port mapping")
   }
+
+  override def toString = s"CreateOptions(imageId=$imageId, exposes=$exposes, ports=$ports, env=$env)"
+}
+
+class StartOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+
+  override def toString = s"StartOptions(containers=$containers)"
 }
 
 case class PortMap(
