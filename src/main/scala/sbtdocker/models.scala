@@ -39,6 +39,149 @@ case class BuildOptions(
   pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing
 )
 
+case class CreateOptions(exposes: Seq[Port],
+                         ports: Seq[PortMap],
+                         imageId: String
+)
+
+object CreateWith {
+  def apply = {
+    var exposes: Seq[Port] = Seq.empty
+    var ports: Seq[PortMap] = Seq.empty
+    var imgId: Option[String] = None
+
+    def expose(port: Port): Unit = exposes = exposes :+ port
+    def port(portMap: PortMap): Unit = ports = ports :+ portMap
+    def imageId(id: String): Unit = imgId = Some(id)
+
+    implicit def toCreateOptions: CreateOptions = imgId match {
+      case Some(id) =>
+        CreateOptions(exposes = exposes, ports = ports, imageId = id)
+      case None =>
+        sys.error("CreateOptions requires an image ID")
+    }
+  }
+}
+
+case class PortMap(
+  hostIp: Option[IPAddress] = None,
+  hostPort: Option[Port] = None,
+  containerPort: Port,
+  isUDP: Boolean = false
+) {
+  override def toString = {
+    val udp = if(isUDP) "/udb" else ""
+    hostIp match {
+      case Some(hip) =>
+        hostPort match {
+          case Some(hp) =>
+            s"$hip:$hp:$containerPort$udp"
+          case None =>
+            s"$hip::$containerPort$udp"
+        }
+      case None =>
+        hostPort match {
+          case Some(hp) =>
+            s"$hp:$containerPort$udp"
+          case None =>
+            s"$containerPort$udp"
+        }
+    }
+
+  }
+}
+
+object PortMap {
+  object ProcessMapping {
+    def unapply(mapping: String): Option[PortMap] = mapping split ":" match {
+      case Array(IPAddress(hostIp), Port(hostPort), Port(containerPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), hostPort = Some(hostPort), containerPort = containerPort))
+      case Array(IPAddress(hostIp), "", Port(containerPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), containerPort = containerPort))
+      case Array(Port(hostPort), Port(containerPort)) =>
+        Some(PortMap(hostPort = Some(hostPort), containerPort = containerPort))
+      case Array(Port(containerPort)) =>
+        Some(PortMap(containerPort = containerPort))
+      case _ => None
+    }
+  }
+
+
+
+  def unapply(pm: String): Option[PortMap] = {
+    pm split "/" match {
+      case Array(ProcessMapping(mapping), "udp") =>
+        Some(mapping.copy(isUDP = true))
+      case Array(ProcessMapping(mapping)) =>
+        Some(mapping)
+      case _ =>
+        None
+    }
+  }
+}
+
+case class IPAddress(
+  d1: IPDigit,
+  d2: IPDigit,
+  d3: IPDigit,
+  d4: IPDigit)
+{
+  override def toString = s"$d1.$d2.$d3.$d4"
+}
+
+object IPAddress {
+  def unapply(txt: String): Option[IPAddress] = txt split '.' match {
+    case Array(IPDigit(d1), IPDigit(d2), IPDigit(d3), IPDigit(d4)) =>
+      Some(IPAddress(d1, d2, d3, d4))
+    case _ =>
+      None
+  }
+}
+
+case class IPDigit(digit: Short) // 8 bit unsigned
+{
+  if(digit < 0 || digit > 255)
+    throw new IllegalArgumentException(s"IP digit must be in the range 0..255 but was '$digit'")
+
+  override def toString = digit.toString
+}
+
+object IPDigit {
+  val IPDigitRx = """(\d+)""".r
+  def unapply(txt: String): Option[IPDigit] = txt match {
+    case IPDigitRx(d) =>
+      d.toShort match {
+        case di if di < 256 =>
+          Some(IPDigit(di))
+        case _ => None
+      }
+    case _ => None
+  }
+}
+
+case class Port(number: Int) // 16 bit unsigned
+{
+  if(number < 0 || number > 65535)
+    throw new IllegalArgumentException(s"Port must be in the range 0..65535 but was '$number'")
+
+  override def toString = number.toString
+}
+
+object Port {
+  private val PortRx = """(\d+)""".r
+
+  def unapply(txt: String): Option[Port] = txt match {
+    case PortRx(n) =>
+      n.toInt match {
+        case i if i <= 65535 =>
+          Some(Port(i))
+        case _ =>
+          None
+      }
+    case _ => None
+  }
+}
+
 /**
  * Id of an Docker image.
  * @param id Id as a hexadecimal digit string.
@@ -103,4 +246,21 @@ case class ImageName(
 
   @deprecated("Use toString instead.", "0.4.0")
   def name = toString
+}
+
+case class ContainerId(id: String) {
+  override def toString = id
+}
+
+object ContainerId {
+  private val ContainerIdRx = """([0-9a-f]+)""".r
+  /**
+    * Parse a [[sbtdocker.ContainerId]] from a string.
+    */
+  def unapply(id: String): Option[ContainerId] = id match {
+    case ContainerIdRx(i) =>
+      Some(ContainerId(i))
+    case _ =>
+      None
+  }
 }

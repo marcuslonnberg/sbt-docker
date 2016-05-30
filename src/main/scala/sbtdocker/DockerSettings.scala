@@ -28,6 +28,12 @@ object DockerSettings {
         push.map(_ => id)
       }
     },
+    dockerCreate := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val createOptions = (DockerKeys.createOptions in docker).value
+      DockerCreate(dockerPath, createOptions, log)
+    },
     dockerfile in docker := {
       sys.error(
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
@@ -38,6 +44,20 @@ object DockerSettings {
           | ...
           |}
         """.stripMargin)
+    },
+    createOptions in docker := {
+      sys.error(
+        """Docker create settings not defined. Please define with `createOptions in docker`
+          |
+          |Example:
+          |createOptions in docker := CreateWith {
+          |  image("mysql")
+          |  expose(22)
+          |  port("0.0.0.0", 3306, 3306)
+          |  port("0.0.0.0:9022:22")
+          |}
+        """.stripMargin
+      )
     },
     target in docker := target.value / "docker",
     imageName in docker := {
