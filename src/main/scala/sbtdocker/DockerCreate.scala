@@ -30,7 +30,7 @@ object DockerCreate {
     val p = createOptions.ports.to[List] flatMap(p => "-p" :: p.toString :: Nil)
     val env = createOptions.env.to[List] flatMap(e => "--env" :: s"${e._1}=${e._2}" :: Nil)
 
-    val command = dockerPath :: "create" :: p ::: env ::: imageId :: Nil
+    val command = dockerPath :: "create" :: p ::: env ::: imageId.id :: Nil
 
     val processOut = Process(command).lines(processLogger)
 

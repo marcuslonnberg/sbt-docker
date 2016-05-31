@@ -43,13 +43,13 @@ class CreateOptions
 {
   import scala.language.implicitConversions
 
-  private [sbtdocker] var imageId: Option[String] = None
+  private [sbtdocker] var imageId: Option[ImageId] = None
   private [sbtdocker] var exposes: Seq[Port] = Seq.empty
   private [sbtdocker] var ports: Seq[PortMap] = Seq.empty
   private [sbtdocker] var env: Seq[(String, String)] = Seq.empty
 
 
-  def image(id: String): Unit = imageId = Some(id)
+  def image(id: ImageId): Unit = imageId = Some(id)
 
   def expose(port: Port): Unit = exposes = exposes :+ port
 
@@ -63,6 +63,7 @@ class CreateOptions
 
   def env(pairs: (String, String)*): Unit = env = env ++ pairs
 
+  implicit def stringToImageId(s: String): ImageId = ImageId(s)
   implicit def intToPort(i: Int): Port = Port(i)
   implicit def stringToIpAddress(s: String): IPAddress = s match {
     case IPAddress(ip) => ip
