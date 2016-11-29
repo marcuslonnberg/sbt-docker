@@ -19,9 +19,6 @@ trait DockerfileCommands {
 
   protected def self: T
 
-  @deprecated("Use stageFile instead.", "0.4.0")
-  def copyToStageDir(source: File, targetRelativeToStageDir: File): T = stageFile(source, targetRelativeToStageDir)
-
   /**
    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
    *
@@ -170,18 +167,6 @@ trait DockerfileCommands {
 
   def add(source: File, destination: File): T = addInstruction(Add(CopyFile(source), destination.getPath))
 
-  @deprecated("Use addRaw instead.", "1.0.0")
-  def add(source: URL, destination: String): T = addRaw(source, destination)
-
-  @deprecated("Use addRaw instead.", "1.0.0")
-  def add(source: URL, destination: File): T = addRaw(source, destination)
-
-  @deprecated("Use addRaw instead.", "1.0.0")
-  def add(source: String, destination: String): T = addRaw(source, destination)
-
-  @deprecated("Use addRaw instead.", "1.0.0")
-  def add(source: String, destination: File): T = addRaw(source, destination)
-
   def addRaw(source: URL, destination: String): T = addInstruction(AddRaw(source.toString, destination))
 
   def addRaw(source: URL, destination: File): T = addInstruction(AddRaw(source.toString, destination.toString))
@@ -195,24 +180,6 @@ trait DockerfileCommands {
   def copy(sources: Seq[File], destination: String): T = addInstruction(Copy(sources.map(CopyFile), destination))
 
   def copy(source: File, destination: File): T = addInstruction(Copy(CopyFile(source), destination.toString))
-
-  @deprecated("Use copyRaw instead.", "1.0.0")
-  def copy(source: URL, destination: String): T = copyRaw(source, destination)
-
-  @deprecated("Use copyRaw instead.", "1.0.0")
-  def copy(source: URL, destination: File): T = copyRaw(source, destination)
-
-  @deprecated("Use copyRaw instead.", "1.0.0")
-  def copy(source: String, destination: String): T = copyRaw(source, destination)
-
-  @deprecated("Use copyRaw instead.", "1.0.0")
-  def copy(source: String, destination: File): T = copyRaw(source, destination)
-
-  @deprecated("Invalid instruction, use addRaw instead", "1.0.1")
-  def copyRaw(source: URL, destination: String): T = addInstruction(CopyRaw(source.toString, destination))
-
-  @deprecated("Invalid instruction, use addRaw instead", "1.0.1")
-  def copyRaw(source: URL, destination: File): T = addInstruction(CopyRaw(source.toString, destination.toString))
 
   def copyRaw(source: String, destination: String): T = addInstruction(CopyRaw(source, destination))
 
