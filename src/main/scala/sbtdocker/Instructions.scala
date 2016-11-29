@@ -14,9 +14,6 @@ trait DockerfileInstruction extends Instruction {
   def instructionName: String
 
   override def toString = s"$instructionName $arguments"
-
-  @deprecated("Use toString instead.", "0.4.0")
-  def toInstructionString = toString
 }
 
 /**

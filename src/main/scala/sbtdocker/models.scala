@@ -100,7 +100,4 @@ case class ImageName(
     val tagString = tag.fold("")(":" + _)
     registryString + namespaceString + repository + tagString
   }
-
-  @deprecated("Use toString instead.", "0.4.0")
-  def name = toString
 }
