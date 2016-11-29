@@ -19,7 +19,7 @@ dockerfile in docker := {
 val check = taskKey[Unit]("Check")
 
 check := {
-  val process = Process("docker", Seq("run", "--rm", (imageName in docker).value.toString))
+  val process = Process("docker", Seq("run", "--rm", (dockerImageNames in docker).value.head.toString))
   val out = process.!!
   if (out.trim != "file") sys.error("Unexpected output: " + out)
 }

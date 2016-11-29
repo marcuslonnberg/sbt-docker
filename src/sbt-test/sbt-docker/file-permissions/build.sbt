@@ -18,9 +18,10 @@ dockerfile in docker := {
 }
 
 val filePermissions = Map(
-  "dir-executable" -> "dr-xr-xr-x",
+  "dir" -> "drwxr-xr-x",
+  /*"dir-executable" -> "dr-xr-xr-x",
   "dir-readable" -> "dr--r--r--",
-  "dir-writable" -> "drw-rw-rw-",
+  "dir-writable" -> "drw-rw-rw-",*/
   "executable" -> "-r-xr-xr-x",
   "readable" -> "-r--r--r--",
   "writable" -> "-rw-rw-rw-"
@@ -33,9 +34,10 @@ createSourceFiles := {
   
   filePermissions.foreach {
     case (filename, permissionsString) =>
-      val file  = sourceDir / filename
+      val file = sourceDir / filename
       if (permissionsString.startsWith("d")) {
         file.mkdir()
+        (file / "file").createNewFile()
       } else {
         file.createNewFile()
       }
@@ -47,8 +49,8 @@ createSourceFiles := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val name = (imageNames in docker).value.head
-  val process = Process("docker", Seq("run", "--rm", name.toString))
+  val imageName = (dockerImageNames in docker).value.head
+  val process = Process("docker", Seq("run", "--rm", imageName.toString))
   val out = process.!!
 
   val lines = out.split('\n').drop(1)
@@ -61,6 +63,7 @@ check := {
   if (result != filePermissions) {
     sys.error(
       s"""Unexpected output: $out
-         |Parsed: $result""".stripMargin)
+         |Parsed: $result""".stripMargin
+    )
   }
 }

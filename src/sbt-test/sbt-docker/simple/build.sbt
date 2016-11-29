@@ -32,18 +32,19 @@ dockerfile in docker := {
 }
 
 // Set a custom image name
-imageNames in docker := {
+dockerImageNames in docker := {
   val imageName = ImageName(
     namespace = Some(organization.value),
     repository = name.value,
-    tag = Some("v" + version.value))
+    tag = Some("v" + version.value)
+  )
   Seq(imageName, imageName.copy(tag = Some("latest")))
 }
 
 val check = taskKey[Unit]("Check")
 
 check := {
-  val names = (imageNames in docker).value
+  val names = (dockerImageNames in docker).value
   names.foreach { imageName =>
     val process = Process("docker", Seq("run", "--rm", imageName.toString))
     val out = process.!!
