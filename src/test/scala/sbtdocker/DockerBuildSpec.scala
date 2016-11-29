@@ -1,9 +1,10 @@
 package sbtdocker
 
+import com.spotify.docker.client.DockerClient.BuildParam
 import org.scalatest.{FreeSpec, Matchers}
-import sbt.{IO, richFile, File}
+import sbt.{File, IO, richFile}
 import sbtdocker.Instructions._
-import staging.{CopyFile, StagedDockerfile}
+import sbtdocker.staging.StagedDockerfile
 
 class DockerBuildSpec extends FreeSpec with Matchers {
 
@@ -14,15 +15,13 @@ class DockerBuildSpec extends FreeSpec with Matchers {
           val fileA = origDir / "fileA"
           val fileAData = createFile(fileA)
 
-          val stagedDockerfile = StagedDockerfile(
-            instructions = Seq.empty,
-            stageFiles = Set(
-              CopyFile(fileA) -> (stageDir / "fileA")
-            )
-          )
-          DockerBuild.prepareFiles(stagedDockerfile)
+          val dockerfile = new Dockerfile {
+            copy(fileA, "fileA")
+          }
 
-          IO.read(stageDir / "fileA") shouldEqual fileAData
+          DockerStage(stageDir, dockerfile)
+
+          IO.read(stageDir / "0" / "fileA") shouldEqual fileAData
         }
       }
     }
@@ -36,7 +35,7 @@ class DockerBuildSpec extends FreeSpec with Matchers {
           ),
           stageFiles = Set.empty
         )
-        DockerBuild.createDockerfile(stagedDockerfile, stageDir)
+        DockerStage(stageDir, stagedDockerfile)
 
         val file = stageDir / "Dockerfile"
         file.exists() shouldEqual true
@@ -61,37 +60,37 @@ class DockerBuildSpec extends FreeSpec with Matchers {
       options.pullBaseImage shouldEqual BuildOptions.Pull.IfMissing
       options.removeIntermediateContainers shouldEqual BuildOptions.Remove.OnSuccess
 
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerClientHelpers.buildParams(options)
 
-      flags should contain theSameElementsAs Seq("--no-cache=false", "--pull=false", "--rm=true")
+      flags should contain theSameElementsAs Seq(BuildParam.rm(true))
     }
 
     "No cache" in {
       val options = BuildOptions(cache = false)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerClientHelpers.buildParams(options)
 
-      flags should contain ("--no-cache=true")
+      flags should contain(BuildParam.noCache())
     }
 
     "Always remove" in {
       val options = BuildOptions(removeIntermediateContainers = BuildOptions.Remove.Always)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerClientHelpers.buildParams(options)
 
-      flags should contain ("--force-rm=true")
+      flags should contain(BuildParam.forceRm())
     }
 
     "Never remove" in {
       val options = BuildOptions(removeIntermediateContainers = BuildOptions.Remove.Never)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerClientHelpers.buildParams(options)
 
-      flags should contain ("--pull=false")
+      flags should not contain BuildParam.noCache()
     }
 
     "Always pull" in {
       val options = BuildOptions(pullBaseImage = BuildOptions.Pull.Always)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerClientHelpers.buildParams(options)
 
-      flags should contain ("--pull=true")
+      flags should contain(BuildParam.pullNewerImage())
     }
   }
 }

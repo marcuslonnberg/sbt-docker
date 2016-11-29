@@ -1,35 +1,36 @@
 package sbtdocker
 
-import sbt.Keys.target
-import sbt._
+import com.spotify.docker.client.DefaultDockerClient
+import sbt.Keys._
+import sbt.{Keys, _}
 import sbtdocker.DockerKeys._
-import staging.DefaultDockerfileProcessor
 
 object DockerSettings {
-  lazy val baseDockerSettings = Seq(
+  def baseDockerSettings = Seq(
+    dockerClient in docker := {
+      DefaultDockerClient.fromEnv().build()
+    },
+    buildOptions in docker := BuildOptions(),
+    dockerBuildOptions in docker := (buildOptions in docker).value,
+    target in docker := target.value / "docker",
     docker := {
-      val log = Keys.streams.value.log
-      val dockerPath = (DockerKeys.dockerPath in docker).value
-      val buildOptions = (DockerKeys.buildOptions in docker).value
-      val stageDir = (target in docker).value
-      val dockerfile = (DockerKeys.dockerfile in docker).value
-      val imageNames = (DockerKeys.imageNames in docker).value
-      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
-    },
-    dockerPush := {
-      val log = Keys.streams.value.log
-      val dockerPath = (DockerKeys.dockerPath in docker).value
-      val imageNames = (DockerKeys.imageNames in docker).value
+      val stageDir = target.in(docker).value
+      DockerStage(stageDir, dockerfile.in(docker).value)
 
-      DockerPush(dockerPath, imageNames, log)
-    },
-    dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
-      build.flatMap { id =>
-        push.map(_ => id)
+      val logger = Keys.streams.value.log
+      logger.info(s"Building Docker image")
+      val client = (dockerClient in docker).value
+      val progressHandler = new ProgressLogger(logger)
+      val imageId = client.build(stageDir.toPath, progressHandler, DockerClientHelpers.buildParams(dockerBuildOptions.in(docker).value): _*)
+
+      val imageNames = (dockerImageNames in docker).value
+      imageNames.foreach { imageName =>
+        logger.info(s"Tagging Docker image $imageId with $imageName")
+        client.tag(imageId, imageName.toString, true)
       }
     },
     dockerfile in docker := {
-      sys.error(
+      sys.error {
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
           |
           |Example:
@@ -37,56 +38,32 @@ object DockerSettings {
           | from("ubuntu")
           | ...
           |}
-        """.stripMargin)
+        """.stripMargin
+      }
     },
-    target in docker := target.value / "docker",
-    imageName in docker := {
+    dockerPush in docker := {
+      val client = (dockerClient in docker).value
+      val imageNames = (dockerImageNames in dockerPush).value
+
+      val logger = Keys.streams.value.log
+      val progressHandler = new ProgressLogger(logger)
+      imageNames.foreach { imageName =>
+        logger.info(s"Pushing Docker image $imageName")
+        client.push(imageName.toString, progressHandler)
+      }
+    },
+    dockerBuildAndPush in docker := {
+      docker.value
+      (dockerPush in docker).value
+    },
+    publish in docker := dockerBuildAndPush in docker,
+    publishLocal in docker := docker in docker,
+    imageNames in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
-      ImageName(namespace = organisation, repository = name)
+      Seq(ImageName(namespace = organisation, repository = name))
     },
-    imageNames in docker := {
-      Seq((imageName in docker).value)
-    },
-    dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
-  )
-
-  def autoPackageJavaApplicationSettings(fromImage: String,
-                                         exposedPorts: Seq[Int],
-                                         exposedVolumes: Seq[String],
-                                         username: Option[String]) = Seq(
-    docker <<= docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)),
-    Keys.mainClass in docker <<= Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin),
-    dockerfile in docker <<= (Keys.managedClasspath in Compile, Keys.artifactPath.in(Compile, Keys.packageBin), Keys.mainClass in docker) map {
-      case (_, _, None) =>
-        sys.error("Either there are no main class or there exist several. " +
-          "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
-      case (classpath, artifact, Some(mainClass)) =>
-        val appPath = "/app"
-        val libsPath = s"$appPath/libs/"
-        val artifactPath = s"$appPath/${artifact.name}"
-
-        val dockerfile = Dockerfile()
-        dockerfile.from(fromImage)
-
-        val libPaths = classpath.files.map { libFile =>
-          val toPath = file(libsPath) / libFile.name
-          dockerfile.stageFile(libFile, toPath)
-          toPath
-        }
-        val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
-
-        dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
-
-        dockerfile.expose(exposedPorts: _*)
-        dockerfile.volume(exposedVolumes: _*)
-        username.foreach(dockerfile.user)
-
-        dockerfile.addRaw(libsPath, libsPath)
-        dockerfile.add(artifact, artifactPath)
-
-        dockerfile
-    }
+    dockerImageNames in docker := imageNames.in(docker).value,
+    dockerImageNames in dockerPush := dockerImageNames.in(docker).value
   )
 }

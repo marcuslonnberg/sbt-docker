@@ -6,13 +6,17 @@ object DockerPlugin extends AutoPlugin {
   object autoImport {
     val DockerKeys = sbtdocker.DockerKeys
 
-    val docker = DockerKeys.docker
-    val dockerfile = DockerKeys.dockerfile
-    val dockerPath = DockerKeys.dockerPath
-    @deprecated("Use imageNames instead.", "1.0.0")
-    val imageName = DockerKeys.imageName
+    @deprecated("Use dockerImageNames instead", "2.0.0")
     val imageNames = DockerKeys.imageNames
+    val dockerImageNames = DockerKeys.dockerImageNames
+    val dockerfile = DockerKeys.dockerfile
+    @deprecated("Use dockerBuildOptions instead", "2.0.0")
     val buildOptions = DockerKeys.buildOptions
+    val dockerBuildOptions = DockerKeys.dockerBuildOptions
+    val dockerClient = DockerKeys.dockerClient
+    val docker = DockerKeys.docker
+    val dockerPush = DockerKeys.dockerPush
+    val dockerBuildAndPush = DockerKeys.dockerBuildAndPush
 
     type Dockerfile = sbtdocker.Dockerfile
     val ImageId = sbtdocker.ImageId
@@ -24,20 +28,6 @@ object DockerPlugin extends AutoPlugin {
 
     val CopyFile = sbtdocker.staging.CopyFile
     type CopyFile = sbtdocker.staging.CopyFile
-
-    /**
-     * Settings to automatically build a Docker image for a JVM application.
-     * @param fromImage Base image to use. Should have a JVM on the PATH.
-     * @param exposedPorts List of ports to expose.
-     * @param exposedVolumes List of volumes to expose.
-     * @param username Username that should run the Java process.
-     */
-    def dockerAutoPackageJavaApplication(fromImage: String = "java:8-jre",
-                                         exposedPorts: Seq[Int] = Seq.empty,
-                                         exposedVolumes: Seq[String] = Seq.empty,
-                                         username: Option[String] = None): Seq[sbt.Def.Setting[_]] = {
-      DockerSettings.autoPackageJavaApplicationSettings(fromImage, exposedPorts, exposedVolumes, username)
-    }
   }
 
   override def projectSettings = DockerSettings.baseDockerSettings

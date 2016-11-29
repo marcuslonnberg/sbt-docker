@@ -27,7 +27,7 @@ dockerfile in docker := {
 }
 
 // Set names for the image
-imageNames in docker := Seq(
+dockerImageNames in docker := Seq(
   ImageName("sbtdocker/basic:stable"),
   ImageName(namespace = Some(organization.value),
     repository = name.value,
