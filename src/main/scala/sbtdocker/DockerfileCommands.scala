@@ -73,12 +73,12 @@ trait DockerfileCommands {
 
   def label(labelName: String, labelValue: String): T = addInstruction(Label(labelName, labelValue))
 
-  def label(lables: (String, String)*) = {
-    if (lables.nonEmpty) addInstruction(Label(lables.toMap))
+  def label(labels: (String, String)*) = {
+    if (labels.nonEmpty) addInstruction(Label(labels.toMap))
     else self
   }
 
-  def label(lables: Map[String, String]) = addInstruction(Label(lables))
+  def label(labels: Map[String, String]) = addInstruction(Label(labels))
 
   def labelRaw(labels: String): T = addInstruction(Label(labels))
 
