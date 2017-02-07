@@ -1,7 +1,7 @@
 sbt-docker
 ==========
 
-sbt-docker is a [sbt](http://www.scala-sbt.org/) plugin that builds and pushes [Docker](https://www.docker.com/) images for your project.
+sbt-docker is an [sbt][sbt] plugin that builds and pushes [Docker][docker] images for your project.
 
 [![Build Status](https://travis-ci.org/marcuslonnberg/sbt-docker.svg?branch=master)](https://travis-ci.org/marcuslonnberg/sbt-docker)
 
@@ -19,7 +19,7 @@ Add sbt-docker as a dependency in `project/plugins.sbt`:
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.4.0")
 ```
 
-sbt-docker is an [auto plugin](http://www.scala-sbt.org/0.13/docs/Plugins.html),
+sbt-docker is an [auto plugin][auto-plugin],
 this means that sbt version 0.13.5 or higher is required.
 
 Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
@@ -28,7 +28,7 @@ Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
 
 Below are some documentation on the sbt tasks and settings in the plugin.
 
-This blog post gives a good introduction to the basics of sbt-docker: [Dockerizing your Scala apps with sbt-docker](https://velvia.github.io/Docker-Scala-Sbt/)
+This blog post gives a good introduction to the basics of sbt-docker: [Dockerizing your Scala apps with sbt-docker][dockerizing-scala-apps]
 
 Also take a look at the [example projects](examples).
 
@@ -48,17 +48,17 @@ The only required setting that is left to define is `dockerfile in docker`.
 If you want your Dockerfile to contain one or several artifacts (such as JAR files) that your
 project generates, then you must make the `docker` task depend on the tasks that generate them.
 It could for example be with the `package` task or with tasks from plugins such as
-[sbt-assembly](https://github.com/sbt/sbt-assembly).
+[sbt-assembly][sbt-assembly].
 
 ### Defining a Dockerfile
 
 In order to produce a Docker image a Dockerfile must be defined.
 It should be defined at the `dockerfile in docker` key.
 There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles
-the plain text [Dockerfile](https://docs.docker.com/reference/builder/) format.
+the plain text [Dockerfile] format.
 The mutable class is default and is used in the following examples.
 
-Example with the [sbt-assembly](https://github.com/sbt/sbt-assembly) plugin:
+Example with the [sbt-assembly][sbt-assembly] plugin:
 ```scala
 dockerfile in docker := {
   // The assembly task generates a fat JAR file
@@ -73,7 +73,7 @@ dockerfile in docker := {
 }
 ```
 
-Example with [sbt-native-packager](https://github.com/sbt/sbt-native-packager):
+Example with [sbt-native-packager][sbt-native-packager]:
 ```scala
 enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
 
@@ -164,3 +164,11 @@ If you have a standalone JVM application that you want a simple Docker image for
 Then you can use `dockerAutoPackageJavaApplication(fromImage, exposedPorts, exposedVolumes, username)`
 which will setup some settings for you, including a Dockerfile.
 Its very basic, so if you have more advanced needs then define your own Dockerfile.
+
+[auto-plugin]: http://www.scala-sbt.org/0.13/docs/Plugins.html
+[docker]: https://www.docker.com/
+[dockerfile]: https://docs.docker.com/engine/reference/builder/
+[dockerizing-scala-apps]: https://velvia.github.io/Docker-Scala-Sbt/
+[sbt]: http://www.scala-sbt.org/
+[sbt-assembly]: https://github.com/sbt/sbt-assembly
+[sbt-native-packager]: https://github.com/sbt/sbt-native-packager
