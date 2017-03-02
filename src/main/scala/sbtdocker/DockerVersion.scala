@@ -28,7 +28,7 @@ object DockerVersion extends RegexParsers {
   }
 
   private val positiveWholeNumber: Parser[Int] = {
-    ("0".r | """[1-9]?\d*""".r).map(_.toInt).withFailureMessage("non-negative integer value expected")
+    """\d+""".r.map(_.toInt).withFailureMessage("non-negative integer value expected")
   }
 
   private val parser: Parser[DockerVersion] = {
