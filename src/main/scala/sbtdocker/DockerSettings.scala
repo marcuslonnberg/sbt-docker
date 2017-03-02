@@ -23,9 +23,23 @@ object DockerSettings {
 
       DockerPush(dockerPath, imageNames, log)
     },
+    dockerCopy := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val dockerMachinePath = (DockerKeys.dockerMachinePath in docker).value
+      val dockerMachineName = (DockerKeys.dockerMachineName in docker).value
+      val imageNames = (DockerKeys.imageNames in docker).value
+
+      DockerCopy(dockerPath, dockerMachinePath, dockerMachineName, imageNames, log)
+    },
     dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
       build.flatMap { id =>
         push.map(_ => id)
+      }
+    },
+    dockerBuildAndCopy <<= (docker, dockerCopy) { (build, copy) =>
+      build.flatMap { id =>
+        copy.map(_ => id)
       }
     },
     dockerfile in docker := {
@@ -49,6 +63,8 @@ object DockerSettings {
       Seq((imageName in docker).value)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
+    dockerMachineName in docker := "default",
+    dockerMachinePath in docker := sys.env.get("DOCKER_MACHINE").filter(_.nonEmpty).getOrElse("docker-machine"),
     buildOptions in docker := BuildOptions()
   )
 
