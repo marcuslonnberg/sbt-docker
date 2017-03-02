@@ -1,3 +1,7 @@
+## 1.4.1
+
+- Fix broken version check with Dockers updated version scheme [#61](https://github.com/marcuslonnberg/sbt-docker/issues/61)
+
 ## 1.4.0
 
 - Don't use deprecated docker tag flag for versions 1.10 and up of Docker [#39](https://github.com/marcuslonnberg/sbt-docker/issues/39)
