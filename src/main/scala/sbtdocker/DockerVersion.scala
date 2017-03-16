@@ -32,7 +32,7 @@ object DockerVersion extends RegexParsers {
   }
 
   private val parser: Parser[DockerVersion] = {
-    positiveWholeNumber ~ ("." ~> positiveWholeNumber) ~ ("." ~> positiveWholeNumber) ^^ {
+    positiveWholeNumber ~ ("." ~> positiveWholeNumber) ~ ("." ~> positiveWholeNumber) <~ """.*""".r ^^ {
       case major ~ minor ~ release  => DockerVersion(major, minor, release)
     }
   }
