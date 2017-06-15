@@ -1,0 +1,3 @@
+- Fix broken version check with Dockers updated version scheme [#61](https://github.com/marcuslonnberg/sbt-docker/issues/61)
+
+This update is needed to support the next Docker version 2017.03.0.

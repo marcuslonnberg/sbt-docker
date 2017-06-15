@@ -1,8 +1,11 @@
 package sbtdocker
 
 import com.spotify.docker.client.DockerClient.BuildParam
+import java.io.File
+
 import org.scalatest.{FreeSpec, Matchers}
-import sbt.{File, IO, richFile}
+import sbt.IO
+import sbtdocker.Helpers._
 import sbtdocker.Instructions._
 import sbtdocker.staging.StagedDockerfile
 

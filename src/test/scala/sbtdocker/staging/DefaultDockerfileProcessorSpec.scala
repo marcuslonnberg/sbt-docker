@@ -1,7 +1,8 @@
 package sbtdocker.staging
 
 import org.scalatest.{FlatSpec, Matchers}
-import sbt.{file, richFile}
+import sbt.file
+import sbtdocker.Helpers._
 import sbtdocker.ImmutableDockerfile
 import sbtdocker.Instructions.{AddRaw, CopyRaw, From, Run}
 
