@@ -7,7 +7,8 @@ organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.3" % "test",
   "org.apache.commons" % "commons-lang3" % "3.6",
-  "com.spotify" % "docker-client" % "8.7.2"
+  "com.spotify" % "docker-client" % "8.7.2",
+  "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
 )
 
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
