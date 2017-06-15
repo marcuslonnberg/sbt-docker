@@ -54,8 +54,10 @@ object DockerSettings {
     },
     dockerPush := (dockerPush in docker).value,
     dockerBuildAndPush in docker := {
-      docker.value
-      (dockerPush in docker).value
+      Def.sequential(
+        docker,
+        dockerPush in docker
+      ).value
     },
     dockerBuildAndPush := (dockerBuildAndPush in docker).value,
     publish in docker := (dockerBuildAndPush in docker).value,
