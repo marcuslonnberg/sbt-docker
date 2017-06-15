@@ -52,12 +52,14 @@ object DockerSettings {
         client.push(imageName.toString, progressHandler)
       }
     },
+    dockerPush := (dockerPush in docker).value,
     dockerBuildAndPush in docker := {
       docker.value
       (dockerPush in docker).value
     },
-    publish in docker := dockerBuildAndPush in docker,
-    publishLocal in docker := docker in docker,
+    dockerBuildAndPush := (dockerBuildAndPush in docker).value,
+    publish in docker := (dockerBuildAndPush in docker).value,
+    publishLocal in docker := (docker in docker).value,
     imageNames in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
