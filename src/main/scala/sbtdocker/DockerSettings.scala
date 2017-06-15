@@ -3,7 +3,7 @@ package sbtdocker
 import sbt.Keys.target
 import sbt._
 import sbtdocker.DockerKeys._
-import staging.DefaultDockerfileProcessor
+import sbtdocker.staging.DefaultDockerfileProcessor
 
 object DockerSettings {
   lazy val baseDockerSettings = Seq(
@@ -23,9 +23,11 @@ object DockerSettings {
 
       DockerPush(dockerPath, imageNames, log)
     },
-    dockerBuildAndPush <<= (docker, dockerPush) { (build, push) =>
-      build.flatMap { id =>
-        push.map(_ => id)
+    dockerBuildAndPush := {
+      docker.value match {
+        case id =>
+          dockerPush.value
+          id
       }
     },
     dockerfile in docker := {
@@ -52,41 +54,54 @@ object DockerSettings {
     buildOptions in docker := BuildOptions()
   )
 
-  def autoPackageJavaApplicationSettings(fromImage: String,
-                                         exposedPorts: Seq[Int],
-                                         exposedVolumes: Seq[String],
-                                         username: Option[String]) = Seq(
-    docker <<= docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)),
-    Keys.mainClass in docker <<= Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin),
-    dockerfile in docker <<= (Keys.managedClasspath in Compile, Keys.artifactPath.in(Compile, Keys.packageBin), Keys.mainClass in docker) map {
-      case (_, _, None) =>
-        sys.error("Either there are no main class or there exist several. " +
-          "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
-      case (classpath, artifact, Some(mainClass)) =>
-        val appPath = "/app"
-        val libsPath = s"$appPath/libs/"
-        val artifactPath = s"$appPath/${artifact.name}"
+  def autoPackageJavaApplicationSettings(
+    fromImage: String,
+    exposedPorts: Seq[Int],
+    exposedVolumes: Seq[String],
+    username: Option[String]
+  ) = Seq(
+    docker := {
+      docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)).value
+    },
+    Keys.mainClass in docker := {
+      (Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin)).value
+    },
+    dockerfile in docker := {
+      val maybeMainClass = Keys.mainClass.in(docker).value
+      maybeMainClass match {
+        case None =>
+          sys.error("Either there are no main class or there exist several. " +
+            "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
 
-        val dockerfile = Dockerfile()
-        dockerfile.from(fromImage)
+        case Some(mainClass) =>
+          val classpath = Keys.managedClasspath.in(Compile).value
+          val artifact = Keys.artifactPath.in(Compile, Keys.packageBin).value
 
-        val libPaths = classpath.files.map { libFile =>
-          val toPath = file(libsPath) / libFile.name
-          dockerfile.stageFile(libFile, toPath)
-          toPath
-        }
-        val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
+          val appPath = "/app"
+          val libsPath = s"$appPath/libs/"
+          val artifactPath = s"$appPath/${artifact.name}"
 
-        dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
+          val dockerfile = Dockerfile()
+          dockerfile.from(fromImage)
 
-        dockerfile.expose(exposedPorts: _*)
-        dockerfile.volume(exposedVolumes: _*)
-        username.foreach(dockerfile.user)
+          val libPaths = classpath.files.map { libFile =>
+            val toPath = file(libsPath) / libFile.name
+            dockerfile.stageFile(libFile, toPath)
+            toPath
+          }
+          val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
 
-        dockerfile.addRaw(libsPath, libsPath)
-        dockerfile.add(artifact, artifactPath)
+          dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
 
-        dockerfile
+          dockerfile.expose(exposedPorts: _*)
+          dockerfile.volume(exposedVolumes: _*)
+          username.foreach(dockerfile.user)
+
+          dockerfile.addRaw(libsPath, libsPath)
+          dockerfile.add(artifact, artifactPath)
+
+          dockerfile
+      }
     }
   )
 }
