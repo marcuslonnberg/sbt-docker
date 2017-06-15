@@ -13,8 +13,6 @@ libraryDependencies ++= Seq(
 
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
 
-sonatypeProfileName := "marcuslonnberg"
-
 publishMavenStyle := true
 
 licenses := Seq("MIT License" -> url("https://github.com/marcuslonnberg/sbt-docker/blob/master/LICENSE"))
