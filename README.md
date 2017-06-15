@@ -25,6 +25,8 @@ this means that sbt version 0.13.5 or higher is required.
 
 Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
 
+Version `1.4.1` exists for sbt 1.0.0-M6.
+
 ### Getting started
 
 Below are some documentation on the sbt tasks and settings in the plugin.
