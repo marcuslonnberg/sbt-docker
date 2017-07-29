@@ -15,7 +15,7 @@ dockerAutoPackageJavaApplication()
 val check = taskKey[Unit]("Check")
 
 check := {
-  val process = Process("docker", Seq("run", "--rm", (imageName in docker).value.toString))
+  val process = Process("docker", Seq("run", "--rm", (imageNames in docker).value.head.toString))
   val out = process.!!
   if (out.trim != "Hello AutoPackage\n20") sys.error("Unexpected output: " + out)
 }

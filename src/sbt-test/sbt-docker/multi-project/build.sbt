@@ -27,6 +27,6 @@ def checkImage(imageName: ImageName, expectedOut: String) {
 val check = taskKey[Unit]("Check")
 
 check := {
-  checkImage((imageName in docker in alfa).value, "alfa")
-  checkImage((imageName in docker in bravo).value, "bravo")
+  checkImage((imageNames in docker in alfa).value.head, "alfa")
+  checkImage((imageNames in docker in bravo).value.head, "bravo")
 }

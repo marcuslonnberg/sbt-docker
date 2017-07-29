@@ -7,7 +7,9 @@ organization := "sbtdocker"
 lazy val alfa = config("alfa")
 inConfig(alfa)(sbtdocker.DockerSettings.baseDockerSettings)
 
-imageName in docker in alfa := ImageName("sbtdocker/scripted-multi-configurations-alfa")
+imageNames in docker in alfa := Seq(
+  ImageName("sbtdocker/scripted-multi-configurations-alfa")
+)
 target in docker in alfa := target.value / "docker-alfa"
 dockerfile in docker in alfa := new Dockerfile {
   from("busybox")
@@ -18,7 +20,9 @@ dockerfile in docker in alfa := new Dockerfile {
 lazy val bravo = config("bravo")
 inConfig(bravo)(sbtdocker.DockerSettings.baseDockerSettings)
 
-imageName in docker in bravo := ImageName("sbtdocker/scripted-multi-configurations-bravo")
+imageNames in docker in bravo := Seq(
+  ImageName("sbtdocker/scripted-multi-configurations-bravo")
+)
 target in docker in bravo := target.value / "docker-bravo"
 dockerfile in docker in bravo := new Dockerfile {
   from("busybox")
@@ -35,6 +39,6 @@ def checkImage(imageName: ImageName, expectedOut: String) {
 val check = taskKey[Unit]("Check")
 
 check := {
-  checkImage((imageName in docker in alfa).value, "alfa")
-  checkImage((imageName in docker in bravo).value, "bravo")
+  checkImage((imageNames in docker in alfa).value.head, "alfa")
+  checkImage((imageNames in docker in bravo).value.head, "bravo")
 }
