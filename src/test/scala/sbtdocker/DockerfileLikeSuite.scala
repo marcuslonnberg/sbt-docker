@@ -3,7 +3,9 @@ package sbtdocker
 import org.scalatest.{FunSuite, Matchers}
 import sbt.file
 import sbtdocker.Instructions._
-import staging.{CopyFile, DefaultDockerfileProcessor, StagedDockerfile}
+import sbtdocker.staging.{CopyFile, DefaultDockerfileProcessor, StagedDockerfile}
+
+import scala.concurrent.duration._
 
 class DockerfileLikeSuite extends FunSuite with Matchers {
   val allInstructions = Seq(
@@ -23,7 +25,12 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
     Volume("mountpoint"),
     User("marcus"),
     WorkDir("path"),
-    OnBuild(Run.exec(Seq("echo", "123")))
+    OnBuild(Run.exec(Seq("echo", "123"))),
+    HealthCheck.exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
+      startPeriod = Some(1.second), retries = Some(3)),
+    HealthCheck.shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
+      startPeriod = Some(1.second), retries = Some(3)),
+    HealthCheck.none()
   )
 
   test("Instructions string is in correct order and matches instructions") {
@@ -46,7 +53,10 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
         |VOLUME ["mountpoint"]
         |USER marcus
         |WORKDIR path
-        |ONBUILD RUN ["echo", "123"]""".stripMargin
+        |ONBUILD RUN ["echo", "123"]
+        |HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD ["cmd", "arg"]
+        |HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD cmd arg
+        |HEALTHCHECK NONE""".stripMargin
   }
 
   def staged(dockerfile: immutable.Dockerfile): StagedDockerfile = {
@@ -85,11 +95,16 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .user("marcus")
       .workDir("path")
       .onBuild(Run.exec(Seq("echo", "123")))
+      .healthCheck(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
+        startPeriod = Some(1.second), retries = Some(3))
+      .healthCheckShell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
+        startPeriod = Some(1.second), retries = Some(3))
+      .healthCheckNone()
 
     withMethods shouldEqual predefined
   }
 
-  test("Run, Cmd and EntryPoint instructions should handle arguments with whitespace") {
+  test("Run, Cmd, EntryPoint and HealthCheck instructions should handle arguments with whitespace") {
     val dockerfile = immutable.Dockerfile.empty
       .run("echo", "arg \"with\t\nspaces")
       .runShell("echo", "arg \"with\t\nspaces")
@@ -97,6 +112,8 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .cmdShell("echo", "arg \"with\t\nspaces")
       .entryPoint("echo", "arg \"with\t\nspaces")
       .entryPointShell("echo", "arg \"with\t\nspaces")
+      .healthCheck(Seq("echo", "arg \"with\t\nspaces"))
+      .healthCheckShell(Seq("echo", "arg \"with\t\nspaces"))
 
     staged(dockerfile).instructionsString shouldEqual
       """RUN ["echo", "arg \"with\t\nspaces"]
@@ -104,7 +121,9 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
         |CMD ["echo", "arg \"with\t\nspaces"]
         |CMD echo arg\ \"with\t\nspaces
         |ENTRYPOINT ["echo", "arg \"with\t\nspaces"]
-        |ENTRYPOINT echo arg\ \"with\t\nspaces""".stripMargin
+        |ENTRYPOINT echo arg\ \"with\t\nspaces
+        |HEALTHCHECK CMD ["echo", "arg \"with\t\nspaces"]
+        |HEALTHCHECK CMD echo arg\ \"with\t\nspaces""".stripMargin
   }
 
   test("Add and copy a file to /") {
@@ -149,6 +168,8 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       .entryPointShell()
       .volume()
       .maintainer("test")
+      .healthCheck()
+      .healthCheckShell()
 
     dockerfile shouldEqual immutable.Dockerfile.empty.maintainer("test")
   }
