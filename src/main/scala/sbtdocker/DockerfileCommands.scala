@@ -4,6 +4,8 @@ import sbt._
 import sbtdocker.Instructions._
 import sbtdocker.staging.{CopyFile, SourceFile}
 
+import scala.concurrent.duration.FiniteDuration
+
 trait DockerfileLike extends DockerfileCommands {
   type T <: DockerfileLike
 
@@ -244,4 +246,36 @@ trait DockerfileCommands {
 
   def onBuild(instruction: DockerfileInstruction): T = addInstruction(Instructions.OnBuild(instruction))
 
+  def healthCheck(commands: Seq[String],
+                  interval: Option[FiniteDuration] = None,
+                  timeout: Option[FiniteDuration] = None,
+                  startPeriod: Option[FiniteDuration] = None,
+                  retries: Option[Int] = None): T = {
+    if (commands.nonEmpty) addInstruction(HealthCheck.exec(
+      commands = commands,
+      interval = interval,
+      timeout = timeout,
+      startPeriod = startPeriod,
+      retries = retries))
+    else self
+  }
+
+  def healthCheck(commands: String*): T = healthCheck(commands)
+
+  def healthCheckShell(commands: Seq[String],
+                       interval: Option[FiniteDuration] = None,
+                       timeout: Option[FiniteDuration] = None,
+                       startPeriod: Option[FiniteDuration] = None,
+                       retries: Option[Int] = None): T = {
+    if (commands.nonEmpty) addInstruction(HealthCheck.shell(commands = commands,
+      interval = interval,
+      timeout = timeout,
+      startPeriod = startPeriod,
+      retries = retries))
+    else self
+  }
+
+  def healthCheckShell(commands: String*): T = healthCheckShell(commands)
+
+  def healthCheckNone(): T = addInstruction(HealthCheckNone)
 }

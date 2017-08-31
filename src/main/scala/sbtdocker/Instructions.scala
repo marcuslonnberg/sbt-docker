@@ -3,6 +3,8 @@ package sbtdocker
 import org.apache.commons.lang3.StringEscapeUtils
 import sbtdocker.staging.SourceFile
 
+import scala.concurrent.duration.FiniteDuration
+
 sealed trait Instruction
 
 /**
@@ -297,6 +299,78 @@ object Instructions {
    * @param destination Destination path.
    */
   case class StageFiles(sources: Seq[SourceFile], destination: String) extends FileStagingInstruction
+
+  object HealthCheck {
+    /**
+      * Command to execute for health check.
+      * @param commands Command list.
+      */
+    def exec(commands: Seq[String],
+             interval: Option[FiniteDuration],
+             timeout: Option[FiniteDuration],
+             startPeriod: Option[FiniteDuration],
+             retries: Option[Int]) =
+      HealthCheck(
+        command = jsonArrayString(commands),
+        interval = interval,
+        timeout = timeout,
+        startPeriod = startPeriod,
+        retries = retries)
+
+    /**
+      * Command to execute through a shell (`/bin/sh`) for health check.
+      * @param commands Command list.
+      */
+    def shell(commands: Seq[String],
+              interval: Option[FiniteDuration],
+              timeout: Option[FiniteDuration],
+              startPeriod: Option[FiniteDuration],
+              retries: Option[Int]) =
+      HealthCheck(
+        command = shellCommandString(commands),
+        interval = interval,
+        timeout = timeout,
+        startPeriod = startPeriod,
+        retries = retries)
+
+    def none() = HealthCheckNone
+  }
+
+  /**
+    * Defines health check command to run inside the container to check that it is still working.
+    * @param command Command to execute for health check
+    * @param interval The health check will first run interval seconds after the container is started,
+    *                 and then again interval seconds after each previous check completes.
+    * @param timeout If a single run of the check takes longer than specified then the check is considered to have failed.
+    * @param startPeriod Provides initialization time for containers that need time to bootstrap.
+    * @param retries How many consecutive failures of the health check for the container to be considered unhealthy.
+    */
+  case class HealthCheck(
+    command: String,
+    interval: Option[FiniteDuration] = None,
+    timeout: Option[FiniteDuration] = None,
+    startPeriod: Option[FiniteDuration] = None,
+    retries: Option[Int] = None
+  ) extends DockerfileInstruction {
+
+    override def instructionName = "HEALTHCHECK"
+
+    override def arguments: String = Seq(
+      interval.map(x => s"--interval=${x.toSeconds}s"),
+      timeout.map(x => s"--timeout=${x.toSeconds}s"),
+      startPeriod.map(x => s"--start-period=${x.toSeconds}s"),
+      retries.map(x => s"--retries=$x"),
+      Some(s"CMD $command")
+    ).flatten.mkString(" ")
+  }
+
+  /**
+    * Disable any health check inherited from the base image.
+    */
+  case object HealthCheckNone extends DockerfileInstruction {
+    override def instructionName = "HEALTHCHECK"
+    override def arguments = "NONE"
+  }
 
   /**
    * This class allows the user to specify a raw Dockerfile instruction.
