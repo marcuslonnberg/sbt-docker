@@ -11,10 +11,10 @@ trait SourceFile {
 }
 
 case class CopyFile(file: File) extends SourceFile {
-  def filename = file.getName
+  def filename: String = file.getName
 
   def stage(destination: File): Unit = {
-    val paths = (PathFinder(file) ***) pair Path.rebase(file, destination)
+    val paths = (PathFinder(file) ** AllPassFilter) pair Path.rebase(file, destination)
     paths.foreach((copy _).tupled)
   }
 
