@@ -39,6 +39,243 @@ case class BuildOptions(
   pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing
 )
 
+class CreateOptions
+{
+  import scala.language.implicitConversions
+
+  private [sbtdocker] var imageId: Option[ImageId] = None
+  private [sbtdocker] var exposes: Seq[Port] = Seq.empty
+  private [sbtdocker] var ports: Seq[PortMap] = Seq.empty
+  private [sbtdocker] var env: Seq[(String, String)] = Seq.empty
+
+
+  def image(id: ImageId): Unit = imageId = Some(id)
+
+  def expose(port: Port): Unit = exposes = exposes :+ port
+
+  def port(portMap: PortMap): Unit = ports = ports :+ portMap
+  def port(ip: IPAddress, hp: Port, cp: Port): Unit =
+    port(PortMap(hostIp = Some(ip), hostPort = Some(hp), containerPort = cp))
+  def port(ip: IPAddress, cp: Port): Unit =
+    port(PortMap(hostIp = Some(ip), hostPort = None, containerPort = cp))
+  def port(hp: Port, cp: Port): Unit =
+    port(PortMap(hostPort = Some(hp), containerPort = cp))
+
+  def env(pairs: (String, String)*): Unit = env = env ++ pairs
+
+  implicit def stringToImageId(s: String): ImageId = ImageId(s)
+  implicit def intToPort(i: Int): Port = Port(i)
+  implicit def stringToIpAddress(s: String): IPAddress = s match {
+    case IPAddress(ip) => ip
+    case _ => sys.error(s"Could not parse '$s' as an ip address")
+  }
+  implicit def stringToPortMap(s: String): PortMap = s match {
+    case PortMap(pm) => pm
+    case _ => sys.error(s"Could not parse '$s' as a port mapping")
+  }
+
+  override def toString = s"CreateOptions(imageId=$imageId, exposes=$exposes, ports=$ports, env=$env)"
+}
+
+class StartOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+
+  override def toString = s"StartOptions(containers=$containers)"
+}
+
+class StopOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+  private [sbtdocker] var time: Option[Int] = None
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+  def time(wait: Int): Unit = time = Some(wait)
+
+  override def toString = s"StopOptions(containers=$containers, time=$time)"
+}
+
+class RmOptions
+{
+  private [sbtdocker] var containers: Seq[ContainerId] = Seq.empty
+
+  def container(cid: ContainerId*): Unit = containers = containers ++ cid
+
+  override def toString = s"RmOptions(containers=$containers)"
+}
+
+class PortOptions
+{
+  private [sbtdocker] var container: Option[ContainerId] = None
+
+  def container(cid: ContainerId): Unit = container = Some(cid)
+
+  override def toString = s"PortOptions(containers=$container)"
+}
+
+case class PortMap(
+  hostIp: Option[IPAddress] = None,
+  hostPort: Option[Port] = None,
+  containerPort: Port,
+  protocol: Option[IpProtocol] = None
+) {
+  override def toString = {
+    val udp = protocol map (p => s"/${p.name}") getOrElse ""
+    hostIp match {
+      case Some(hip) =>
+        hostPort match {
+          case Some(hp) =>
+            s"$hip:$hp:$containerPort$udp"
+          case None =>
+            s"$hip::$containerPort$udp"
+        }
+      case None =>
+        hostPort match {
+          case Some(hp) =>
+            s"$hp:$containerPort$udp"
+          case None =>
+            s"$containerPort$udp"
+        }
+    }
+
+  }
+}
+
+object PortMap {
+  object ProcessMapping {
+    def unapply(mapping: String): Option[PortMap] = mapping split ":" match {
+      case Array(IPAddress(hostIp), Port(hostPort), Port(containerPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), hostPort = Some(hostPort), containerPort = containerPort))
+      case Array(IPAddress(hostIp), "", Port(containerPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), containerPort = containerPort))
+      case Array(Port(hostPort), Port(containerPort)) =>
+        Some(PortMap(hostPort = Some(hostPort), containerPort = containerPort))
+      case Array(Port(containerPort)) =>
+        Some(PortMap(containerPort = containerPort))
+      case _ => None
+    }
+  }
+
+
+
+  def unapply(pm: String): Option[PortMap] = {
+    pm split "/" match {
+      case Array(ProcessMapping(mapping), IpProtocol(protocol)) =>
+        Some(mapping.copy(protocol = Some(protocol)))
+      case Array(ProcessMapping(mapping)) =>
+        Some(mapping)
+      case _ =>
+        None
+    }
+  }
+
+  object FromPortCommand {
+    def unapply(mapping: String): Option[PortMap] = mapping split "->" map (_.trim) match {
+      case Array(ContainerPortProtocol(containerPort, protocol), HostAddressPort(hostIp, hostPort)) =>
+        Some(PortMap(hostIp = Some(hostIp), hostPort = Some(hostPort), containerPort = containerPort, protocol = Some(protocol)))
+      case _ => None
+    }
+  }
+
+  object ContainerPortProtocol {
+    def unapply(cpp: String): Option[(Port, IpProtocol)] = cpp split "/" match {
+      case Array(Port(port), IpProtocol(protocol)) => Some(port -> protocol)
+      case _ => None
+    }
+  }
+
+  object HostAddressPort {
+    def unapply(hap: String): Option[(IPAddress, Port)] = hap split ":" match {
+      case Array(IPAddress(ip), Port(p)) => Some(ip -> p)
+    }
+  }
+}
+
+case class PortMapping(maps: Seq[PortMap])
+{
+  def hostPortForContainer(cp: Port): Option[Port] =
+    (maps filter (_.containerPort == cp) flatMap (_.hostPort)).headOption
+}
+
+sealed trait IpProtocol {
+  def name: String
+}
+
+object IpProtocol {
+  case object TCP extends IpProtocol { def name = "tcp" }
+  case object UDP extends IpProtocol { def name = "udp" }
+
+  def unapply(protocol: String): Option[IpProtocol] = protocol.toLowerCase match {
+    case "tcp" => Some(TCP)
+    case "udp" => Some(UDP)
+    case _ => None
+  }
+}
+
+case class IPAddress(
+  d1: IPDigit,
+  d2: IPDigit,
+  d3: IPDigit,
+  d4: IPDigit)
+{
+  override def toString = s"$d1.$d2.$d3.$d4"
+}
+
+object IPAddress {
+  def unapply(txt: String): Option[IPAddress] = txt split '.' match {
+    case Array(IPDigit(d1), IPDigit(d2), IPDigit(d3), IPDigit(d4)) =>
+      Some(IPAddress(d1, d2, d3, d4))
+    case _ =>
+      None
+  }
+}
+
+case class IPDigit(digit: Short) // 8 bit unsigned
+{
+  if(digit < 0 || digit > 255)
+    throw new IllegalArgumentException(s"IP digit must be in the range 0..255 but was '$digit'")
+
+  override def toString = digit.toString
+}
+
+object IPDigit {
+  val IPDigitRx = """(\d+)""".r
+  def unapply(txt: String): Option[IPDigit] = txt match {
+    case IPDigitRx(d) =>
+      d.toShort match {
+        case di if di < 256 =>
+          Some(IPDigit(di))
+        case _ => None
+      }
+    case _ => None
+  }
+}
+
+case class Port(number: Int) // 16 bit unsigned
+{
+  if(number < 0 || number > 65535)
+    throw new IllegalArgumentException(s"Port must be in the range 0..65535 but was '$number'")
+
+  override def toString = number.toString
+}
+
+object Port {
+  private val PortRx = """(\d+)""".r
+
+  def unapply(txt: String): Option[Port] = txt match {
+    case PortRx(n) =>
+      n.toInt match {
+        case i if i <= 65535 =>
+          Some(Port(i))
+        case _ =>
+          None
+      }
+    case _ => None
+  }
+}
+
 /**
  * Id of an Docker image.
  * @param id Id as a hexadecimal digit string.
@@ -103,4 +340,21 @@ case class ImageName(
 
   @deprecated("Use toString instead.", "0.4.0")
   def name = toString
+}
+
+case class ContainerId(id: String) {
+  override def toString = id
+}
+
+object ContainerId {
+  private val ContainerIdRx = """([0-9a-f]+)""".r
+  /**
+    * Parse a [[sbtdocker.ContainerId]] from a string.
+    */
+  def unapply(id: String): Option[ContainerId] = id match {
+    case ContainerIdRx(i) =>
+      Some(ContainerId(i))
+    case _ =>
+      None
+  }
 }

@@ -30,6 +30,36 @@ object DockerSettings {
           id
       }
     },
+    dockerCreate := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val createOptions = (DockerKeys.createOptions in docker).value
+      DockerCreate(dockerPath, createOptions, log)
+    },
+    dockerStart := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val startOptions = (DockerKeys.startOptions in docker).value
+      DockerStart(dockerPath, startOptions, log)
+    },
+    dockerStop := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val stopOptions = (DockerKeys.stopOptions in docker).value
+      DockerStop(dockerPath, stopOptions, log)
+    },
+    dockerRm := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val rmOptions = (DockerKeys.rmOptions in docker).value
+      DockerRm(dockerPath, rmOptions, log)
+    },
+    dockerPort := {
+      val log = Keys.streams.value.log
+      val dockerPath = (DockerKeys.dockerPath in docker).value
+      val portOptions = (DockerKeys.portOptions in docker).value
+      DockerPort(dockerPath, portOptions, log)
+    },
     dockerfile in docker := {
       sys.error(
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
@@ -41,6 +71,24 @@ object DockerSettings {
           |}
         """.stripMargin)
     },
+    createOptions in docker := {
+      sys.error(
+        """Docker create settings not defined. Please define with `createOptions in docker`
+          |
+          |Example:
+          |createOptions in docker := new CreateOptions {
+          |  image("mysql")
+          |  expose(22)
+          |  port("0.0.0.0", 3306, 3306)
+          |  port("0.0.0.0:9022:22")
+          |  env("MYSQL_RANDOM_ROOT_PASSWORD" -> "true")
+          |}
+        """.stripMargin
+      )
+    },
+    startOptions in docker := new StartOptions,
+    stopOptions in docker := new StopOptions,
+    rmOptions in docker := new RmOptions,
     target in docker := target.value / "docker",
     imageName in docker := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
