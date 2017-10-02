@@ -1,3 +1,8 @@
+## 1.5.0
+- Add `HEALTHCHECK` instruction [#75](https://github.com/marcuslonnberg/sbt-docker/pull/75)
+- The `ADD` and `COPY` instructions can now receive the `chown` flag
+- Fix `dockerBuildAndPush` task in sbt 1.0
+
 ## 1.4.1
 
 - Fix broken version check with Dockers updated version scheme [#61](https://github.com/marcuslonnberg/sbt-docker/issues/61)
