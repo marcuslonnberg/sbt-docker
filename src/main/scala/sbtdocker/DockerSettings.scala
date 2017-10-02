@@ -23,13 +23,13 @@ object DockerSettings {
 
       DockerPush(dockerPath, imageNames, log)
     },
-    dockerBuildAndPush := {
-      docker.value match {
-        case id =>
-          dockerPush.value
-          id
+    dockerBuildAndPush := Def.taskDyn {
+      val id = docker.value
+      Def.task {
+        dockerPush.value
+        id
       }
-    },
+    }.value,
     dockerfile in docker := {
       sys.error(
         """A Dockerfile is not defined. Please define one with `dockerfile in docker`
