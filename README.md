@@ -89,7 +89,7 @@ dockerfile in docker := {
   new Dockerfile {
     from("java")
     entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-    copy(appDir, targetDir)
+    copy(appDir, targetDir, chown = "daemon:daemon")
   }
 }
 ```

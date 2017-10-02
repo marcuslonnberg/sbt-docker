@@ -157,20 +157,26 @@ trait DockerfileCommands {
 
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
-  def env(variables: (String, String)*) = {
+  def env(variables: (String, String)*): T = {
     if (variables.nonEmpty) addInstruction(Env(variables.toMap))
     else self
   }
 
-  def env(variables: Map[String, String]) = addInstruction(Env(variables))
+  def env(variables: Map[String, String]): T = addInstruction(Env(variables))
 
   def envRaw(variables: String): T = addInstruction(Env(variables))
 
-  def add(source: File, destination: String): T = addInstruction(Add(CopyFile(source), destination))
+  def add(source: File, destination: String): T = addInstruction(Add(Seq(CopyFile(source)), destination))
 
   def add(sources: Seq[File], destination: String): T = addInstruction(Add(sources.map(CopyFile), destination))
 
-  def add(source: File, destination: File): T = addInstruction(Add(CopyFile(source), destination.getPath))
+  def add(source: File, destination: File): T = addInstruction(Add(Seq(CopyFile(source)), destination.getPath))
+
+  def add(source: File, destination: String, chown: String): T = addInstruction(Add(Seq(CopyFile(source)), destination, Some(chown)))
+
+  def add(sources: Seq[File], destination: String, chown: String): T = addInstruction(Add(sources.map(CopyFile), destination, Some(chown)))
+
+  def add(source: File, destination: File, chown: String): T = addInstruction(Add(Seq(CopyFile(source)), destination.getPath, Some(chown)))
 
   @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: URL, destination: String): T = addRaw(source, destination)
@@ -184,19 +190,28 @@ trait DockerfileCommands {
   @deprecated("Use addRaw instead.", "1.0.0")
   def add(source: String, destination: File): T = addRaw(source, destination)
 
+  @deprecated("Use addRaw(String, String) instead.", "1.5.0")
   def addRaw(source: URL, destination: String): T = addInstruction(AddRaw(source.toString, destination))
 
+  @deprecated("Use addRaw(String, String) instead.", "1.5.0")
   def addRaw(source: URL, destination: File): T = addInstruction(AddRaw(source.toString, destination.toString))
 
   def addRaw(source: String, destination: String): T = addInstruction(AddRaw(source, destination))
 
+  @deprecated("Use addRaw(String, String) instead.", "1.5.0")
   def addRaw(source: String, destination: File): T = addInstruction(AddRaw(source, destination.toString))
 
-  def copy(source: File, destination: String): T = addInstruction(Copy(CopyFile(source), destination))
+  def copy(source: File, destination: String): T = addInstruction(Copy(Seq(CopyFile(source)), destination))
 
   def copy(sources: Seq[File], destination: String): T = addInstruction(Copy(sources.map(CopyFile), destination))
 
-  def copy(source: File, destination: File): T = addInstruction(Copy(CopyFile(source), destination.toString))
+  def copy(source: File, destination: File): T = addInstruction(Copy(Seq(CopyFile(source)), destination.toString))
+
+  def copy(source: File, destination: String, chown: String): T = addInstruction(Copy(Seq(CopyFile(source)), destination, Some(chown)))
+
+  def copy(sources: Seq[File], destination: String, chown: String): T = addInstruction(Copy(sources.map(CopyFile), destination, Some(chown)))
+
+  def copy(source: File, destination: File, chown: String): T = addInstruction(Copy(Seq(CopyFile(source)), destination.toString, Some(chown)))
 
   @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: URL, destination: String): T = copyRaw(source, destination)

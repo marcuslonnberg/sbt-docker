@@ -206,9 +206,10 @@ object Instructions {
    * If a source file is a tar file it will be extracted as a directory.
    * @param sources Source files.
    * @param destination Destination path inside the container.
+   * @param chown Set the owner user and group of the files in the container. Added in 17.09.0-ce.
    */
-  case class Add(sources: Seq[SourceFile], destination: String) extends FileStagingDockerfileInstruction {
-    def dockerInstruction(sources: Seq[String]) = AddRaw(sources, destination)
+  case class Add(sources: Seq[SourceFile], destination: String, chown: Option[String] = None) extends FileStagingDockerfileInstruction {
+    def dockerInstruction(sources: Seq[String]) = AddRaw(sources, destination, chown)
   }
 
   object AddRaw {
@@ -220,11 +221,20 @@ object Instructions {
    * If a source file is a tar file it will be extracted as a directory.
    * @param sources Source path inside the staging directory.
    * @param destination Destination path inside the container.
+   * @param chown Set the owner user and group of the files in the container. Added in 17.09.0-ce.
    */
-  case class AddRaw(sources: Seq[String], destination: String) extends ProductDockerfileInstruction {
+  case class AddRaw(sources: Seq[String], destination: String, chown: Option[String] = None) extends ProductDockerfileInstruction {
     override def instructionName = "ADD"
 
-    override def arguments = sources.mkString(" ") + " " + destination
+    override def arguments = {
+      val paths = sources.mkString(" ") + " " + destination
+      chown match {
+        case Some(chown) =>
+          s"--chown=$chown $paths"
+        case None =>
+          paths
+      }
+    }
   }
 
   object Copy {
@@ -235,9 +245,10 @@ object Instructions {
    * Adds files to the image.
    * @param sources Source files. Cannot be empty.
    * @param destination Destination path inside the container.
+   * @param chown Set the owner user and group of the files in the container. Added in 17.09.0-ce.
    */
-  case class Copy(sources: Seq[SourceFile], destination: String) extends FileStagingDockerfileInstruction {
-    def dockerInstruction(sources: Seq[String]) = CopyRaw(sources, destination)
+  case class Copy(sources: Seq[SourceFile], destination: String, chown: Option[String] = None) extends FileStagingDockerfileInstruction {
+    def dockerInstruction(sources: Seq[String]) = CopyRaw(sources, destination, chown)
   }
 
   object CopyRaw {
@@ -248,11 +259,20 @@ object Instructions {
    * Adds files from the staging directory to the image.
    * @param sources Source path inside the staging directory. Cannot be empty.
    * @param destination Destination path inside the container.
+   * @param chown Set the owner user and group of the files in the container. Added in 17.09.0-ce.
    */
-  case class CopyRaw(sources: Seq[String], destination: String) extends ProductDockerfileInstruction {
+  case class CopyRaw(sources: Seq[String], destination: String, chown: Option[String] = None) extends ProductDockerfileInstruction {
     override def instructionName = "COPY"
 
-    override def arguments = sources.mkString(" ") + " " + destination
+    override def arguments = {
+      val paths = sources.mkString(" ") + " " + destination
+      chown match {
+        case Some(chown) =>
+          s"--chown=$chown $paths"
+        case None =>
+          paths
+      }
+    }
   }
 
   object Volume {

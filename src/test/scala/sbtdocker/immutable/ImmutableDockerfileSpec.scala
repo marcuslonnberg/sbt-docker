@@ -25,8 +25,7 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
   it should "have methods for all instructions" in {
     val file1 = file("/1")
     val file2 = file("/2")
-    val url1 = new URL("http://domain.tld")
-    val url2 = new URL("http://sub.domain.tld")
+    val file3String = "/3"
 
     val dockerfile = Dockerfile.empty
       .from("image")
@@ -41,10 +40,11 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       .env("key", "value")
       .add(file1, "/")
       .add(file2, file2)
-      .addRaw(url1, "/")
-      .addRaw(url2, file2)
+      .add(file2, file2, chown = "daemon:1003")
+      .addRaw(file3String, "/")
       .copy(file1, "/")
       .copy(file2, file2)
+      .copy(file2, file2, chown = "daemon:1003")
       .entryPoint("echo", "1")
       .entryPointShell("echo", "2")
       .volume("/srv")
@@ -70,10 +70,11 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       Env("key", "value"),
       Add(Seq(CopyFile(file1)), "/"),
       Add(Seq(CopyFile(file2)), file2.toString),
-      AddRaw(url1.toString, "/"),
-      AddRaw(url2.toString, file2.toString),
+      Add(Seq(CopyFile(file2)), file2.toString, chown = Some("daemon:1003")),
+      AddRaw(file3String, "/"),
       Copy(Seq(CopyFile(file1)), "/"),
       Copy(Seq(CopyFile(file2)), file2.toString),
+      Copy(Seq(CopyFile(file2)), file2.toString, chown = Some("daemon:1003")),
       EntryPoint.exec(Seq("echo", "1")),
       EntryPoint.shell(Seq("echo", "2")),
       Volume("/srv"),

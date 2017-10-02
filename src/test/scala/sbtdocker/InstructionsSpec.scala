@@ -48,10 +48,12 @@ class InstructionsSpec extends FlatSpec with Matchers {
 
   "Add" should "create a correct string" in {
     AddRaw("a", "b").toString shouldEqual "ADD a b"
+    AddRaw(Seq("a"), "b", chown =  Some("user")).toString shouldEqual "ADD --chown=user a b"
   }
 
   "Copy" should "create a correct string" in {
     CopyRaw("a", "b").toString shouldEqual "COPY a b"
+    CopyRaw(Seq("a"), "b", chown = Some("user")).toString shouldEqual "COPY --chown=user a b"
   }
 
   "EntryPoint" should "create a correct string with exec format" in {
