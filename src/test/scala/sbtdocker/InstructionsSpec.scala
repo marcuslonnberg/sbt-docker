@@ -97,7 +97,7 @@ class InstructionsSpec extends FlatSpec with Matchers {
   }
 
   it should "create a correct string for NONE parameter" in {
-    HealthCheck.none().toString shouldEqual "HEALTHCHECK NONE"
+    HealthCheck.none.toString shouldEqual "HEALTHCHECK NONE"
   }
 
   "Label" should "create a correct label string" in {

@@ -30,7 +30,7 @@ class DockerfileLikeSuite extends FunSuite with Matchers {
       startPeriod = Some(1.second), retries = Some(3)),
     HealthCheck.shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
       startPeriod = Some(1.second), retries = Some(3)),
-    HealthCheck.none()
+    HealthCheck.none
   )
 
   test("Instructions string is in correct order and matches instructions") {

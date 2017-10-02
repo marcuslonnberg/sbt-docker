@@ -325,35 +325,39 @@ object Instructions {
       * Command to execute for health check.
       * @param commands Command list.
       */
-    def exec(commands: Seq[String],
-             interval: Option[FiniteDuration],
-             timeout: Option[FiniteDuration],
-             startPeriod: Option[FiniteDuration],
-             retries: Option[Int]) =
-      HealthCheck(
-        command = jsonArrayString(commands),
-        interval = interval,
-        timeout = timeout,
-        startPeriod = startPeriod,
-        retries = retries)
+    def exec(
+      commands: Seq[String],
+      interval: Option[FiniteDuration],
+      timeout: Option[FiniteDuration],
+      startPeriod: Option[FiniteDuration],
+      retries: Option[Int]
+    ) = HealthCheck(
+      command = jsonArrayString(commands),
+      interval = interval,
+      timeout = timeout,
+      startPeriod = startPeriod,
+      retries = retries
+    )
 
     /**
       * Command to execute through a shell (`/bin/sh`) for health check.
       * @param commands Command list.
       */
-    def shell(commands: Seq[String],
-              interval: Option[FiniteDuration],
-              timeout: Option[FiniteDuration],
-              startPeriod: Option[FiniteDuration],
-              retries: Option[Int]) =
-      HealthCheck(
-        command = shellCommandString(commands),
-        interval = interval,
-        timeout = timeout,
-        startPeriod = startPeriod,
-        retries = retries)
+    def shell(
+      commands: Seq[String],
+      interval: Option[FiniteDuration],
+      timeout: Option[FiniteDuration],
+      startPeriod: Option[FiniteDuration],
+      retries: Option[Int]
+    ) = HealthCheck(
+      command = shellCommandString(commands),
+      interval = interval,
+      timeout = timeout,
+      startPeriod = startPeriod,
+      retries = retries
+    )
 
-    def none() = HealthCheckNone
+    def none = HealthCheckNone
   }
 
   /**

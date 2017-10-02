@@ -1,7 +1,5 @@
 package sbtdocker.immutable
 
-import java.net.URL
-
 import org.scalatest.{FlatSpec, Matchers}
 import sbt.file
 import sbtdocker.ImageName
@@ -51,10 +49,20 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       .user("marcus")
       .workDir("/srv")
       .onBuild(Run.exec(Seq("echo", "text")))
-      .healthCheck(Seq("healthcheck.sh", "1"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3))
-      .healthCheckShell(Seq("healthcheck.sh", "2"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3))
+      .healthCheck(
+        commands = Seq("healthcheck.sh", "1"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      )
+      .healthCheckShell(
+        commands = Seq("healthcheck.sh", "2"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      )
       .healthCheckNone()
 
     val instructions = Seq(
@@ -81,11 +89,22 @@ class ImmutableDockerfileSpec extends FlatSpec with Matchers {
       User("marcus"),
       WorkDir("/srv"),
       OnBuild(Run.exec(Seq("echo", "text"))),
-      HealthCheck.exec(Seq("healthcheck.sh", "1"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3)),
-      HealthCheck.shell(Seq("healthcheck.sh", "2"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3)),
-      HealthCheckNone)
+      HealthCheck.exec(
+        commands = Seq("healthcheck.sh", "1"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      ),
+      HealthCheck.shell(
+        commands = Seq("healthcheck.sh", "2"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      ),
+      HealthCheckNone
+    )
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
   }
