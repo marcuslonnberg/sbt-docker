@@ -16,7 +16,7 @@ dockerfile in docker := {
   val classpathString = classpath.files.map("/app/" + _.getName).mkString(":") + ":" + jarTarget
   new Dockerfile {
     // Base image
-    from("java")
+    from("openjdk:8-jre")
     // Add all files on the classpath
     add(classpath.files, "/app/")
     // Add the JAR file

@@ -19,7 +19,7 @@ dockerfile in docker := {
   // Make a colon separated classpath with the JAR file
   val classpathString = files.values.mkString(":") + ":" + jarTarget
   new Dockerfile {
-    from("java")
+    from("openjdk:8-jre")
     // Add all files that is on the classpath
     files.foreach {
       case (source, destination) =>

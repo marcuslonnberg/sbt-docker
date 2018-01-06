@@ -25,7 +25,7 @@ dockerfile in docker := {
 
   new Dockerfile {
     // Use a base image that contain Java
-    from("java")
+    from("openjdk:8-jre")
     // Expose port 8080
     expose(8080)
 

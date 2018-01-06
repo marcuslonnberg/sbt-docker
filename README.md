@@ -71,7 +71,7 @@ dockerfile in docker := {
   val artifactTargetPath = s"/app/${artifact.name}"
 
   new Dockerfile {
-    from("java")
+    from("openjdk:8-jre")
     add(artifact, artifactTargetPath)
     entryPoint("java", "-jar", artifactTargetPath)
   }
@@ -87,7 +87,7 @@ dockerfile in docker := {
   val targetDir = "/app"
 
   new Dockerfile {
-    from("java")
+    from("openjdk:8-jre")
     entryPoint(s"$targetDir/bin/${executableScriptName.value}")
     copy(appDir, targetDir, chown = "daemon:daemon")
   }
@@ -106,7 +106,7 @@ dockerfile in docker := {
     .mkString(":") + ":" + jarTarget
   new Dockerfile {
     // Base image
-    from("java")
+    from("openjdk:8-jre")
     // Add all files on the classpath
     add(classpath.files, "/app/")
     // Add the JAR file

@@ -12,7 +12,7 @@ dockerfile in docker := {
   val targetDir = "/app"
 
   new Dockerfile {
-    from("java")
+    from("openjdk:8-jre")
     entryPoint(s"$targetDir/bin/${executableScriptName.value}")
     copy(appDir, targetDir)
   }

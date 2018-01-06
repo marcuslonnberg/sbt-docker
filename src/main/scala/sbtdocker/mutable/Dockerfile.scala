@@ -9,7 +9,7 @@ import sbtdocker.{DockerfileLike, Instruction}
  *  val jarFile: File
  *
  *  new Dockerfile {
- *    from("java")
+ *    from("openjdk:8-jre")
  *    add(jarFile, "/srv/app.jar")
  *    workDir("/srv")
  *    cmd("java", "-jar", "app.jar")

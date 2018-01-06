@@ -13,7 +13,7 @@ object Dockerfile {
  *  val jarFile: File
  *
  *  Dockerfile.empty
- *    .from("java")
+ *    .from("openjdk:8-jre")
  *    .add(jarFile, "/srv/app.jar")
  *    .workDir("/srv")
  *    .cmd("java", "-jar", "app.jar")
