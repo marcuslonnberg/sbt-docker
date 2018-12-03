@@ -2,7 +2,7 @@
 # The scripted tests require Docker which travis does not support
 language: scala
 scala:
-  - 2.10.4
+  - 2.10.7
 jdk:
   - oraclejdk8
   - oraclejdk7
