@@ -5,7 +5,7 @@ organization := "se.marcuslonnberg"
 organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "org.apache.commons" % "commons-lang3" % "3.5"
 )
 
