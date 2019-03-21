@@ -1,22 +1,22 @@
 package sbtdocker
 
 import sbt._
-import staging.{DockerfileProcessor, StagedDockerfile}
+import staging.{DockerSourceFileProcessor, DockerfileProcessor, StagedDockerfile}
 
 import scala.sys.process.{Process, ProcessLogger}
 
 object DockerBuild {
   /**
-   * Build a Dockerfile using a provided docker binary.
-   *
-   * @param dockerfile Dockerfile to build
-   * @param processor processor to create a staging directory for the Dockerfile
-   * @param imageNames names of the resulting image
-   * @param stageDir stage dir
-   * @param dockerPath path to the docker binary
-   * @param buildOptions options for the build command
-   * @param log logger
-   */
+    * Build a Dockerfile using a provided docker binary.
+    *
+    * @param dockerfile Dockerfile to build
+    * @param processor processor to create a staging directory for the Dockerfile
+    * @param imageNames names of the resulting image
+    * @param stageDir stage dir
+    * @param dockerPath path to the docker binary
+    * @param buildOptions options for the build command
+    * @param log logger
+    */
   def apply(dockerfile: DockerfileLike, processor: DockerfileProcessor, imageNames: Seq[ImageName],
             buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
     val staged = processor(dockerfile, stageDir)
@@ -25,24 +25,43 @@ object DockerBuild {
   }
 
   /**
-   * Build a Dockerfile using a provided docker binary.
-   *
-   * @param staged a staged Dockerfile to build.
-   * @param imageNames names of the resulting image
-   * @param stageDir stage dir
-   * @param dockerPath path to the docker binary
-   * @param buildOptions options for the build command
-   * @param log logger
-   */
-  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
-    log.debug("Building Dockerfile:\n" + staged.instructionsString)
-
-    log.debug(s"Preparing stage directory '${stageDir.getPath}'")
-
+    * Build a Dockerfile using a provided docker binary.
+    *
+    * @param staged a staged Dockerfile to build.
+    * @param imageNames names of the resulting image
+    * @param stageDir stage dir
+    * @param dockerPath path to the docker binary
+    * @param buildOptions options for the build command
+    * @param log logger
+    */
+  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions,
+            stageDir: File, dockerPath: String, log: Logger, fromDockerTextFile: Boolean =
+            false): ImageId = {
     clean(stageDir)
-    createDockerfile(staged, stageDir)
+    if (!fromDockerTextFile) {
+      log.debug("Building Dockerfile:\n" + staged.instructionsString)
+      createDockerfile(staged, stageDir)
+    }
     prepareFiles(staged)
     buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log)
+  }
+
+  /**
+    * Build a docker image using a provided DockerFromFileInstructions.
+    *
+    * @param dockerFromFile details of the Dockerfile
+    * @param processor processor to create a staging directory for the Dockerfile
+    * @param imageNames names of the resulting image
+    * @param stageDir stage dir
+    * @param dockerPath path to the docker binary
+    * @param buildOptions options for the build command
+    * @param log logger
+    */
+  def apply(dockerFromFile: DockerFromFileInstructions, processor: DockerSourceFileProcessor,
+            imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String,
+            log: Logger): ImageId = {
+    val staged = processor(dockerFromFile, stageDir)
+    apply(staged, imageNames, buildOptions, stageDir, dockerPath, log, true)
   }
 
   private[sbtdocker] def clean(stageDir: File) = {

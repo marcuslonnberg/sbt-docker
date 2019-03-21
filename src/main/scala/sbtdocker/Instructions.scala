@@ -1,5 +1,7 @@
 package sbtdocker
 
+import java.io.File
+
 import org.apache.commons.lang3.StringEscapeUtils
 import sbtdocker.staging.SourceFile
 
@@ -19,6 +21,13 @@ trait DockerfileInstruction extends Instruction {
 
   @deprecated("Use toString instead.", "0.4.0")
   def toInstructionString = toString
+}
+
+trait ResourcesStagingInstruction extends Instruction {
+
+  def directory: File
+
+  def include: String
 }
 
 /**
