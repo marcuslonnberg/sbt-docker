@@ -28,6 +28,11 @@ case class CopyFile(file: File) extends SourceFile {
       }
     }
 
-    Files.copy(sourceDir.toPath, destinationDir.toPath, StandardCopyOption.COPY_ATTRIBUTES)
+    Files.copy(
+      sourceDir.toPath,
+      destinationDir.toPath,
+      StandardCopyOption.COPY_ATTRIBUTES,
+      StandardCopyOption.REPLACE_EXISTING
+    )
   }
 }
