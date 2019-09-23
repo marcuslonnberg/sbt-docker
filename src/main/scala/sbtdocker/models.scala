@@ -14,7 +14,6 @@ object BuildOptions {
 
   }
 
-
   object Pull {
 
     sealed trait Option
@@ -48,6 +47,13 @@ case class ImageId(id: String) {
 }
 
 object ImageName {
+  /**
+   * https://docs.docker.com/engine/reference/commandline/tag/
+   * A tag name must be valid ASCII and may contain lowercase and uppercase letters, digits, underscores, periods and dashes.
+   * A tag name may not start with a period or a dash and may contain a maximum of 128 characters.
+   */
+  val forbiddenTagCharacters = """[^a-zA-Z0-9_\-,]""".r
+
   /**
    * Parse a [[sbtdocker.ImageName]] from a string.
    */
@@ -97,9 +103,14 @@ case class ImageName(
   override def toString = {
     val registryString = registry.fold("")(_ + "/")
     val namespaceString = namespace.fold("")(_ + "/")
-    val tagString = tag.fold("")(":" + _)
+    val tagString = sanitizedTagString.fold("")(":" + _)
     registryString + namespaceString + repository + tagString
   }
+
+  private def sanitizedTagString = tag.map(s => {
+    val dashesForSlashes = s.replace('/', '-')
+    ImageName.forbiddenTagCharacters.replaceAllIn(dashesForSlashes, "")
+  })
 
   @deprecated("Use toString instead.", "0.4.0")
   def name = toString
