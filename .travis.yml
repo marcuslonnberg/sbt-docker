@@ -1,6 +1,7 @@
 # Only the ScalaTest tests will be run!
 # The scripted tests require Docker which travis does not support
 language: scala
+dist: trusty
 scala:
   - 2.10.7
 jdk:
