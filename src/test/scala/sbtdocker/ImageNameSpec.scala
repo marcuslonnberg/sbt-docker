@@ -87,4 +87,8 @@ class ImageNameSpec extends FlatSpec with Matchers {
       repository = "test",
       tag = Some("v2")).toString shouldEqual "registry.example.com/sbtdocker/test:v2"
   }
+
+  it should "sanitize bad tags" in {
+    ImageName(repository = "repo", tag = Some("an/Unu5u4|-tag")).toString shouldEqual "repo:an-Unu5u4-tag"
+  }
 }
