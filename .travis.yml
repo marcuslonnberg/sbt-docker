@@ -9,12 +9,17 @@ jdk:
   - oraclejdk9
   - oraclejdk11
   - openjdk7
+services: docker
 
 cache:
   directories:
     - $HOME/.m2
     - $HOME/.ivy2/cache
     - $HOME/.sbt
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION test
+  - sbt ++$TRAVIS_SCALA_VERSION scripted
 
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
