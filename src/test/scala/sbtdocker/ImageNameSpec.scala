@@ -89,6 +89,6 @@ class ImageNameSpec extends FlatSpec with Matchers {
   }
 
   it should "sanitize bad tags" in {
-    ImageName(repository = "repo", tag = Some("än/Unu5u4|-tag")).toString shouldEqual "repo:-n-Unu5u4--tag"
+    ImageName("repo:än/Unu5u4|-tag").toString shouldEqual "repo:-n-Unu5u4--tag"
   }
 }
