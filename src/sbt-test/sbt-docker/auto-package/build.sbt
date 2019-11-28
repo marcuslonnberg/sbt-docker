@@ -10,7 +10,7 @@ scalaVersion := "2.11.5"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.7"
 
-javaOptions := Seq("-Dmy.system.property=true")
+javaOptions in docker := Seq("-Dmy.system.property=true")
 
 dockerAutoPackageJavaApplication()
 

@@ -76,7 +76,7 @@ object DockerSettings {
         case Some(mainClass) =>
           val classpath = Keys.managedClasspath.in(Compile).value
           val artifact = Keys.artifactPath.in(Compile, Keys.packageBin).value
-          val javaArgs = javaOptions.value
+          val javaArgs = (javaOptions in docker).value
 
           val appPath = "/app"
           val libsPath = s"$appPath/libs/"
