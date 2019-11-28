@@ -16,6 +16,7 @@ object DockerSettings {
       val imageNames = (DockerKeys.imageNames in docker).value
       DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
     },
+    javaOptions in docker := Seq("$JAVA_OPTS"),
     dockerPush := {
       val log = Keys.streams.value.log
       val dockerPath = (DockerKeys.dockerPath in docker).value
