@@ -93,7 +93,9 @@ object DockerSettings {
           }
           val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
 
-          dockerfile.entryPoint("java", "-cp", classpathString, javaArgs.mkString(" "), mainClass)
+          val entryPoint = Seq("java", "-cp", classpathString) ++ javaArgs :+ mainClass
+
+          dockerfile.entryPoint("bash", "-c", entryPoint.mkString(" "), "--")
 
           dockerfile.expose(exposedPorts: _*)
           dockerfile.volume(exposedVolumes: _*)
