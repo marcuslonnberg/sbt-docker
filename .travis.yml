@@ -1,17 +1,19 @@
-# Only the ScalaTest tests will be run!
-# The scripted tests require Docker which travis does not support
 language: scala
+dist: trusty
+
 scala:
   - 2.10.7
+
 jdk:
   - oraclejdk8
-  - oraclejdk7
   - openjdk7
-# Workaround for buffer overflow error in OpenJDK 7
-addons:
-  hosts:
-    - sbt-docker-ci
-  hostname: sbt-docker-ci
+
+services:
+  - docker
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION test
+  - sbt ++$TRAVIS_SCALA_VERSION scripted
 
 cache:
   directories:
