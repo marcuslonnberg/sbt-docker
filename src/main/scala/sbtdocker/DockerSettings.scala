@@ -1,6 +1,6 @@
 package sbtdocker
 
-import sbt.Keys.target
+import sbt.Keys.{target, javaOptions}
 import sbt._
 import sbtdocker.DockerKeys._
 import sbtdocker.staging.DefaultDockerfileProcessor
@@ -76,6 +76,7 @@ object DockerSettings {
         case Some(mainClass) =>
           val classpath = Keys.managedClasspath.in(Compile).value
           val artifact = Keys.artifactPath.in(Compile, Keys.packageBin).value
+          val javaArgs = javaOptions.value
 
           val appPath = "/app"
           val libsPath = s"$appPath/libs/"
@@ -91,7 +92,7 @@ object DockerSettings {
           }
           val classpathString = s"${libPaths.mkString(":")}:$artifactPath"
 
-          dockerfile.entryPoint("java", "-cp", classpathString, mainClass)
+          dockerfile.entryPoint("java", "-cp", classpathString, javaArgs.mkString(" "), mainClass)
 
           dockerfile.expose(exposedPorts: _*)
           dockerfile.volume(exposedVolumes: _*)
