@@ -155,6 +155,11 @@ trait DockerfileCommands {
     else self
   }
 
+  def exposeUdp(ports: Int*): T = {
+    if (ports.nonEmpty) addInstruction(ExposeUdp(ports))
+    else self
+  }
+
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
   def env(variables: (String, String)*): T = {

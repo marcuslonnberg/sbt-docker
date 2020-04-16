@@ -38,6 +38,10 @@ class InstructionsSpec extends FlatSpec with Matchers {
     Expose(Seq(80, 8080)).toString shouldEqual "EXPOSE 80 8080"
   }
 
+  "ExposeUdp" should "create a correct string" in {
+    ExposeUdp(Seq(80, 8080)).toString shouldEqual "EXPOSE 80/udp 8080/udp"
+  }
+
   "Env" should "create a correct string" in {
     Env("key", "value").toString shouldEqual """ENV key="value""""
     Env("key", "-Dconfig.resource=docker.conf").toString shouldEqual """ENV key="-Dconfig.resource=docker.conf""""

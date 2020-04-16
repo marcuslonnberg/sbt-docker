@@ -176,6 +176,18 @@ object Instructions {
     override def arguments = ports.mkString(" ")
   }
 
+  /**
+   * Exposes udp network ports at runtime.
+   * @param ports Port numbers to expose.
+   */
+  case class ExposeUdp(ports: Seq[Int]) extends ProductDockerfileInstruction {
+    require(ports.nonEmpty, "Must expose at least one port")
+
+    override def arguments = ports.mkString("", "/udp ", "/udp")
+
+    override def instructionName = "EXPOSE"
+  }
+
   object Env {
     def apply(variables: Map[String, String]): Env = {
       Env(variables.map { case (key, value) => formatKeyValue(key, value) }.mkString(" "))
