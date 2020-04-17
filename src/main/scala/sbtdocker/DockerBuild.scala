@@ -1,9 +1,11 @@
 package sbtdocker
 
+import java.util.concurrent.LinkedBlockingQueue
+
 import sbt._
 import staging.{DockerfileProcessor, StagedDockerfile}
 
-import scala.sys.process.{Process, ProcessLogger}
+import scala.sys.process.{Process, ProcessBuilder, ProcessLogger}
 
 object DockerBuild {
   /**
@@ -61,13 +63,47 @@ object DockerBuild {
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
+  private val SuccessfullyBuiltBuildKit = "^.*writing image sha256:([0-9a-f]+).*done$".r
+
+  private[sbtdocker] trait ProcessLoggerWithStream extends ProcessLogger {
+    val queue = new LinkedBlockingQueue[Either[Int, String]]
+    val log: Logger
+
+    override def out(s: => String): Unit = fn(s)
+    override def err(s: => String): Unit = fn(s)
+    override def buffer[T](f: => T): T = f
+
+    def stream = next()
+
+    def forBuilder(processBuilder: ProcessBuilder) {
+      val self: ProcessLoggerWithStream = this
+
+      new Thread {
+        self.end(processBuilder.run(self).exitValue())
+      }.start()
+    }
+
+    private def end = { exitCode: Int ⇒ queue.put(Left(exitCode)) }
+
+    private def fn = { line: String =>
+      log.info(line)
+      queue.put(Right(line))
+    }
+
+    private def next(): Stream[String] = queue.take match {
+      case Right(s) => Stream.cons(s, next())
+      case Left(_) => Stream.empty
+    }
+  }
+
+  private[sbtdocker] object ProcessLoggerWithStream {
+    def apply(logger: Logger): ProcessLoggerWithStream = new ProcessLoggerWithStream {
+      override val log: Logger = logger
+    }
+  }
 
   private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
-    val processLogger = ProcessLogger({ line =>
-      log.info(line)
-    }, { line =>
-      log.info(line)
-    })
+    val processLogger = ProcessLoggerWithStream(log)
 
     val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger)
 
@@ -78,18 +114,16 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
+  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLoggerWithStream): ImageId = {
     val flags = buildFlags(buildOptions)
     val command = dockerPath :: "build" :: flags ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
-    val processOutput = Process(command, stageDir).lines(processLogger)
-    processOutput.foreach { line =>
-      log.info(line)
-    }
+    processLogger.forBuilder(Process(command, stageDir))
 
-    val imageId = processOutput.collect {
-      case SuccessfullyBuilt(id) => ImageId(id)
+    val imageId = processLogger.stream.collect {
+      case SuccessfullyBuilt(id)         => ImageId(id)
+      case SuccessfullyBuiltBuildKit(id) => ImageId(id)
     }.lastOption
 
     imageId match {
