@@ -5,13 +5,9 @@ scala:
   - 2.10.7
 jdk:
   - oraclejdk8
-  - oraclejdk7
-  - openjdk7
-# Workaround for buffer overflow error in OpenJDK 7
-addons:
-  hosts:
-    - sbt-docker-ci
-  hostname: sbt-docker-ci
+  - oraclejdk11
+  - openjdk10
+  - openjdk11
 
 cache:
   directories:
