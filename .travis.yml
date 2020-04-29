@@ -1,5 +1,3 @@
-# Only the ScalaTest tests will be run!
-# The scripted tests require Docker which travis does not support
 language: scala
 scala:
   - 2.10.7
@@ -8,6 +6,9 @@ jdk:
   - openjdk10
   - openjdk11
   - oraclejdk11
+
+services:
+  - docker
 
 cache:
   directories:
@@ -18,3 +19,6 @@ cache:
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
+
+script:
+  - sbt test scripted
