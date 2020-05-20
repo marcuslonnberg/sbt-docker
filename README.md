@@ -163,6 +163,18 @@ buildOptions in docker := BuildOptions(
 )
 ```
 
+### Build arguments / `docker build`s `--build-arg`
+
+Use the key `buildArgs in docker` to set build args (see [documentation][build-arg-doc] on build args
+in docker)
+
+Example:
+```scala
+buildArgs in docker := Map(
+  "argName" -> "argValue"
+)
+```
+
 ### Auto packaging JVM applications
 
 If you have a standalone JVM application that you want a simple Docker image for.
@@ -177,3 +189,4 @@ Its very basic, so if you have more advanced needs then define your own Dockerfi
 [sbt]: http://www.scala-sbt.org/
 [sbt-assembly]: https://github.com/sbt/sbt-assembly
 [sbt-native-packager]: https://github.com/sbt/sbt-native-packager
+[build-arg-doc]: https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg

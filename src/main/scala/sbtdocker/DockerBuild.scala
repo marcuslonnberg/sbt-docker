@@ -18,10 +18,10 @@ object DockerBuild {
    * @param log logger
    */
   def apply(dockerfile: DockerfileLike, processor: DockerfileProcessor, imageNames: Seq[ImageName],
-            buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
+            buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger, buildArgs: Map[String, String]): ImageId = {
     val staged = processor(dockerfile, stageDir)
 
-    apply(staged, imageNames, buildOptions, stageDir, dockerPath, log)
+    apply(staged, imageNames, buildOptions, stageDir, dockerPath, log, buildArgs)
   }
 
   /**
@@ -34,7 +34,8 @@ object DockerBuild {
    * @param buildOptions options for the build command
    * @param log logger
    */
-  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
+  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger,
+            buildArgs: Map[String, String]): ImageId = {
     log.debug("Building Dockerfile:\n" + staged.instructionsString)
 
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
@@ -42,7 +43,7 @@ object DockerBuild {
     clean(stageDir)
     createDockerfile(staged, stageDir)
     prepareFiles(staged)
-    buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log)
+    buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log, buildArgs)
   }
 
   private[sbtdocker] def clean(stageDir: File) = {
@@ -62,14 +63,15 @@ object DockerBuild {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger,
+                                     buildArgs: Map[String, String]): ImageId = {
     val processLogger = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
       log.info(line)
     })
 
-    val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger)
+    val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger, buildArgs)
 
     imageNames.foreach { name =>
       DockerTag(imageId, name, dockerPath, log)
@@ -78,9 +80,11 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
+  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger,
+                               buildArgs: Map[String, String]): ImageId = {
     val flags = buildFlags(buildOptions)
-    val command = dockerPath :: "build" :: flags ::: "." :: Nil
+    val args = buildBuildArgs(buildArgs)
+    val command = dockerPath :: "build" :: flags ::: args ::: "." :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
 
     val processOutput = Process(command, stageDir).lines(processLogger)
@@ -122,4 +126,9 @@ object DockerBuild {
 
     cacheFlag :: removeFlag :: pullFlag :: Nil
   }
+
+  private[sbtdocker] def buildBuildArgs(buildArgs: Map[String, String]): List[String] =
+    buildArgs.toList.flatMap {
+      case (argName, argValue) => List("--build-arg", s"$argName=$argValue")
+    }
 }

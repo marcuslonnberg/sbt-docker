@@ -97,4 +97,10 @@ class DockerBuildSpec extends FreeSpec with Matchers {
       flags should contain("--pull=true")
     }
   }
+
+  "Build buildArgs" - {
+    "Simple build-arg" in {
+      DockerBuild.buildBuildArgs(Map("hello" -> "world")) shouldBe List("--build-arg", "hello=world")
+    }
+  }
 }
