@@ -1,13 +1,14 @@
 package sbtdocker
 
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import sbt.file
 import sbtdocker.Instructions._
 import sbtdocker.staging.{CopyFile, DefaultDockerfileProcessor, StagedDockerfile}
 
 import scala.concurrent.duration._
 
-class DockerfileLikeSuite extends FunSuite with Matchers {
+class DockerfileLikeSuite extends AnyFunSuite with Matchers {
   val allInstructions = Seq(
     From("image"),
     Maintainer("marcus"),

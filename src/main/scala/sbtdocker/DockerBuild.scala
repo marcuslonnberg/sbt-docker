@@ -74,7 +74,7 @@ object DockerBuild {
     imageNames.foreach { name =>
       DockerTag(imageId, name, dockerPath, log)
     }
-    
+
     imageId
   }
 

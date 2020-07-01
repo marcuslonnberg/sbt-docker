@@ -2,13 +2,14 @@ package sbtdocker
 
 import java.io.File
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import sbt.IO
 import sbtdocker.Helpers._
 import sbtdocker.Instructions._
 import sbtdocker.staging.{CopyFile, StagedDockerfile}
 
-class DockerBuildSpec extends FreeSpec with Matchers {
+class DockerBuildSpec extends AnyFreeSpec with Matchers {
 
   "Stage files" - {
     "Files should be staged" in {

@@ -1,12 +1,13 @@
 package sbtdocker.staging
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbt.file
 import sbtdocker.Helpers._
 import sbtdocker.ImmutableDockerfile
 import sbtdocker.Instructions.{AddRaw, CopyRaw, From, Run}
 
-class DefaultDockerfileProcessorSpec extends FlatSpec with Matchers {
+class DefaultDockerfileProcessorSpec extends AnyFlatSpec with Matchers {
   val stageDir = file("/tmp/staging")
 
   "The default Dockerfile processor" should "handle non file instructions" in {

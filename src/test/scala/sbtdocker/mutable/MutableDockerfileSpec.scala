@@ -1,13 +1,14 @@
 package sbtdocker.mutable
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbt._
 import sbtdocker.ImageName
 import sbtdocker.staging.CopyFile
 
 import scala.concurrent.duration._
 
-class MutableDockerfileSpec extends FlatSpec with Matchers {
+class MutableDockerfileSpec extends AnyFlatSpec with Matchers {
 
   import sbtdocker.Instructions._
 

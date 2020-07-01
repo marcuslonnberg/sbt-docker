@@ -1,10 +1,11 @@
 package sbtdocker.staging
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbt._
 import sbtdocker.Instructions.{Expose, From, Maintainer}
 
-class StagedDockerfileSpec extends FlatSpec with Matchers {
+class StagedDockerfileSpec extends AnyFlatSpec with Matchers {
   "A staged Dockerfile" should "be empty from the start" in {
     val sdf = StagedDockerfile.empty
     sdf.instructions shouldBe empty
