@@ -18,7 +18,7 @@ dockerfile in docker := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val process = Process("docker", Seq("run", "--rm", (imageNames in docker).value.head.toString))
+  val process = scala.sys.process.Process("docker", Seq("run", "--rm", (imageNames in docker).value.head.toString))
   val out = process.!!
   if (out.trim != environmentValue) sys.error("Unexpected output: " + out)
 }

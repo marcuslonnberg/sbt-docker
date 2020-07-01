@@ -31,7 +31,7 @@ dockerfile in docker in bravo := new Dockerfile {
 
 
 def checkImage(imageName: ImageName, expectedOut: String) {
-  val process = Process("docker", Seq("run", "--rm", imageName.name))
+  val process = scala.sys.process.Process("docker", Seq("run", "--rm", imageName.name))
   val out = process.!!
   if (out.trim != expectedOut) sys.error(s"Unexpected output (${imageName.name}): $out")
 }
