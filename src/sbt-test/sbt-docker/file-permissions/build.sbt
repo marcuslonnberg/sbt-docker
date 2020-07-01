@@ -30,7 +30,7 @@ val createSourceFiles = taskKey[Unit]("Create source files")
 createSourceFiles := {
   val sourceDir = file("files")
   sourceDir.mkdir()
-  
+
   filePermissions.foreach {
     case (filename, permissionsString) =>
       val file  = sourceDir / filename
@@ -48,7 +48,7 @@ createSourceFiles := {
 val check = taskKey[Unit]("Check")
 check := {
   val name = (imageNames in docker).value.head
-  val process = Process("docker", Seq("run", "--rm", name.toString))
+  val process = scala.sys.process.Process("docker", Seq("run", "--rm", name.toString))
   val out = process.!!
 
   val lines = out.split('\n').drop(1)

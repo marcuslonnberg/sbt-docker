@@ -20,15 +20,6 @@ Add sbt-docker as a dependency in `project/plugins.sbt`:
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.5.0")
 ```
 
-sbt-docker is an [auto plugin][auto-plugin],
-this means that sbt version 0.13.5 or higher is required.
-
-Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
-
-Version `1.4.1` have been released for sbt 1.0.
-
-Docker changed their versioning scheme in 2017. Due to this you need to use at least version `1.4.1` of sbt-docker.
-
 ### Getting started
 
 Below are some documentation on the sbt tasks and settings in the plugin.
