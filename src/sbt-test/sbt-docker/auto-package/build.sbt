@@ -6,7 +6,7 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.12.11"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.7"
 
