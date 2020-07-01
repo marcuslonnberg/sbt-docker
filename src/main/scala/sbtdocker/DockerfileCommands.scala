@@ -1,12 +1,23 @@
 package sbtdocker
 
+import java.io.File
+
 import sbt._
 import sbtdocker.Instructions._
 import sbtdocker.staging.{CopyFile, SourceFile}
 
 import scala.concurrent.duration.FiniteDuration
 
-trait DockerfileLike extends DockerfileCommands {
+sealed trait DockerfileBase
+
+/**
+ * Reference to an existing Dockerfile in the filesystem.
+ *
+ * @param path Filesystem path to the Dockerfile.
+ */
+case class DockerfileFile(path: File) extends DockerfileBase
+
+trait DockerfileLike extends DockerfileCommands with DockerfileBase {
   type T <: DockerfileLike
 
   def instructions: Seq[Instruction]
