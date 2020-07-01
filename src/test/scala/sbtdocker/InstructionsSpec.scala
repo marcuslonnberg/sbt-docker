@@ -1,11 +1,12 @@
 package sbtdocker
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbtdocker.Instructions._
 
 import scala.concurrent.duration._
 
-class InstructionsSpec extends FlatSpec with Matchers {
+class InstructionsSpec extends AnyFlatSpec with Matchers {
   "From" should "create a correct string" in {
     From("image").toString shouldEqual "FROM image"
   }

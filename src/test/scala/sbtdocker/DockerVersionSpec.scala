@@ -1,8 +1,9 @@
 package sbtdocker
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class DockerVersionSpec extends FlatSpec with Matchers {
+class DockerVersionSpec extends AnyFlatSpec with Matchers {
   it should "correctly parse" in {
     DockerVersion.parseVersion("1.0.0") shouldEqual DockerVersion(1,0,0)
     DockerVersion.parseVersion("11.1.1") shouldEqual DockerVersion(11,1,1)
