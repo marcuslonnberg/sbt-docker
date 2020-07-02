@@ -59,4 +59,4 @@ Dockerfile(instructions)
 
 // In order to build a Dockerfile that exists already in the filesystem use the NativeDockerfile class:
 
-NativeDockerfile(file("subdirectory") / "Dockerfile")
+NativeDockerfile(new File("subdirectory/Dockerfile"))
