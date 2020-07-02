@@ -20,7 +20,7 @@ object DockerBuild {
   def apply(dockerfile: DockerfileBase, processor: DockerfileProcessor, imageNames: Seq[ImageName],
             buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
     dockerfile match {
-      case DockerfileFile(path) =>
+      case NativeDockerfile(path) =>
         buildAndTag(imageNames, path, dockerPath, buildOptions, log)
 
       case dockerfileLike: DockerfileLike =>
@@ -88,7 +88,7 @@ object DockerBuild {
 
   private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
     val flags = buildFlags(buildOptions)
-    val command = dockerPath :: "build" :: flags ::: dockerfilePath.absolutePath :: Nil
+    val command: Seq[String] = dockerPath :: "build" :: flags ::: "--file" :: dockerfilePath.name :: dockerfilePath.getParentFile.absolutePath :: Nil
     log.debug(s"Running command: '${command.mkString(" ")}'")
 
     val processOutput = Process(command, dockerfilePath.getParentFile).lines(processLogger)

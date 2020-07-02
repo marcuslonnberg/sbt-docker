@@ -15,7 +15,7 @@ sealed trait DockerfileBase
  *
  * @param path Filesystem path to the Dockerfile.
  */
-case class DockerfileFile(path: File) extends DockerfileBase
+case class NativeDockerfile(path: File) extends DockerfileBase
 
 trait DockerfileLike extends DockerfileCommands with DockerfileBase {
   type T <: DockerfileLike
