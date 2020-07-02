@@ -65,35 +65,35 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
       options.pullBaseImage shouldEqual BuildOptions.Pull.IfMissing
       options.removeIntermediateContainers shouldEqual BuildOptions.Remove.OnSuccess
 
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain theSameElementsAs Seq("--no-cache=false", "--pull=false", "--rm=true")
     }
 
     "No cache" in {
       val options = BuildOptions(cache = false)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain("--no-cache=true")
     }
 
     "Always remove" in {
       val options = BuildOptions(removeIntermediateContainers = BuildOptions.Remove.Always)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain("--force-rm=true")
     }
 
     "Never remove" in {
       val options = BuildOptions(removeIntermediateContainers = BuildOptions.Remove.Never)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain("--pull=false")
     }
 
     "Always pull" in {
       val options = BuildOptions(pullBaseImage = BuildOptions.Pull.Always)
-      val flags = DockerBuild.buildFlags(options)
+      val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain("--pull=true")
     }
