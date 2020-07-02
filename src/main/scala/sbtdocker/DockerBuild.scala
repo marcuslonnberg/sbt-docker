@@ -17,11 +17,17 @@ object DockerBuild {
    * @param buildOptions options for the build command
    * @param log logger
    */
-  def apply(dockerfile: DockerfileLike, processor: DockerfileProcessor, imageNames: Seq[ImageName],
+  def apply(dockerfile: DockerfileBase, processor: DockerfileProcessor, imageNames: Seq[ImageName],
             buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
-    val staged = processor(dockerfile, stageDir)
+    dockerfile match {
+      case NativeDockerfile(path) =>
+        buildAndTag(imageNames, path, dockerPath, buildOptions, log)
 
-    apply(staged, imageNames, buildOptions, stageDir, dockerPath, log)
+      case dockerfileLike: DockerfileLike =>
+        val staged = processor(dockerfileLike, stageDir)
+
+        apply(staged, imageNames, buildOptions, stageDir, dockerPath, log)
+    }
   }
 
   /**
@@ -40,17 +46,19 @@ object DockerBuild {
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
 
     clean(stageDir)
-    createDockerfile(staged, stageDir)
+    val dockerfilePath = createDockerfile(staged, stageDir)
     prepareFiles(staged)
-    buildAndTag(imageNames, stageDir, dockerPath, buildOptions, log)
+    buildAndTag(imageNames, dockerfilePath, dockerPath, buildOptions, log)
   }
 
   private[sbtdocker] def clean(stageDir: File) = {
     IO.delete(stageDir)
   }
 
-  private[sbtdocker] def createDockerfile(staged: StagedDockerfile, stageDir: File) = {
-    IO.write(stageDir / "Dockerfile", staged.instructionsString)
+  private[sbtdocker] def createDockerfile(staged: StagedDockerfile, stageDir: File): File = {
+    val dockerfilePath = stageDir / "Dockerfile"
+    IO.write(dockerfilePath, staged.instructionsString)
+    dockerfilePath
   }
 
   private[sbtdocker] def prepareFiles(staged: StagedDockerfile) = {
@@ -62,14 +70,14 @@ object DockerBuild {
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
 
-  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
     val processLogger = ProcessLogger({ line =>
       log.info(line)
     }, { line =>
       log.info(line)
     })
 
-    val imageId = build(stageDir, dockerPath, buildOptions, log, processLogger)
+    val imageId = build(dockerfilePath, dockerPath, buildOptions, log, processLogger)
 
     imageNames.foreach { name =>
       DockerTag(imageId, name, dockerPath, log)
@@ -78,12 +86,12 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(stageDir: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
+  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
     val flags = buildFlags(buildOptions)
-    val command = dockerPath :: "build" :: flags ::: "." :: Nil
-    log.debug(s"Running command: '${command.mkString(" ")}' in '${stageDir.absString}'")
+    val command: Seq[String] = dockerPath :: "build" :: flags ::: "--file" :: dockerfilePath.name :: dockerfilePath.getParentFile.absolutePath :: Nil
+    log.debug(s"Running command: '${command.mkString(" ")}'")
 
-    val processOutput = Process(command, stageDir).lines(processLogger)
+    val processOutput = Process(command, dockerfilePath.getParentFile).lines(processLogger)
     processOutput.foreach { line =>
       log.info(line)
     }

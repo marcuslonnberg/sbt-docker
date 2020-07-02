@@ -108,6 +108,11 @@ dockerfile in docker := {
 }
 ```
 
+Example with a Dockerfile in the filesystem.
+```scala
+dockerfile in docker := NativeDockerfile(file("subdirectory") / "Dockerfile")
+```
+
 Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
 ### Building an image
