@@ -1,4 +1,11 @@
+## 1.6.0
+
+- Fix issue with building images not working with Docker 19.03.12.
+- Add support for native Dockerfiles with `NativeDockerfile(filePath))`.
+- Add support for Docker BuildKit.
+
 ## 1.5.0
+
 - Add `HEALTHCHECK` instruction [#75](https://github.com/marcuslonnberg/sbt-docker/pull/75)
 - The `ADD` and `COPY` instructions can now receive the `chown` flag
 - Fix `dockerBuildAndPush` task in sbt 1.0
