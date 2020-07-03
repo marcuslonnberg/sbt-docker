@@ -159,6 +159,10 @@ buildOptions in docker := BuildOptions(
 )
 ```
 
+### BuildKit support
+
+Images can be built with [https://docs.docker.com/develop/develop-images/build_enhancements/](BuildKit) by enabling it in the daemon configuration or by passing the environment variable `DOCKER_BUILDKIT=1` to sbt.
+
 ### Auto packaging JVM applications
 
 If you have a standalone JVM application that you want a simple Docker image for.

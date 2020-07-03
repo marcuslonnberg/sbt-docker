@@ -1,24 +1,32 @@
 package sbtdocker
 
 import sbt._
-import staging.{DockerfileProcessor, StagedDockerfile}
+import sbtdocker.staging.{DockerfileProcessor, StagedDockerfile}
 
 import scala.sys.process.{Process, ProcessLogger}
 
 object DockerBuild {
+
   /**
-   * Build a Dockerfile using a provided docker binary.
-   *
-   * @param dockerfile Dockerfile to build
-   * @param processor processor to create a staging directory for the Dockerfile
-   * @param imageNames names of the resulting image
-   * @param stageDir stage dir
-   * @param dockerPath path to the docker binary
-   * @param buildOptions options for the build command
-   * @param log logger
-   */
-  def apply(dockerfile: DockerfileBase, processor: DockerfileProcessor, imageNames: Seq[ImageName],
-            buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
+    * Build a Dockerfile using a provided docker binary.
+    *
+    * @param dockerfile Dockerfile to build
+    * @param processor processor to create a staging directory for the Dockerfile
+    * @param imageNames names of the resulting image
+    * @param stageDir stage dir
+    * @param dockerPath path to the docker binary
+    * @param buildOptions options for the build command
+    * @param log logger
+    */
+  def apply(
+    dockerfile: DockerfileBase,
+    processor: DockerfileProcessor,
+    imageNames: Seq[ImageName],
+    buildOptions: BuildOptions,
+    stageDir: File,
+    dockerPath: String,
+    log: Logger
+  ): ImageId = {
     dockerfile match {
       case NativeDockerfile(path) =>
         buildAndTag(imageNames, path, dockerPath, buildOptions, log)
@@ -31,16 +39,23 @@ object DockerBuild {
   }
 
   /**
-   * Build a Dockerfile using a provided docker binary.
-   *
-   * @param staged a staged Dockerfile to build.
-   * @param imageNames names of the resulting image
-   * @param stageDir stage dir
-   * @param dockerPath path to the docker binary
-   * @param buildOptions options for the build command
-   * @param log logger
-   */
-  def apply(staged: StagedDockerfile, imageNames: Seq[ImageName], buildOptions: BuildOptions, stageDir: File, dockerPath: String, log: Logger): ImageId = {
+    * Build a Dockerfile using a provided docker binary.
+    *
+    * @param staged a staged Dockerfile to build.
+    * @param imageNames names of the resulting image
+    * @param stageDir stage dir
+    * @param dockerPath path to the docker binary
+    * @param buildOptions options for the build command
+    * @param log logger
+    */
+  def apply(
+    staged: StagedDockerfile,
+    imageNames: Seq[ImageName],
+    buildOptions: BuildOptions,
+    stageDir: File,
+    dockerPath: String,
+    log: Logger
+  ): ImageId = {
     log.debug("Building Dockerfile:\n" + staged.instructionsString)
 
     log.debug(s"Preparing stage directory '${stageDir.getPath}'")
@@ -69,15 +84,16 @@ object DockerBuild {
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
+  private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) done$".r
 
-  private[sbtdocker] def buildAndTag(imageNames: Seq[ImageName], dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
-    val processLogger = ProcessLogger({ line =>
-      log.info(line)
-    }, { line =>
-      log.info(line)
-    })
-
-    val imageId = build(dockerfilePath, dockerPath, buildOptions, log, processLogger)
+  private[sbtdocker] def buildAndTag(
+    imageNames: Seq[ImageName],
+    dockerfilePath: File,
+    dockerPath: String,
+    buildOptions: BuildOptions,
+    log: Logger
+  ): ImageId = {
+    val imageId = build(dockerfilePath, dockerPath, buildOptions, log)
 
     imageNames.foreach { name =>
       DockerTag(imageId, name, dockerPath, log)
@@ -86,29 +102,50 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger, processLogger: ProcessLogger): ImageId = {
-    val flags = buildFlags(buildOptions)
-    val command: Seq[String] = dockerPath :: "build" :: flags ::: "--file" :: dockerfilePath.name :: dockerfilePath.getParentFile.absolutePath :: Nil
-    log.debug(s"Running command: '${command.mkString(" ")}'")
+  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+    var lines = Seq.empty[String]
 
-    val processOutput = Process(command, dockerfilePath.getParentFile).lines(processLogger)
-    processOutput.foreach { line =>
-      log.info(line)
+    def runBuild(buildKitSupport: Boolean): Int = {
+      val buildOptionFlags = generateBuildOptionFlags(buildOptions)
+      val buildKitFlags = if (buildKitSupport) List("--progress=plain") else Nil
+      val command: Seq[String] = dockerPath ::
+        "build" ::
+        buildOptionFlags :::
+        buildKitFlags :::
+        "--file" ::
+        dockerfilePath.name ::
+        dockerfilePath.getParentFile.absolutePath ::
+        Nil
+      log.debug(s"Running command: '${command.mkString(" ")}'")
+
+      Process(command, dockerfilePath.getParentFile).!(ProcessLogger({ line =>
+        log.info(line)
+        lines :+= line
+      }, { line =>
+        log.info(line)
+        lines :+= line
+      }))
     }
 
-    val imageId = processOutput.collect {
+    if (runBuild(true) != 0 && lines.contains("unknown flag: --progress")) {
+      // Re-runs the build without the --progress flag, in order to support old Docker versions.
+      runBuild(false)
+    }
+
+    val imageId = lines.collect {
       case SuccessfullyBuilt(id) => ImageId(id)
+      case SuccessfullyBuiltBuildKit(id) => ImageId(id)
     }.lastOption
 
     imageId match {
       case Some(id) =>
         id
       case None =>
-        sys.error("Could not parse image id")
+        sys.error("Could not parse Docker image id")
     }
   }
 
-  private[sbtdocker] def buildFlags(buildOptions: BuildOptions): List[String] = {
+  private[sbtdocker] def generateBuildOptionFlags(buildOptions: BuildOptions): List[String] = {
     val cacheFlag = "--no-cache=" + !buildOptions.cache
     val removeFlag = {
       buildOptions.removeIntermediateContainers match {
