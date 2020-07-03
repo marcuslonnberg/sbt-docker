@@ -107,11 +107,11 @@ object DockerBuild {
 
     def runBuild(buildKitSupport: Boolean): Int = {
       val buildOptionFlags = generateBuildOptionFlags(buildOptions)
-      val buildKitFlags = if (buildKitSupport) Some("--progress=plain") else None
+      val buildKitFlags = if (buildKitSupport) List("--progress=plain") else Nil
       val command: Seq[String] = dockerPath ::
         "build" ::
         buildOptionFlags :::
-        buildKitFlags.toList :::
+        buildKitFlags :::
         "--file" ::
         dockerfilePath.name ::
         dockerfilePath.getParentFile.absolutePath ::
