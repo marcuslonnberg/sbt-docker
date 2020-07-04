@@ -14,4 +14,6 @@ object DockerKeys {
   val imageNames = taskKey[Seq[ImageName]]("Names of the built image.")
   val dockerPath = settingKey[String]("Path to the Docker binary.")
   val buildOptions = settingKey[BuildOptions]("Options for the Docker build command.")
+
+  val dockerRegistryCredentials = settingKey[Option[DockerRegistryCredentials]]("Credentials to Docker Registry")
 }

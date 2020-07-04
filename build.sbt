@@ -18,6 +18,9 @@ libraryDependencies ++= Seq(
 
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
 
+crossScalaVersions := Seq("2.10.6", "2.12.2")
+crossSbtVersions := Seq("0.13.16", "1.0.0")
+
 licenses := Seq("MIT License" -> url("https://github.com/marcuslonnberg/sbt-docker/blob/master/LICENSE"))
 homepage := Some(url("https://github.com/marcuslonnberg/sbt-docker"))
 scmInfo := Some(ScmInfo(url("https://github.com/marcuslonnberg/sbt-docker"), "scm:git:git://github.com:marcuslonnberg/sbt-docker.git"))

@@ -104,3 +104,5 @@ case class ImageName(
   @deprecated("Use toString instead.", "0.4.0")
   def name = toString
 }
+
+case class DockerRegistryCredentials(url: String, username: String, password: String)
