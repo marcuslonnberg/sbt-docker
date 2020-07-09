@@ -128,21 +128,30 @@ object DockerBuild {
       }))
     }
 
-    if (runBuild(true) != 0 && lines.contains("unknown flag: --progress")) {
-      // Re-runs the build without the --progress flag, in order to support old Docker versions.
-      runBuild(false)
+    val exitCode = {
+      val firstBuildExitCode = runBuild(true)
+      if (firstBuildExitCode != 0 && lines.contains("unknown flag: --progress")) {
+        // Re-runs the build without the --progress flag, in order to support old Docker versions.
+        runBuild(false)
+      } else {
+        firstBuildExitCode
+      }
     }
 
-    val imageId = lines.collect {
-      case SuccessfullyBuilt(id) => ImageId(id)
-      case SuccessfullyBuiltBuildKit(id) => ImageId(id)
-    }.lastOption
+    if (exitCode == 0) {
+      val imageId = lines.collect {
+        case SuccessfullyBuilt(id) => ImageId(id)
+        case SuccessfullyBuiltBuildKit(id) => ImageId(id)
+      }.lastOption
 
-    imageId match {
-      case Some(id) =>
-        id
-      case None =>
-        sys.error("Could not parse Docker image id")
+      imageId match {
+        case Some(id) =>
+          id
+        case None =>
+          throw new DockerBuildException("Could not parse Docker image id")
+      }
+    } else {
+      throw new DockerBuildException(s"Failed to build Docker image (exit code: $exitCode)")
     }
   }
 
@@ -169,3 +178,5 @@ object DockerBuild {
     cacheFlag :: removeFlag :: pullFlag :: Nil
   }
 }
+
+class DockerBuildException(message: String) extends RuntimeException(message)
