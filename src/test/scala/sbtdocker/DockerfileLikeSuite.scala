@@ -9,10 +9,11 @@ import sbtdocker.staging.{CopyFile, DefaultDockerfileProcessor, StagedDockerfile
 import scala.concurrent.duration._
 
 class DockerfileLikeSuite extends AnyFunSuite with Matchers {
+
   val allInstructions = Seq(
     From("image"),
     Maintainer("marcus"),
-    Run.exec(Seq("echo","docker")),
+    Run.exec(Seq("echo", "docker")),
     Run.shell(Seq("echo", "docker")),
     Cmd.exec(Seq("cmd", "arg")),
     Cmd.shell(Seq("cmd", "arg")),
@@ -29,10 +30,10 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
     User("marcus"),
     WorkDir("path"),
     OnBuild(Run.exec(Seq("echo", "123"))),
-    HealthCheck.exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-      startPeriod = Some(1.second), retries = Some(3)),
-    HealthCheck.shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-      startPeriod = Some(1.second), retries = Some(3)),
+    HealthCheck
+      .exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3)),
+    HealthCheck
+      .shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3)),
     HealthCheck.none
   )
 
@@ -102,10 +103,20 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
       .user("marcus")
       .workDir("path")
       .onBuild(Run.exec(Seq("echo", "123")))
-      .healthCheck(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3))
-      .healthCheckShell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-        startPeriod = Some(1.second), retries = Some(3))
+      .healthCheck(
+        Seq("cmd", "arg"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      )
+      .healthCheckShell(
+        Seq("cmd", "arg"),
+        interval = Some(20.seconds),
+        timeout = Some(10.seconds),
+        startPeriod = Some(1.second),
+        retries = Some(3)
+      )
       .healthCheckNone()
 
     withMethods shouldEqual predefined
@@ -141,7 +152,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
 
     dockerfile.instructions should contain theSameElementsInOrderAs Seq(
       Add(Seq(CopyFile(sourceFile)), "/"),
-      Copy(Seq(CopyFile(sourceFile)), "/"))
+      Copy(Seq(CopyFile(sourceFile)), "/")
+    )
   }
 
   test("Adding a single source file to multiple paths") {
@@ -160,7 +172,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
       Add(Seq(CopyFile(sourceFile)), "/z"),
       Copy(Seq(CopyFile(sourceFile)), "/x/y"),
       Copy(Seq(CopyFile(sourceFile)), "/z"),
-      Copy(Seq(CopyFile(sourceFile)), "/z"))
+      Copy(Seq(CopyFile(sourceFile)), "/z")
+    )
   }
 
   test("Instruction methods with varags should be ignore instruction when zero args") {

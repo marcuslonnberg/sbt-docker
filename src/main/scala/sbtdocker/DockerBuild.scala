@@ -105,7 +105,13 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, buildArguments: Map[String, String], log: Logger): ImageId = {
+  private[sbtdocker] def build(
+    dockerfilePath: File,
+    dockerPath: String,
+    buildOptions: BuildOptions,
+    buildArguments: Map[String, String],
+    log: Logger
+  ): ImageId = {
     val dockerfileAbsolutePath = dockerfilePath.getAbsoluteFile
     var lines = Seq.empty[String]
 
@@ -127,13 +133,18 @@ object DockerBuild {
         Nil
       log.debug(s"Running command: '${command.mkString(" ")}'")
 
-      Process(command, dockerfileAbsolutePath.getParentFile).!(ProcessLogger({ line =>
-        log.info(line)
-        lines :+= line
-      }, { line =>
-        log.info(line)
-        lines :+= line
-      }))
+      Process(command, dockerfileAbsolutePath.getParentFile).!(
+        ProcessLogger(
+          { line =>
+            log.info(line)
+            lines :+= line
+          },
+          { line =>
+            log.info(line)
+            lines :+= line
+          }
+        )
+      )
     }
 
     val exitCode = {

@@ -6,6 +6,7 @@ import sbtdocker.DockerKeys._
 import sbtdocker.staging.DefaultDockerfileProcessor
 
 object DockerSettings {
+
   lazy val baseDockerSettings = Seq(
     docker := {
       val log = Keys.streams.value.log
@@ -32,14 +33,13 @@ object DockerSettings {
       }
     }.value,
     dockerfile in docker := {
-      sys.error(
-        """A Dockerfile is not defined. Please define one with `dockerfile in docker`
-          |
-          |Example:
-          |dockerfile in docker := new Dockerfile {
-          | from("ubuntu")
-          | ...
-          |}
+      sys.error("""A Dockerfile is not defined. Please define one with `dockerfile in docker`
+        |
+        |Example:
+        |dockerfile in docker := new Dockerfile {
+        | from("ubuntu")
+        | ...
+        |}
         """.stripMargin)
     },
     target in docker := target.value / "docker",
@@ -66,14 +66,16 @@ object DockerSettings {
       docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)).value
     },
     Keys.mainClass in docker := {
-      (Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin)).value
+      (Keys.mainClass in docker).or(Keys.mainClass.in(Compile, Keys.packageBin)).value
     },
     dockerfile in docker := {
       val maybeMainClass = Keys.mainClass.in(docker).value
       maybeMainClass match {
         case None =>
-          sys.error("Either there are no main class or there exist several. " +
-            "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
+          sys.error(
+            "Either there are no main class or there exist several. " +
+              "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'."
+          )
 
         case Some(mainClass) =>
           val classpath = Keys.managedClasspath.in(Compile).value

@@ -14,7 +14,6 @@ object BuildOptions {
 
   }
 
-
   object Pull {
 
     sealed trait Option
@@ -28,11 +27,11 @@ object BuildOptions {
 }
 
 /**
- * Options for when building a Docker image.
- * @param cache Use cache when building the image.
- * @param removeIntermediateContainers Remove intermediate containers after a build.
- * @param pullBaseImage Always attempts to pull a newer version of the base image.
- */
+  * Options for when building a Docker image.
+  * @param cache Use cache when building the image.
+  * @param removeIntermediateContainers Remove intermediate containers after a build.
+  * @param pullBaseImage Always attempts to pull a newer version of the base image.
+  */
 case class BuildOptions(
   cache: Boolean = true,
   removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
@@ -40,17 +39,18 @@ case class BuildOptions(
 )
 
 /**
- * Id of an Docker image.
- * @param id Id as a hexadecimal digit string.
- */
+  * Id of an Docker image.
+  * @param id Id as a hexadecimal digit string.
+  */
 case class ImageId(id: String) {
   override def toString = id
 }
 
 object ImageName {
+
   /**
-   * Parse a [[sbtdocker.ImageName]] from a string.
-   */
+    * Parse a [[sbtdocker.ImageName]] from a string.
+    */
   def apply(name: String): ImageName = {
     val (registry, rest) = name.split("/", 3).toList match {
       case host :: x :: xs if host.contains(".") || host.contains(":") || host == "localhost" =>
@@ -80,20 +80,21 @@ object ImageName {
 }
 
 /**
- * Name of a Docker image.
- * Format: [registry/][namespace/]repository[:tag]
- * Examples: `docker-registry.example.com/scala:2.11` or `example/scala:2.11`
- * @param repository Name of the repository.
- * @param registry Host and optionally port of the registry, example `docker-registry.example.com:5000`.
- * @param namespace Namespace name.
- * @param tag Tag, for example a version number.
- */
+  * Name of a Docker image.
+  * Format: [registry/][namespace/]repository[:tag]
+  * Examples: `docker-registry.example.com/scala:2.11` or `example/scala:2.11`
+  * @param repository Name of the repository.
+  * @param registry Host and optionally port of the registry, example `docker-registry.example.com:5000`.
+  * @param namespace Namespace name.
+  * @param tag Tag, for example a version number.
+  */
 case class ImageName(
   registry: Option[String] = None,
   namespace: Option[String] = None,
   repository: String,
   tag: Option[String] = None
 ) {
+
   override def toString = {
     val registryString = registry.fold("")(_ + "/")
     val namespaceString = namespace.fold("")(_ + "/")

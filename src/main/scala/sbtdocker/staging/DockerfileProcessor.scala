@@ -1,4 +1,5 @@
 package sbtdocker.staging
+
 import sbt._
 import sbtdocker.DockerfileLike
 

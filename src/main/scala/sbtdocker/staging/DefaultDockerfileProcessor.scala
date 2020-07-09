@@ -4,10 +4,11 @@ import sbt._
 import sbtdocker._
 
 /**
- * DockerfileProcessor that stages all files in the docker staging directory as `/{index}/file`.
- * Where index is a counter that increases for each file that is staged.
- */
+  * DockerfileProcessor that stages all files in the docker staging directory as `/{index}/file`.
+  * Where index is a counter that increases for each file that is staged.
+  */
 object DefaultDockerfileProcessor extends DockerfileProcessor {
+
   def apply(dockerfile: DockerfileLike, stageDir: File) = {
     dockerfile.instructions
       .foldLeft(StagedDockerfile.empty)(handleInstruction(stageDir))

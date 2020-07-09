@@ -3,21 +3,21 @@ package sbtdocker.mutable
 import sbtdocker.{DockerfileLike, Instruction}
 
 /**
- * Mutable Dockerfile.
- *
- * @example {{{
- *  val jarFile: File
- *
- *  new Dockerfile {
- *    from("openjdk:8-jre")
- *    add(jarFile, "/srv/app.jar")
- *    workDir("/srv")
- *    cmd("java", "-jar", "app.jar")
- *  }
- *  }}}
- *
- * @param instructions Ordered sequence of instructions.
- */
+  * Mutable Dockerfile.
+  *
+  * @example {{{
+  *  val jarFile: File
+  *
+  *  new Dockerfile {
+  *    from("openjdk:8-jre")
+  *    add(jarFile, "/srv/app.jar")
+  *    workDir("/srv")
+  *    cmd("java", "-jar", "app.jar")
+  *  }
+  *  }}}
+  *
+  * @param instructions Ordered sequence of instructions.
+  */
 case class Dockerfile(var instructions: Seq[Instruction] = Seq.empty) extends DockerfileLike {
   type T = Dockerfile
 

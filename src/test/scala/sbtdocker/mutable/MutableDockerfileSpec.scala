@@ -107,7 +107,8 @@ class MutableDockerfileSpec extends AnyFlatSpec with Matchers {
         startPeriod = Some(1.second),
         retries = Some(3)
       ),
-      HealthCheckNone)
+      HealthCheckNone
+    )
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
   }
