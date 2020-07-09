@@ -17,7 +17,7 @@ Setup
 
 Add sbt-docker as a dependency in `project/plugins.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.6.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.7.0")
 ```
 
 ### Getting started
@@ -192,7 +192,6 @@ Then you can use `dockerAutoPackageJavaApplication(fromImage, exposedPorts, expo
 which will setup some settings for you, including a Dockerfile.
 Its very basic, so if you have more advanced needs then define your own Dockerfile.
 
-[auto-plugin]: http://www.scala-sbt.org/0.13/docs/Plugins.html
 [docker]: https://www.docker.com/
 [dockerfile]: https://docs.docker.com/engine/reference/builder/
 [dockerizing-scala-apps]: https://velvia.github.io/Docker-Scala-Sbt/
