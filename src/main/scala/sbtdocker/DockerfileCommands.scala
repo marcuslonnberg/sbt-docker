@@ -166,6 +166,8 @@ trait DockerfileCommands {
     else self
   }
 
+  def arg(key: String, defaultValue: Option[String] = None): T = addInstruction(Arg(key, defaultValue))
+
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
   def env(variables: (String, String)*): T = {

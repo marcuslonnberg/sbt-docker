@@ -13,6 +13,7 @@ object DockerPlugin extends AutoPlugin {
     val imageName = DockerKeys.imageName
     val imageNames = DockerKeys.imageNames
     val buildOptions = DockerKeys.buildOptions
+    val dockerBuildArguments = DockerKeys.dockerBuildArguments
 
     type Dockerfile = sbtdocker.Dockerfile
     val NativeDockerfile = sbtdocker.NativeDockerfile

@@ -17,6 +17,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
     Cmd.exec(Seq("cmd", "arg")),
     Cmd.shell(Seq("cmd", "arg")),
     Expose(Seq(80, 8080)),
+    Arg("key"),
+    Arg("key", Some("defaultValue")),
     Env("key", "value"),
     Label("key", "value"),
     AddRaw("a", "b"),
@@ -45,6 +47,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
         |CMD ["cmd", "arg"]
         |CMD cmd arg
         |EXPOSE 80 8080
+        |ARG key
+        |ARG key="defaultValue"
         |ENV key="value"
         |LABEL key="value"
         |ADD a b
@@ -86,6 +90,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
       .cmd("cmd", "arg")
       .cmdShell("cmd", "arg")
       .expose(80, 8080)
+      .arg("key")
+      .arg("key", Some("defaultValue"))
       .env("key", "value")
       .label("key", "value")
       .addRaw("a", "b")

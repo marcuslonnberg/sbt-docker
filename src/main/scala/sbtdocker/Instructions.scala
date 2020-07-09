@@ -397,6 +397,22 @@ object Instructions {
   }
 
   /**
+    * Define a build argument. The ARG instruction in a Dockerfile.
+    */
+  case class Arg(key: String, defaultValue: Option[String] = None) extends DockerfileInstruction {
+    require("\\s".r.findFirstIn(key).isEmpty, "An ARG key can not contain whitespace characters.")
+
+    override def instructionName = "ARG"
+
+    override def arguments: String = {
+      defaultValue match {
+        case Some(value) => s"$key=${escapeVariable(value)}"
+        case None => key
+      }
+    }
+  }
+
+  /**
    * This class allows the user to specify a raw Dockerfile instruction.
    * Example:
    * {{{

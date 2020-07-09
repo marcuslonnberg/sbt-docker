@@ -14,7 +14,8 @@ object DockerSettings {
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
       val imageNames = (DockerKeys.imageNames in docker).value
-      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
+      val buildArguments = (DockerKeys.dockerBuildArguments in docker).value
+      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, buildArguments, stageDir, dockerPath, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log
@@ -51,7 +52,8 @@ object DockerSettings {
       Seq((imageName in docker).value)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    dockerBuildArguments in docker := Map.empty
   )
 
   def autoPackageJavaApplicationSettings(

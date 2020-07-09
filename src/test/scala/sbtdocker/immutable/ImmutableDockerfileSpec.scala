@@ -36,6 +36,8 @@ class ImmutableDockerfileSpec extends AnyFlatSpec with Matchers {
       .cmd("echo", "1")
       .cmdShell("echo", "2")
       .expose(80, 443)
+      .arg("key")
+      .arg("key", Some("defaultValue"))
       .env("key", "value")
       .add(file1, "/")
       .add(file2, file2)
@@ -76,6 +78,8 @@ class ImmutableDockerfileSpec extends AnyFlatSpec with Matchers {
       Cmd.exec(Seq("echo", "1")),
       Cmd.shell(Seq("echo", "2")),
       Expose(Seq(80, 443)),
+      Arg("key"),
+      Arg("key", Some("defaultValue")),
       Env("key", "value"),
       Add(Seq(CopyFile(file1)), "/"),
       Add(Seq(CopyFile(file2)), file2.toString),

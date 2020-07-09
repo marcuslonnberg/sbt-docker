@@ -23,18 +23,19 @@ object DockerBuild {
     processor: DockerfileProcessor,
     imageNames: Seq[ImageName],
     buildOptions: BuildOptions,
+    buildArguments: Map[String, String],
     stageDir: File,
     dockerPath: String,
     log: Logger
   ): ImageId = {
     dockerfile match {
       case NativeDockerfile(path) =>
-        buildAndTag(imageNames, path, dockerPath, buildOptions, log)
+        buildAndTag(imageNames, path, dockerPath, buildOptions, buildArguments, log)
 
       case dockerfileLike: DockerfileLike =>
         val staged = processor(dockerfileLike, stageDir)
 
-        apply(staged, imageNames, buildOptions, stageDir, dockerPath, log)
+        apply(staged, imageNames, buildOptions, buildArguments, stageDir, dockerPath, log)
     }
   }
 
@@ -52,6 +53,7 @@ object DockerBuild {
     staged: StagedDockerfile,
     imageNames: Seq[ImageName],
     buildOptions: BuildOptions,
+    buildArguments: Map[String, String],
     stageDir: File,
     dockerPath: String,
     log: Logger
@@ -63,7 +65,7 @@ object DockerBuild {
     clean(stageDir)
     val dockerfilePath = createDockerfile(staged, stageDir)
     prepareFiles(staged)
-    buildAndTag(imageNames, dockerfilePath, dockerPath, buildOptions, log)
+    buildAndTag(imageNames, dockerfilePath, dockerPath, buildOptions, buildArguments, log)
   }
 
   private[sbtdocker] def clean(stageDir: File) = {
@@ -91,9 +93,10 @@ object DockerBuild {
     dockerfilePath: File,
     dockerPath: String,
     buildOptions: BuildOptions,
+    buildArguments: Map[String, String],
     log: Logger
   ): ImageId = {
-    val imageId = build(dockerfilePath, dockerPath, buildOptions, log)
+    val imageId = build(dockerfilePath, dockerPath, buildOptions, buildArguments, log)
 
     imageNames.foreach { name =>
       DockerTag(imageId, name, dockerPath, log)
@@ -102,17 +105,22 @@ object DockerBuild {
     imageId
   }
 
-  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+  private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, buildArguments: Map[String, String], log: Logger): ImageId = {
     val dockerfileAbsolutePath = dockerfilePath.getAbsoluteFile
     var lines = Seq.empty[String]
 
     def runBuild(buildKitSupport: Boolean): Int = {
       val buildOptionFlags = generateBuildOptionFlags(buildOptions)
       val buildKitFlags = if (buildKitSupport) List("--progress=plain") else Nil
+      val buildArgumentFlags = buildArguments.toList.flatMap {
+        case (key, value) =>
+          Seq(s"--build-arg", s"$key=$value")
+      }
       val command: Seq[String] = dockerPath ::
         "build" ::
         buildOptionFlags :::
         buildKitFlags :::
+        buildArgumentFlags :::
         "--file" ::
         dockerfilePath.name ::
         dockerfileAbsolutePath.getParentFile.getPath ::

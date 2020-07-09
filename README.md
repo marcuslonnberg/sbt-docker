@@ -26,7 +26,7 @@ Below are some documentation on the sbt tasks and settings in the plugin.
 
 This blog post gives a good introduction to the basics of sbt-docker: [Dockerizing your Scala apps with sbt-docker][dockerizing-scala-apps]
 
-Also take a look at the [example projects](examples).
+Also, take a look at the [example projects](examples).
 
 Usage
 -----
@@ -157,6 +157,28 @@ buildOptions in docker := BuildOptions(
   removeIntermediateContainers = BuildOptions.Remove.Always,
   pullBaseImage = BuildOptions.Pull.Always
 )
+```
+
+### Build arguments
+
+Use the key `dockerBuildArguments in docker` to set build arguments.
+
+Example:
+```scala
+dockerBuildArguments in docker := Map(
+  "KEY" -> "value",
+  "CREDENTIALS" -> sys.env("CREDENTIALS")
+)
+
+dockerfile in docker := {
+  new Dockerfile {
+    // ...
+    arg("KEY")
+    arg("CREDENTIALS")
+    env("KEY" -> "$KEY", "CREDENTIALS" -> "$CREDENTIALS")
+    // ...
+  }
+}
 ```
 
 ### BuildKit support
