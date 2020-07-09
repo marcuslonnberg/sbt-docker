@@ -1,3 +1,10 @@
+## 1.7.0
+
+- Support passing build arguments with `dockerBuildArguments in docker` setting.
+- Add `ARG` instruction.
+- Fix issue with resolving native Dockerfile path when in root of project.
+- Fix issue with Docker build not passing failure properly on build failure. 
+
 ## 1.6.0
 
 - Fix issue with building images not working with Docker 19.03.12.
