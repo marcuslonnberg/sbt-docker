@@ -103,6 +103,7 @@ object DockerBuild {
   }
 
   private[sbtdocker] def build(dockerfilePath: File, dockerPath: String, buildOptions: BuildOptions, log: Logger): ImageId = {
+    val dockerfileAbsolutePath = dockerfilePath.getAbsoluteFile
     var lines = Seq.empty[String]
 
     def runBuild(buildKitSupport: Boolean): Int = {
@@ -114,11 +115,11 @@ object DockerBuild {
         buildKitFlags :::
         "--file" ::
         dockerfilePath.name ::
-        dockerfilePath.getParentFile.absolutePath ::
+        dockerfileAbsolutePath.getParentFile.getPath ::
         Nil
       log.debug(s"Running command: '${command.mkString(" ")}'")
 
-      Process(command, dockerfilePath.getParentFile).!(ProcessLogger({ line =>
+      Process(command, dockerfileAbsolutePath.getParentFile).!(ProcessLogger({ line =>
         log.info(line)
         lines :+= line
       }, { line =>

@@ -7,7 +7,7 @@ organization := "sbtdocker"
 version := "0.1.0"
 
 // Define a Dockerfile
-dockerfile in docker := NativeDockerfile(file("subdirectory") / "Dockerfile")
+dockerfile in docker := NativeDockerfile(file("Dockerfile"))
 
 // Set a custom image name
 imageNames in docker := {
