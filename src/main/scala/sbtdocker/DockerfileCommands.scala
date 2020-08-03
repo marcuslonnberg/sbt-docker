@@ -1,12 +1,23 @@
 package sbtdocker
 
+import java.io.File
+
 import sbt._
 import sbtdocker.Instructions._
 import sbtdocker.staging.{CopyFile, SourceFile}
 
 import scala.concurrent.duration.FiniteDuration
 
-trait DockerfileLike extends DockerfileCommands {
+sealed trait DockerfileBase
+
+/**
+  * Reference to an existing Dockerfile in the filesystem.
+  *
+  * @param path Filesystem path to the Dockerfile.
+  */
+case class NativeDockerfile(path: File) extends DockerfileBase
+
+trait DockerfileLike extends DockerfileCommands with DockerfileBase {
   type T <: DockerfileLike
 
   def instructions: Seq[Instruction]
@@ -25,49 +36,49 @@ trait DockerfileCommands {
   def copyToStageDir(source: File, targetRelativeToStageDir: File): T = stageFile(source, targetRelativeToStageDir)
 
   /**
-   * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
-   *
-   * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
-   * files on the same target.
-   *
-   * @param source File to copy into stage dir.
-   * @param target Path to copy file to, should be relative to the stage dir.
-   */
+    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
+    *
+    * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
+    * files on the same target.
+    *
+    * @param source File to copy into stage dir.
+    * @param target Path to copy file to, should be relative to the stage dir.
+    */
   def stageFile(source: File, target: File): T = {
     addInstruction(Instructions.StageFiles(CopyFile(source), target.getPath))
   }
 
   /**
-   * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
-   *
-   * If the `target` ends with / then the source filename will be added at the end.
-   *
-   * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
-   * files on the same target.
-   *
-   * @param source File to copy into stage dir.
-   * @param target Path to copy file to, should be relative to the stage dir.
-   */
+    * Stage a file. The file will be copied to the stage directory when the Dockerfile is built.
+    *
+    * If the `target` ends with / then the source filename will be added at the end.
+    *
+    * The `target` file must be unique for this Dockerfile. Otherwise later staged files will overwrite previous
+    * files on the same target.
+    *
+    * @param source File to copy into stage dir.
+    * @param target Path to copy file to, should be relative to the stage dir.
+    */
   def stageFile(source: File, target: String): T = {
     addInstruction(Instructions.StageFiles(CopyFile(source), target))
   }
 
   /**
-   * Stages a multiple files.
-   *
-   * @param sources What to stage.
-   * @param target Destination directory in the staging directory.
-   */
+    * Stages a multiple files.
+    *
+    * @param sources What to stage.
+    * @param target Destination directory in the staging directory.
+    */
   def stageFiles(sources: Seq[File], target: String): T = {
     addInstruction(Instructions.StageFiles(sources.map(CopyFile), target))
   }
 
   /**
-   * Stages a single source.
-   *
-   * @param source What to stage.
-   * @param target Destination path in the staging directory.
-   */
+    * Stages a single source.
+    *
+    * @param source What to stage.
+    * @param target Destination path in the staging directory.
+    */
   def stageFile(source: SourceFile, target: String): T = addInstruction(StageFiles(source, target))
 
   // Instructions
@@ -92,50 +103,50 @@ trait DockerfileCommands {
   def maintainer(name: String, email: String): T = addInstruction(Maintainer(s"$name <$email>"))
 
   /**
-   * Execute a command in the image.
-   * Uses exec form. Which means the command will not be executed in a shell.
-   *
-   * Example:
-   * {{{
-   *   run("executable", "parameter1", "parameter 2")
-   * }}}
-   * this will yield the raw instruction `RUN ["executable", "parameter1", "parameter 2"]`.
-   *
-   * @param args An executable followed by eventual parameters.
-   */
+    * Execute a command in the image.
+    * Uses exec form. Which means the command will not be executed in a shell.
+    *
+    * Example:
+    * {{{
+    *   run("executable", "parameter1", "parameter 2")
+    * }}}
+    * this will yield the raw instruction `RUN ["executable", "parameter1", "parameter 2"]`.
+    *
+    * @param args An executable followed by eventual parameters.
+    */
   def run(args: String*): T = {
     if (args.nonEmpty) addInstruction(Instructions.Run.exec(args))
     else self
   }
 
   /**
-   * Execute a command in the image.
-   * The command will be executed through a shell (`/bin/sh`).
-   *
-   * Example:
-   * {{{
-   *   runShell("executable", "parameter1", "parameter 2")
-   * }}}
-   * this will yield the raw instruction `RUN executable parameter1 parameter\ 2`.
-   *
-   * @param args A command followed by eventual parameters.
-   */
+    * Execute a command in the image.
+    * The command will be executed through a shell (`/bin/sh`).
+    *
+    * Example:
+    * {{{
+    *   runShell("executable", "parameter1", "parameter 2")
+    * }}}
+    * this will yield the raw instruction `RUN executable parameter1 parameter\ 2`.
+    *
+    * @param args A command followed by eventual parameters.
+    */
   def runShell(args: String*): T = {
     if (args.nonEmpty) addInstruction(Instructions.Run.shell(args))
     else self
   }
 
   /**
-   * Execute a command in the image.
-   *
-   * Example:
-   * {{{
-   *   runRaw("executable parameter1 parameter 2")
-   * }}}
-   * this will yield the raw instruction `RUN executable parameter1 parameter 2`.
-   *
-   * @param command A command including parameters (on shell or exec form).
-   */
+    * Execute a command in the image.
+    *
+    * Example:
+    * {{{
+    *   runRaw("executable parameter1 parameter 2")
+    * }}}
+    * this will yield the raw instruction `RUN executable parameter1 parameter 2`.
+    *
+    * @param command A command including parameters (on shell or exec form).
+    */
   def runRaw(command: String): T = addInstruction(Instructions.Run(command))
 
   def cmd(args: String*): T = {
@@ -154,6 +165,8 @@ trait DockerfileCommands {
     if (ports.nonEmpty) addInstruction(Expose(ports))
     else self
   }
+
+  def arg(key: String, defaultValue: Option[String] = None): T = addInstruction(Arg(key, defaultValue))
 
   def env(key: String, value: String): T = addInstruction(Env(key, value))
 
@@ -209,9 +222,13 @@ trait DockerfileCommands {
 
   def copy(source: File, destination: String, chown: String): T = addInstruction(Copy(Seq(CopyFile(source)), destination, Some(chown)))
 
-  def copy(sources: Seq[File], destination: String, chown: String): T = addInstruction(Copy(sources.map(CopyFile), destination, Some(chown)))
+  def copy(sources: Seq[File], destination: String, chown: String): T = addInstruction(
+    Copy(sources.map(CopyFile), destination, Some(chown))
+  )
 
-  def copy(source: File, destination: File, chown: String): T = addInstruction(Copy(Seq(CopyFile(source)), destination.toString, Some(chown)))
+  def copy(source: File, destination: File, chown: String): T = addInstruction(
+    Copy(Seq(CopyFile(source)), destination.toString, Some(chown))
+  )
 
   @deprecated("Use copyRaw instead.", "1.0.0")
   def copy(source: URL, destination: String): T = copyRaw(source, destination)
@@ -261,32 +278,33 @@ trait DockerfileCommands {
 
   def onBuild(instruction: DockerfileInstruction): T = addInstruction(Instructions.OnBuild(instruction))
 
-  def healthCheck(commands: Seq[String],
-                  interval: Option[FiniteDuration] = None,
-                  timeout: Option[FiniteDuration] = None,
-                  startPeriod: Option[FiniteDuration] = None,
-                  retries: Option[Int] = None): T = {
-    if (commands.nonEmpty) addInstruction(HealthCheck.exec(
-      commands = commands,
-      interval = interval,
-      timeout = timeout,
-      startPeriod = startPeriod,
-      retries = retries))
+  def healthCheck(
+    commands: Seq[String],
+    interval: Option[FiniteDuration] = None,
+    timeout: Option[FiniteDuration] = None,
+    startPeriod: Option[FiniteDuration] = None,
+    retries: Option[Int] = None
+  ): T = {
+    if (commands.nonEmpty)
+      addInstruction(
+        HealthCheck.exec(commands = commands, interval = interval, timeout = timeout, startPeriod = startPeriod, retries = retries)
+      )
     else self
   }
 
   def healthCheck(commands: String*): T = healthCheck(commands)
 
-  def healthCheckShell(commands: Seq[String],
-                       interval: Option[FiniteDuration] = None,
-                       timeout: Option[FiniteDuration] = None,
-                       startPeriod: Option[FiniteDuration] = None,
-                       retries: Option[Int] = None): T = {
-    if (commands.nonEmpty) addInstruction(HealthCheck.shell(commands = commands,
-      interval = interval,
-      timeout = timeout,
-      startPeriod = startPeriod,
-      retries = retries))
+  def healthCheckShell(
+    commands: Seq[String],
+    interval: Option[FiniteDuration] = None,
+    timeout: Option[FiniteDuration] = None,
+    startPeriod: Option[FiniteDuration] = None,
+    retries: Option[Int] = None
+  ): T = {
+    if (commands.nonEmpty)
+      addInstruction(
+        HealthCheck.shell(commands = commands, interval = interval, timeout = timeout, startPeriod = startPeriod, retries = retries)
+      )
     else self
   }
 

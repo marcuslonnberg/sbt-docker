@@ -5,15 +5,13 @@ scala:
   - 2.10.7
 
 jdk:
-  - oraclejdk8
-  - openjdk7
+  - openjdk8
+  - openjdk10
+  - openjdk11
+  - oraclejdk11
 
 services:
   - docker
-
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION test
-  - sbt ++$TRAVIS_SCALA_VERSION scripted
 
 cache:
   directories:
@@ -24,3 +22,6 @@ cache:
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
+
+script:
+  - sbt test scripted scalafmtCheckAll

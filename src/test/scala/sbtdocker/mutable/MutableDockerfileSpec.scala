@@ -1,13 +1,14 @@
 package sbtdocker.mutable
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbt._
 import sbtdocker.ImageName
 import sbtdocker.staging.CopyFile
 
 import scala.concurrent.duration._
 
-class MutableDockerfileSpec extends FlatSpec with Matchers {
+class MutableDockerfileSpec extends AnyFlatSpec with Matchers {
 
   import sbtdocker.Instructions._
 
@@ -35,6 +36,8 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
       cmd("echo", "1")
       cmdShell("echo", "2")
       expose(80, 443)
+      arg("key")
+      arg("key", Some("defaultValue"))
       env("key", "value")
       add(file1, "/")
       add(file2, file2)
@@ -75,6 +78,8 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
       Cmd.exec(Seq("echo", "1")),
       Cmd.shell(Seq("echo", "2")),
       Expose(Seq(80, 443)),
+      Arg("key"),
+      Arg("key", Some("defaultValue")),
       Env("key", "value"),
       Add(Seq(CopyFile(file1)), "/"),
       Add(Seq(CopyFile(file2)), file2.toString),
@@ -102,7 +107,8 @@ class MutableDockerfileSpec extends FlatSpec with Matchers {
         startPeriod = Some(1.second),
         retries = Some(3)
       ),
-      HealthCheckNone)
+      HealthCheckNone
+    )
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions
   }

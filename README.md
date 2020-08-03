@@ -17,17 +17,8 @@ Setup
 
 Add sbt-docker as a dependency in `project/plugins.sbt`:
 ```scala
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.5.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.7.0")
 ```
-
-sbt-docker is an [auto plugin][auto-plugin],
-this means that sbt version 0.13.5 or higher is required.
-
-Java 7 or higher is required. Use version `1.1.0` if you need Java 6 support.
-
-Version `1.4.1` have been released for sbt 1.0.
-
-Docker changed their versioning scheme in 2017. Due to this you need to use at least version `1.4.1` of sbt-docker.
 
 ### Getting started
 
@@ -35,7 +26,7 @@ Below are some documentation on the sbt tasks and settings in the plugin.
 
 This blog post gives a good introduction to the basics of sbt-docker: [Dockerizing your Scala apps with sbt-docker][dockerizing-scala-apps]
 
-Also take a look at the [example projects](examples).
+Also, take a look at the [example projects](examples).
 
 Usage
 -----
@@ -117,6 +108,11 @@ dockerfile in docker := {
 }
 ```
 
+Example with a Dockerfile in the filesystem.
+```scala
+dockerfile in docker := NativeDockerfile(file("subdirectory") / "Dockerfile")
+```
+
 Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
 ### Building an image
@@ -163,6 +159,32 @@ buildOptions in docker := BuildOptions(
 )
 ```
 
+### Build arguments
+
+Use the key `dockerBuildArguments in docker` to set build arguments.
+
+Example:
+```scala
+dockerBuildArguments in docker := Map(
+  "KEY" -> "value",
+  "CREDENTIALS" -> sys.env("CREDENTIALS")
+)
+
+dockerfile in docker := {
+  new Dockerfile {
+    // ...
+    arg("KEY")
+    arg("CREDENTIALS")
+    env("KEY" -> "$KEY", "CREDENTIALS" -> "$CREDENTIALS")
+    // ...
+  }
+}
+```
+
+### BuildKit support
+
+Images can be built with [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/) by enabling it in the daemon configuration or by passing the environment variable `DOCKER_BUILDKIT=1` to sbt.
+
 ### Auto packaging JVM applications
 
 If you have a standalone JVM application that you want a simple Docker image for.
@@ -170,7 +192,6 @@ Then you can use `dockerAutoPackageJavaApplication(fromImage, exposedPorts, expo
 which will setup some settings for you, including a Dockerfile.
 Its very basic, so if you have more advanced needs then define your own Dockerfile.
 
-[auto-plugin]: http://www.scala-sbt.org/0.13/docs/Plugins.html
 [docker]: https://www.docker.com/
 [dockerfile]: https://docs.docker.com/engine/reference/builder/
 [dockerizing-scala-apps]: https://velvia.github.io/Docker-Scala-Sbt/

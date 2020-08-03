@@ -1,12 +1,19 @@
-sbtPlugin := true
-
 name := "sbt-docker"
 organization := "se.marcuslonnberg"
 organizationHomepage := Some(url("https://github.com/marcuslonnberg"))
 
+lazy val root = (project in file("."))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    scriptedLaunchOpts := { scriptedLaunchOpts.value ++
+      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    },
+    scriptedBufferLog := false
+  )
+
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
-  "org.apache.commons" % "commons-lang3" % "3.5"
+  "org.scalatest" %% "scalatest" % "3.2.0" % "test",
+  "org.apache.commons" % "commons-lang3" % "3.10"
 )
 
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
@@ -35,5 +42,3 @@ pomExtra := {
     </developer>
   </developers>
 }
-
-useGpg := true

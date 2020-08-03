@@ -8,6 +8,7 @@ releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
   runClean,
+  releaseStepTask(scalafmtCheckAll),
   runTest,
   releaseStepInputTask(scripted),
   setReleaseVersion,

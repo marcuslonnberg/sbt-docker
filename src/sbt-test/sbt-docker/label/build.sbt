@@ -17,7 +17,7 @@ dockerfile in docker := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val imagesWithLabel = Process("docker", Seq("images", "--filter", s"""label=com.example.key=$labelValue"""))
+  val imagesWithLabel = scala.sys.process.Process("docker", Seq("images", "--filter", s"""label=com.example.key=$labelValue"""))
   val out = imagesWithLabel.!!
   val firstImageName = (imageNames in docker).value.head
   if (!out.toString.contains(firstImageName.toString)) {

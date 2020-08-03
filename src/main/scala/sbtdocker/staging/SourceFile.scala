@@ -14,7 +14,7 @@ case class CopyFile(file: File) extends SourceFile {
   def filename: String = file.getName
 
   def stage(destination: File): Unit = {
-    val paths = (PathFinder(file) ** AllPassFilter) pair Path.rebase(file, destination)
+    val paths = (PathFinder(file) ** AllPassFilter).pair(Path.rebase(file, destination))
     paths.foreach((copy _).tupled)
   }
 
@@ -28,6 +28,11 @@ case class CopyFile(file: File) extends SourceFile {
       }
     }
 
-    Files.copy(sourceDir.toPath, destinationDir.toPath, StandardCopyOption.COPY_ATTRIBUTES)
+    Files.copy(
+      sourceDir.toPath,
+      destinationDir.toPath,
+      StandardCopyOption.COPY_ATTRIBUTES,
+      StandardCopyOption.REPLACE_EXISTING
+    )
   }
 }

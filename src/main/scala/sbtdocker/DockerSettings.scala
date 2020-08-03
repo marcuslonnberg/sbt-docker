@@ -6,6 +6,7 @@ import sbtdocker.DockerKeys._
 import sbtdocker.staging.DefaultDockerfileProcessor
 
 object DockerSettings {
+
   lazy val baseDockerSettings = Seq(
     docker := {
       val log = Keys.streams.value.log
@@ -14,7 +15,8 @@ object DockerSettings {
       val stageDir = (target in docker).value
       val dockerfile = (DockerKeys.dockerfile in docker).value
       val imageNames = (DockerKeys.imageNames in docker).value
-      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, stageDir, dockerPath, log)
+      val buildArguments = (DockerKeys.dockerBuildArguments in docker).value
+      DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, buildArguments, stageDir, dockerPath, log)
     },
     javaOptions in docker := Seq("$JAVA_OPTS"),
     dockerPush := {
@@ -32,14 +34,13 @@ object DockerSettings {
       }
     }.value,
     dockerfile in docker := {
-      sys.error(
-        """A Dockerfile is not defined. Please define one with `dockerfile in docker`
-          |
-          |Example:
-          |dockerfile in docker := new Dockerfile {
-          | from("ubuntu")
-          | ...
-          |}
+      sys.error("""A Dockerfile is not defined. Please define one with `dockerfile in docker`
+        |
+        |Example:
+        |dockerfile in docker := new Dockerfile {
+        | from("ubuntu")
+        | ...
+        |}
         """.stripMargin)
     },
     target in docker := target.value / "docker",
@@ -52,7 +53,8 @@ object DockerSettings {
       Seq((imageName in docker).value)
     },
     dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions()
+    buildOptions in docker := BuildOptions(),
+    dockerBuildArguments in docker := Map.empty
   )
 
   def autoPackageJavaApplicationSettings(
@@ -65,14 +67,16 @@ object DockerSettings {
       docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)).value
     },
     Keys.mainClass in docker := {
-      (Keys.mainClass in docker or Keys.mainClass.in(Compile, Keys.packageBin)).value
+      (Keys.mainClass in docker).or(Keys.mainClass.in(Compile, Keys.packageBin)).value
     },
     dockerfile in docker := {
       val maybeMainClass = Keys.mainClass.in(docker).value
       maybeMainClass match {
         case None =>
-          sys.error("Either there are no main class or there exist several. " +
-            "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'.")
+          sys.error(
+            "Either there are no main class or there exist several. " +
+              "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'."
+          )
 
         case Some(mainClass) =>
           val classpath = Keys.managedClasspath.in(Compile).value

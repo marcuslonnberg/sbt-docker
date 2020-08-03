@@ -7,6 +7,7 @@ package object sbtdocker {
 
   @deprecated("Use sbtdocker.Instructions.StageFiles", "1.0.0")
   type StageFile = Instructions.StageFiles
+
   @deprecated("Use sbtdocker.Instructions.StageFiles", "1.0.0")
   val StageFile = Instructions.StageFiles
 }

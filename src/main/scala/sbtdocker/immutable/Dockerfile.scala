@@ -7,20 +7,20 @@ object Dockerfile {
 }
 
 /**
- * Immutable Dockerfile.
- *
- * @example {{{
- *  val jarFile: File
- *
- *  Dockerfile.empty
- *    .from("openjdk:8-jre")
- *    .add(jarFile, "/srv/app.jar")
- *    .workDir("/srv")
- *    .cmd("java", "-jar", "app.jar")
- *  }}}
- *
- * @param instructions Ordered sequence of instructions.
- */
+  * Immutable Dockerfile.
+  *
+  * @example {{{
+  *  val jarFile: File
+  *
+  *  Dockerfile.empty
+  *    .from("openjdk:8-jre")
+  *    .add(jarFile, "/srv/app.jar")
+  *    .workDir("/srv")
+  *    .cmd("java", "-jar", "app.jar")
+  *  }}}
+  *
+  * @param instructions Ordered sequence of instructions.
+  */
 case class Dockerfile(instructions: Seq[Instruction] = Seq.empty) extends DockerfileLike {
   type T = Dockerfile
 

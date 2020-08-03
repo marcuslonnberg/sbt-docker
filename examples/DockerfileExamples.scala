@@ -56,3 +56,7 @@ val instructions = Seq(
 )
 
 Dockerfile(instructions)
+
+// In order to build a Dockerfile that exists already in the filesystem use the NativeDockerfile class:
+
+NativeDockerfile(new File("subdirectory/Dockerfile"))

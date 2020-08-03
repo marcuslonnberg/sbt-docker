@@ -1,11 +1,12 @@
 package sbtdocker
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import sbtdocker.Instructions._
 
 import scala.concurrent.duration._
 
-class InstructionsSpec extends FlatSpec with Matchers {
+class InstructionsSpec extends AnyFlatSpec with Matchers {
   "From" should "create a correct string" in {
     From("image").toString shouldEqual "FROM image"
   }
@@ -48,7 +49,7 @@ class InstructionsSpec extends FlatSpec with Matchers {
 
   "Add" should "create a correct string" in {
     AddRaw("a", "b").toString shouldEqual "ADD a b"
-    AddRaw(Seq("a"), "b", chown =  Some("user")).toString shouldEqual "ADD --chown=user a b"
+    AddRaw(Seq("a"), "b", chown = Some("user")).toString shouldEqual "ADD --chown=user a b"
   }
 
   "Copy" should "create a correct string" in {
@@ -83,15 +84,19 @@ class InstructionsSpec extends FlatSpec with Matchers {
   }
 
   "HealthCheck" should "create a correct string with exec format" in {
-    HealthCheck.exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-      startPeriod = Some(1.second), retries = Some(3)).toString shouldEqual
+    HealthCheck
+      .exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3))
+      .toString shouldEqual
       "HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD [\"cmd\", \"arg\"]"
-    HealthCheck.exec(Seq("1 \t3", "\"ö'\\a"), None, None, None, None).toString shouldEqual "HEALTHCHECK CMD [\"1 \\t3\", \"\\\"\\u00F6'\\\\a\"]"
+    HealthCheck
+      .exec(Seq("1 \t3", "\"ö'\\a"), None, None, None, None)
+      .toString shouldEqual "HEALTHCHECK CMD [\"1 \\t3\", \"\\\"\\u00F6'\\\\a\"]"
   }
 
   it should "create a correct string with shell format" in {
-    HealthCheck.shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds),
-      startPeriod = Some(1.second), retries = Some(3)).toString shouldEqual
+    HealthCheck
+      .shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3))
+      .toString shouldEqual
       "HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD cmd arg"
     HealthCheck.shell(Seq("1 \t3", "\"ö'\\a"), None, None, None, None).toString shouldEqual "HEALTHCHECK CMD 1\\ \\t3 \\\"ö'\\a"
   }
