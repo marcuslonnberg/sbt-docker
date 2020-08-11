@@ -26,15 +26,18 @@ object DockerPush {
     * @param imageName name of the image to push
     * @param log logger
     */
-  def apply(dockerPath: String, imageName: ImageName, log: Logger): Unit = {
+  def apply(dockerPath: String, imageName: ImageName, log: Logger): ImageId = {
     log.info(s"Pushing docker image with name: '$imageName'")
 
+    var lines = Seq.empty[String]
     val processLog = ProcessLogger(
       { line =>
         log.info(line)
+        lines :+= line
       },
       { line =>
         log.info(line)
+        lines :+= line
       }
     )
 
@@ -44,5 +47,20 @@ object DockerPush {
     val process = Process(command)
     val exitValue = process ! processLog
     if (exitValue != 0) sys.error("Failed to push")
+
+    val PushedImageId = ".* sha256:([0-9a-f]+) .*".r
+
+    val imageId = lines.collect {
+      case PushedImageId(id) => ImageId(id)
+    }.lastOption
+
+    imageId match {
+      case Some(id) =>
+        id
+      case None =>
+        throw new DockerPushException("Could not parse Docker image id")
+    }
   }
 }
+
+class DockerPushException(message: String) extends RuntimeException(message)
