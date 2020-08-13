@@ -13,13 +13,10 @@ object DockerPush {
     * @param imageNames names of the images to push
     * @param log logger
     */
-  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger): Map[ImageName, ImageId] = {
-    imageNames
-      .map { imageName =>
-        apply(dockerPath, imageName, log)
-      }
-      .flatten
-      .toMap
+  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger): Map[ImageName, ImageDigest] = {
+    imageNames.map { imageName =>
+      apply(dockerPath, imageName, log)
+    }.toMap
   }
 
   /**
@@ -29,7 +26,7 @@ object DockerPush {
     * @param imageName name of the image to push
     * @param log logger
     */
-  def apply(dockerPath: String, imageName: ImageName, log: Logger): Map[ImageName, ImageId] = {
+  def apply(dockerPath: String, imageName: ImageName, log: Logger): (ImageName, ImageDigest) = {
     log.info(s"Pushing docker image with name: '$imageName'")
 
     var lines = Seq.empty[String]
@@ -54,12 +51,12 @@ object DockerPush {
     val PushedImageId = ".* sha256:([0-9a-f]+) .*".r
 
     val imageId = lines.collect {
-      case PushedImageId(id) => ImageId(id)
+      case PushedImageId(id) => ImageDigest(id)
     }.lastOption
 
     imageId match {
       case Some(id) =>
-        Map(imageName -> id)
+        imageName -> id
       case None =>
         throw new DockerPushException("Could not parse Docker image id")
     }

@@ -26,6 +26,7 @@ object DockerSettings {
       DockerPush(dockerPath, imageNames, log)
     },
     dockerBuildAndPush := Def.taskDyn {
+      docker.value
       Def.task {
         dockerPush.value
       }
