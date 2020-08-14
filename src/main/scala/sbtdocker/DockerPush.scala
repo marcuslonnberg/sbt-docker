@@ -50,15 +50,15 @@ object DockerPush {
 
     val PushedImageDigestSha256 = ".* digest: sha256:([0-9a-f]+) .*".r
 
-    val imageId = lines.collect {
+    val imageDigest = lines.collect {
       case PushedImageDigestSha256(digest) => ImageDigest("sha256", digest)
     }.lastOption
 
-    imageId match {
-      case Some(id) =>
-        imageName -> id
+    imageDigest match {
+      case Some(digest) =>
+        imageName -> digest
       case None =>
-        throw new DockerPushException("Could not parse Docker image id")
+        throw new DockerPushException("Could not parse Docker image digest")
     }
   }
 }
