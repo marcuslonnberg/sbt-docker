@@ -47,11 +47,12 @@ final case class ImageId(id: String) extends AnyVal {
 }
 
 /**
-  * SHA of the pushed docker image.
-  * @param digest A SHA 256 digest as a string.
+  * The image digest, the format of the digest is `algorithm:hex-string`
+  * @param digest A digest of the image, as a string.
+  * @param algorithm The algorithm used to produce the digest.
   */
-final case class ImageDigest(digest: String) extends AnyVal {
-  override def toString = digest
+final case class ImageDigest(algorithm: String, digest: String) {
+  override def toString = s"$algorithm:$digest"
 }
 
 object ImageName {

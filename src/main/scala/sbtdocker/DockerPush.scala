@@ -48,10 +48,10 @@ object DockerPush {
     val exitValue = process ! processLog
     if (exitValue != 0) sys.error("Failed to push")
 
-    val PushedImageId = ".* digest: sha256:([0-9a-f]+) .*".r
+    val PushedImageDigestSha256 = ".* digest: sha256:([0-9a-f]+) .*".r
 
     val imageId = lines.collect {
-      case PushedImageId(id) => ImageDigest(id)
+      case PushedImageDigestSha256(digest) => ImageDigest("sha256", digest)
     }.lastOption
 
     imageId match {
