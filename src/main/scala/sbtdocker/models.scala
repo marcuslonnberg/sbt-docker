@@ -48,8 +48,8 @@ final case class ImageId(id: String) extends AnyVal {
 
 /**
   * The image digest, the format of the digest is `algorithm:hex-string`
-  * @param digest A digest of the image, as a string.
   * @param algorithm The algorithm used to produce the digest.
+  * @param digest A digest of the image, as a string.
   */
 final case class ImageDigest(algorithm: String, digest: String) {
   override def toString = s"$algorithm:$digest"
