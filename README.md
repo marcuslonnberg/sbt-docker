@@ -155,7 +155,8 @@ Example:
 buildOptions in docker := BuildOptions(
   cache = false,
   removeIntermediateContainers = BuildOptions.Remove.Always,
-  pullBaseImage = BuildOptions.Pull.Always
+  pullBaseImage = BuildOptions.Pull.Always,
+  additionalArguments = Seq("--add-host", "127.0.0.1:12345", "--compress")
 )
 ```
 
