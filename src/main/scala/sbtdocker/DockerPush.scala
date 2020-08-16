@@ -45,8 +45,8 @@ object DockerPush {
     log.debug(s"Running command: '${command.mkString(" ")}'")
 
     val process = Process(command)
-    val exitValue = process ! processLog
-    if (exitValue != 0) sys.error("Failed to push")
+    val exitCode = process ! processLog
+    if (exitCode != 0) throw new DockerPushException(s"Failed to run 'docker push' on image $imageName. Exit code $exitCode")
 
     val PushedImageDigestSha256 = ".* digest: sha256:([0-9a-f]+) .*".r
 
