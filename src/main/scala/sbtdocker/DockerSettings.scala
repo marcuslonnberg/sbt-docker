@@ -26,10 +26,9 @@ object DockerSettings {
       DockerPush(dockerPath, imageNames, log)
     },
     dockerBuildAndPush := Def.taskDyn {
-      val id = docker.value
+      docker.value
       Def.task {
         dockerPush.value
-        id
       }
     }.value,
     dockerfile in docker := {

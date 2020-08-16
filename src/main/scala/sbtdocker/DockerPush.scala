@@ -13,10 +13,10 @@ object DockerPush {
     * @param imageNames names of the images to push
     * @param log logger
     */
-  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger): Unit = {
-    imageNames.foreach { imageName =>
+  def apply(dockerPath: String, imageNames: Seq[ImageName], log: Logger): Map[ImageName, ImageDigest] = {
+    imageNames.map { imageName =>
       apply(dockerPath, imageName, log)
-    }
+    }.toMap
   }
 
   /**
@@ -26,15 +26,18 @@ object DockerPush {
     * @param imageName name of the image to push
     * @param log logger
     */
-  def apply(dockerPath: String, imageName: ImageName, log: Logger): Unit = {
+  def apply(dockerPath: String, imageName: ImageName, log: Logger): (ImageName, ImageDigest) = {
     log.info(s"Pushing docker image with name: '$imageName'")
 
+    var lines = Seq.empty[String]
     val processLog = ProcessLogger(
       { line =>
         log.info(line)
+        lines :+= line
       },
       { line =>
         log.info(line)
+        lines :+= line
       }
     )
 
@@ -44,5 +47,20 @@ object DockerPush {
     val process = Process(command)
     val exitValue = process ! processLog
     if (exitValue != 0) sys.error("Failed to push")
+
+    val PushedImageDigestSha256 = ".* digest: sha256:([0-9a-f]+) .*".r
+
+    val imageDigest = lines.collect {
+      case PushedImageDigestSha256(digest) => ImageDigest("sha256", digest)
+    }.lastOption
+
+    imageDigest match {
+      case Some(digest) =>
+        imageName -> digest
+      case None =>
+        throw new DockerPushException("Could not parse Docker image digest")
+    }
   }
 }
+
+class DockerPushException(message: String) extends RuntimeException(message)

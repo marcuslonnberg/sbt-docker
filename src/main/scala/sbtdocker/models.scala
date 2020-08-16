@@ -32,7 +32,7 @@ object BuildOptions {
   * @param removeIntermediateContainers Remove intermediate containers after a build.
   * @param pullBaseImage Always attempts to pull a newer version of the base image.
   */
-case class BuildOptions(
+final case class BuildOptions(
   cache: Boolean = true,
   removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
   pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing
@@ -42,8 +42,17 @@ case class BuildOptions(
   * Id of an Docker image.
   * @param id Id as a hexadecimal digit string.
   */
-case class ImageId(id: String) {
+final case class ImageId(id: String) extends AnyVal {
   override def toString = id
+}
+
+/**
+  * The image digest, the format of the digest is `algorithm:hex-string`
+  * @param algorithm The algorithm used to produce the digest.
+  * @param digest A digest of the image, as a string.
+  */
+final case class ImageDigest(algorithm: String, digest: String) {
+  override def toString = s"$algorithm:$digest"
 }
 
 object ImageName {
@@ -88,7 +97,7 @@ object ImageName {
   * @param namespace Namespace name.
   * @param tag Tag, for example a version number.
   */
-case class ImageName(
+final case class ImageName(
   registry: Option[String] = None,
   namespace: Option[String] = None,
   repository: String,
