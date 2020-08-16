@@ -1,3 +1,8 @@
+## 1.8.0
+
+- Output Docker image digest from `dockerPush` and `dockerBuildAndPush`. [#117](https://github.com/marcuslonnberg/sbt-docker/pull/117)
+- Add `BuildOptions.additionalArguments` to support all [arguments](https://docs.docker.com/engine/reference/commandline/build/#options) that can be passed to `docker build`.
+
 ## 1.7.0
 
 - Support passing build arguments with `dockerBuildArguments in docker` setting.
