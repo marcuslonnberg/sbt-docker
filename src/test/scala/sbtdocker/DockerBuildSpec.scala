@@ -99,7 +99,7 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
     }
 
     "Custom arguments" in {
-      val options = BuildOptions(otherArguments = Seq("--add-host", "127.0.0.1:12345", "--compress"))
+      val options = BuildOptions(additionalArguments = Seq("--add-host", "127.0.0.1:12345", "--compress"))
       val flags = DockerBuild.generateBuildOptionFlags(options)
 
       flags should contain inOrderElementsOf Seq("--add-host", "127.0.0.1:12345", "--compress")

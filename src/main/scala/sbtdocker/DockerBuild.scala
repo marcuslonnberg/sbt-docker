@@ -194,7 +194,7 @@ object DockerBuild {
       "--pull=" + value
     }
 
-    cacheFlag :: removeFlag :: pullFlag :: buildOptions.otherArguments.toList
+    cacheFlag :: removeFlag :: pullFlag :: buildOptions.additionalArguments.toList
   }
 }
 
