@@ -1,3 +1,7 @@
+## 1.8.1
+
+- Fix issue with changed output from Buildkit. [#118](https://github.com/marcuslonnberg/sbt-docker/pull/118)
+
 ## 1.8.0
 
 - Output Docker image digest from `dockerPush` and `dockerBuildAndPush`. [#117](https://github.com/marcuslonnberg/sbt-docker/pull/117)
