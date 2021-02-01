@@ -86,7 +86,7 @@ object DockerBuild {
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
-  private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\bdone$".r
+  private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
 
   private[sbtdocker] def buildAndTag(
     imageNames: Seq[ImageName],
