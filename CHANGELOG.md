@@ -1,3 +1,7 @@
+## 1.8.2
+
+- Fix issue with changed output from Buildkit. [#120](https://github.com/marcuslonnberg/sbt-docker/pull/120)
+
 ## 1.8.1
 
 - Fix issue with changed output from Buildkit. [#118](https://github.com/marcuslonnberg/sbt-docker/pull/118)
@@ -12,7 +16,7 @@
 - Support passing build arguments with `dockerBuildArguments in docker` setting.
 - Add `ARG` instruction.
 - Fix issue with resolving native Dockerfile path when in root of project.
-- Fix issue with Docker build not passing failure properly on build failure. 
+- Fix issue with Docker build not passing failure properly on build failure.
 
 ## 1.6.0
 
