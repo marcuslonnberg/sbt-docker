@@ -10,18 +10,18 @@ object DockerSettings {
   lazy val baseDockerSettings = Seq(
     docker := {
       val log = Keys.streams.value.log
-      val dockerPath = (DockerKeys.dockerPath in docker).value
-      val buildOptions = (DockerKeys.buildOptions in docker).value
-      val stageDir = (target in docker).value
-      val dockerfile = (DockerKeys.dockerfile in docker).value
-      val imageNames = (DockerKeys.imageNames in docker).value
-      val buildArguments = (DockerKeys.dockerBuildArguments in docker).value
+      val dockerPath = (docker / DockerKeys.dockerPath).value
+      val buildOptions = (docker / DockerKeys.buildOptions).value
+      val stageDir = (docker / target).value
+      val dockerfile = (docker / DockerKeys.dockerfile).value
+      val imageNames = (docker / DockerKeys.imageNames).value
+      val buildArguments = (docker / DockerKeys.dockerBuildArguments).value
       DockerBuild(dockerfile, DefaultDockerfileProcessor, imageNames, buildOptions, buildArguments, stageDir, dockerPath, log)
     },
     dockerPush := {
       val log = Keys.streams.value.log
-      val dockerPath = (DockerKeys.dockerPath in docker).value
-      val imageNames = (DockerKeys.imageNames in docker).value
+      val dockerPath = (docker / DockerKeys.dockerPath).value
+      val imageNames = (docker / DockerKeys.imageNames).value
 
       DockerPush(dockerPath, imageNames, log)
     },
@@ -31,28 +31,28 @@ object DockerSettings {
         dockerPush.value
       }
     }.value,
-    dockerfile in docker := {
-      sys.error("""A Dockerfile is not defined. Please define one with `dockerfile in docker`
+    docker / dockerfile := {
+      sys.error("""A Dockerfile is not defined. Please define one with `docker / dockerfile`
         |
         |Example:
-        |dockerfile in docker := new Dockerfile {
+        |docker / dockerfile := new Dockerfile {
         | from("ubuntu")
         | ...
         |}
         """.stripMargin)
     },
-    target in docker := target.value / "docker",
-    imageName in docker := {
+    docker / target := target.value / "docker",
+    docker / imageName := {
       val organisation = Option(Keys.organization.value).filter(_.nonEmpty)
       val name = Keys.normalizedName.value
       ImageName(namespace = organisation, repository = name)
     },
-    imageNames in docker := {
-      Seq((imageName in docker).value)
+    docker / imageNames := {
+      Seq((docker / imageName).value)
     },
-    dockerPath in docker := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
-    buildOptions in docker := BuildOptions(),
-    dockerBuildArguments in docker := Map.empty
+    docker / dockerPath := sys.env.get("DOCKER").filter(_.nonEmpty).getOrElse("docker"),
+    docker / buildOptions := BuildOptions(),
+    docker / dockerBuildArguments := Map.empty
   )
 
   def autoPackageJavaApplicationSettings(
@@ -62,23 +62,23 @@ object DockerSettings {
     username: Option[String]
   ) = Seq(
     docker := {
-      docker.dependsOn(Keys.`package`.in(Compile, Keys.packageBin)).value
+      docker.dependsOn(Compile / Keys.packageBin / Keys.`package`).value
     },
-    Keys.mainClass in docker := {
-      (Keys.mainClass in docker).or(Keys.mainClass.in(Compile, Keys.packageBin)).value
+    docker / Keys.mainClass := {
+      (docker / Keys.mainClass).or(Compile / Keys.packageBin / Keys.mainClass).value
     },
-    dockerfile in docker := {
+    docker / dockerfile := {
       val maybeMainClass = Keys.mainClass.in(docker).value
       maybeMainClass match {
         case None =>
           sys.error(
             "Either there are no main class or there exist several. " +
-              "One can be set with 'mainClass in docker := Some(\"package.MainClass\")'."
+              "One can be set with 'docker / mainClass := Some(\"package.MainClass\")'."
           )
 
         case Some(mainClass) =>
-          val classpath = Keys.managedClasspath.in(Compile).value
-          val artifact = Keys.artifactPath.in(Compile, Keys.packageBin).value
+          val classpath = (Compile / Keys.managedClasspath).value
+          val artifact = (Compile / Keys.packageBin / Keys.artifactPath).value
 
           val appPath = "/app"
           val libsPath = s"$appPath/libs/"

@@ -6,7 +6,7 @@ version := "0.1.0"
 
 enablePlugins(DockerPlugin)
 
-dockerfile in docker := {
+docker / dockerfile := {
   // The assembly task generates a fat JAR file
   val artifact: File = assembly.value
   val artifactTargetPath = s"/app/${artifact.name}"
@@ -18,4 +18,4 @@ dockerfile in docker := {
   }
 }
 
-buildOptions in docker := BuildOptions(cache = false)
+docker / buildOptions := BuildOptions(cache = false)

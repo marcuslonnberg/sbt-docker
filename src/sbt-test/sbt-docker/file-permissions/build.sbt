@@ -9,7 +9,7 @@ organization := "sbtdocker"
 
 version := "0.1.0"
 
-dockerfile in docker := {
+docker / dockerfile := {
   new Dockerfile {
     from("busybox")
     copy(file("files"), "/files")
@@ -47,7 +47,7 @@ createSourceFiles := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val name = (imageNames in docker).value.head
+  val name = (docker / imageNames).value.head
   val process = scala.sys.process.Process("docker", Seq("run", "--rm", name.toString))
   val out = process.!!
 

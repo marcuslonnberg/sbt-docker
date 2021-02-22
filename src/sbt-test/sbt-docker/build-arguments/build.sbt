@@ -7,10 +7,10 @@ organization := "sbtdocker"
 version := "0.1.0"
 
 // Define a Dockerfile
-dockerfile in docker := {
-  val jarFile = Keys.`package`.in(Compile, packageBin).value
-  val classpath = (managedClasspath in Compile).value
-  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse {
+docker / dockerfile := {
+  val jarFile = (Compile / packageBin / Keys.`package`).value
+  val classpath = (Compile / managedClasspath).value
+  val mainclass = (Compile / packageBin / mainClass).value.getOrElse {
     sys.error("Expected exactly one main class")
   }
   val jarTarget = s"/app/${jarFile.getName}"
@@ -41,12 +41,12 @@ dockerfile in docker := {
 }
 
 // Set a custom image name
-imageNames in docker := {
+docker / imageNames := {
   val imageName = ImageName(namespace = Some(organization.value), repository = name.value, tag = Some("v" + version.value))
   Seq(imageName, imageName.copy(tag = Some("latest")))
 }
 
-dockerBuildArguments in docker := Map(
+docker / dockerBuildArguments := Map(
   "buildArgument1" -> "value 1",
   "buildArgument2" -> "value$2"
 )
@@ -54,7 +54,7 @@ dockerBuildArguments in docker := Map(
 val check = taskKey[Unit]("Check")
 
 check := {
-  val names = (imageNames in docker).value
+  val names = (docker / imageNames).value
   names.foreach { imageName =>
     val process = scala.sys.process.Process("docker", Seq("run", "--rm", imageName.toString))
     val out = process.!!

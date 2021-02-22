@@ -16,10 +16,10 @@ libraryDependencies ++= Seq(
 enablePlugins(DockerPlugin)
 
 // Define a Dockerfile
-dockerfile in docker := {
-  val jarFile = Keys.`package`.in(Compile, packageBin).value
-  val classpath = (managedClasspath in Compile).value
-  val mainclass = mainClass.in(Compile, packageBin).value.get
+docker / dockerfile := {
+  val jarFile = (Compile / packageBin / Keys.`package`).value
+  val classpath = (Compile / managedClasspath).value
+  val mainclass = (Compile / packageBin / mainClass).value.get
   val libs = "/app/libs"
   val jarTarget = "/app/" + jarFile.name
 

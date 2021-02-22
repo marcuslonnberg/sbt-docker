@@ -7,10 +7,10 @@ organization := "sbtdocker"
 version := "0.1.0"
 
 // Define a Dockerfile
-dockerfile in docker := NativeDockerfile(file("Dockerfile"))
+docker / dockerfile := NativeDockerfile(file("Dockerfile"))
 
 // Set a custom image name
-imageNames in docker := {
+docker / imageNames := {
   val imageName = ImageName(
     namespace = Some(organization.value),
     repository = name.value,
@@ -21,7 +21,7 @@ imageNames in docker := {
 val check = taskKey[Unit]("Check")
 
 check := {
-  val names = (imageNames in docker).value
+  val names = (docker / imageNames).value
   names.foreach { imageName =>
     val process = scala.sys.process.Process("docker", Seq("run", "--rm", imageName.toString))
     val out = process.!!

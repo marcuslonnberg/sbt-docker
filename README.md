@@ -37,7 +37,7 @@ enablePlugins(DockerPlugin)
 ```
 
 This sets up some settings with default values and adds tasks such as `docker` which builds a Docker image.
-The only required setting that is left to define is `dockerfile in docker`.
+The only required setting that is left to define is `docker / dockerfile`.
 
 ### Artifacts
 
@@ -49,14 +49,14 @@ It could for example be with the `package` task or with tasks from plugins such 
 ### Defining a Dockerfile
 
 In order to produce a Docker image a Dockerfile must be defined.
-It should be defined at the `dockerfile in docker` key.
+It should be defined at the `docker / dockerfile` key.
 There is a mutable and an immutable Dockerfile class available, both provides a DSL which resembles
 the plain text [Dockerfile] format.
 The mutable class is default and is used in the following examples.
 
 Example with the [sbt-assembly][sbt-assembly] plugin:
 ```scala
-dockerfile in docker := {
+docker / dockerfile := {
   // The assembly task generates a fat JAR file
   val artifact: File = assembly.value
   val artifactTargetPath = s"/app/${artifact.name}"
@@ -73,7 +73,7 @@ Example with [sbt-native-packager][sbt-native-packager]:
 ```scala
 enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
 
-dockerfile in docker := {
+docker / dockerfile := {
   val appDir: File = stage.value
   val targetDir = "/app"
 
@@ -87,10 +87,10 @@ dockerfile in docker := {
 
 Example with the sbt `package` task.
 ```scala
-dockerfile in docker := {
-  val jarFile: File = sbt.Keys.`package`.in(Compile, packageBin).value
-  val classpath = (managedClasspath in Compile).value
-  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+docker / dockerfile := {
+  val jarFile: File = (Compile / packageBin / sbt.Keys.`package`).value
+  val classpath = (Compile / managedClasspath).value
+  val mainclass = (Compile / packageBin / mainClass).value.getOrElse(sys.error("Expected exactly one main class"))
   val jarTarget = s"/app/${jarFile.getName}"
   // Make a colon separated classpath with the JAR file
   val classpathString = classpath.files.map("/app/" + _.getName)
@@ -110,7 +110,7 @@ dockerfile in docker := {
 
 Example with a Dockerfile in the filesystem.
 ```scala
-dockerfile in docker := NativeDockerfile(file("subdirectory") / "Dockerfile")
+docker / dockerfile := NativeDockerfile(file("subdirectory") / "Dockerfile")
 ```
 
 Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
@@ -125,15 +125,15 @@ Simply run `sbt docker` from your prompt or `docker` in the sbt console.
 An image that have already been built can be pushed with the `dockerPush` task.
 To both build and push an image use the `dockerBuildAndPush` task.
 
-The `imageNames in docker` key is used to determine which image names to push.
+The `docker / imageNames` key is used to determine which image names to push.
 
 ### Custom image names
 
-You can specify the names / tags you want your image to get after a successful build with the `imageNames in docker` key of type `Seq[sbtdocker.ImageName]`.
+You can specify the names / tags you want your image to get after a successful build with the `docker / imageNames` key of type `Seq[sbtdocker.ImageName]`.
 
 Example:
 ```scala
-imageNames in docker := Seq(
+docker / imageNames := Seq(
   // Sets the latest tag
   ImageName(s"${organization.value}/${name.value}:latest"),
 
@@ -148,11 +148,11 @@ imageNames in docker := Seq(
 
 ### Build options
 
-Use the key `buildOptions in docker` to set build options.
+Use the key `docker / buildOptions` to set build options.
 
 Example:
 ```scala
-buildOptions in docker := BuildOptions(
+docker / buildOptions := BuildOptions(
   cache = false,
   removeIntermediateContainers = BuildOptions.Remove.Always,
   pullBaseImage = BuildOptions.Pull.Always,
@@ -162,16 +162,16 @@ buildOptions in docker := BuildOptions(
 
 ### Build arguments
 
-Use the key `dockerBuildArguments in docker` to set build arguments.
+Use the key `docker / dockerBuildArguments` to set build arguments.
 
 Example:
 ```scala
-dockerBuildArguments in docker := Map(
+docker / dockerBuildArguments := Map(
   "KEY" -> "value",
   "CREDENTIALS" -> sys.env("CREDENTIALS")
 )
 
-dockerfile in docker := {
+docker / dockerfile := {
   new Dockerfile {
     // ...
     arg("KEY")

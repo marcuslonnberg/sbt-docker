@@ -7,10 +7,10 @@ version := "0.1.0"
 enablePlugins(DockerPlugin)
 
 // Define a Dockerfile
-dockerfile in docker := {
-  val jarFile = sbt.Keys.`package`.in(Compile, packageBin).value
+docker / dockerfile := {
+  val jarFile = (Compile / packageBin / sbt.Keys.`package`).value
   val classpath = (managedClasspath in Compile).value
-  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+  val mainclass = (Compile / packageBin / mainClass).value.getOrElse(sys.error("Expected exactly one main class"))
   val jarTarget = s"/app/${jarFile.getName}"
   // Make a colon separated classpath with the JAR file
   val classpathString = classpath.files.map("/app/" + _.getName).mkString(":") + ":" + jarTarget
@@ -27,7 +27,7 @@ dockerfile in docker := {
 }
 
 // Set names for the image
-imageNames in docker := Seq(
+docker / imageNames := Seq(
   ImageName("sbtdocker/basic:stable"),
   ImageName(namespace = Some(organization.value),
     repository = name.value,

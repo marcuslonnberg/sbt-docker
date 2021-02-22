@@ -7,7 +7,7 @@ version := "0.1.0"
 // Need to use full name to DockerPlugin, since sbt-native-packager uses the same name for its Docker plugin
 enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
 
-dockerfile in docker := {
+docker / dockerfile := {
   val appDir = stage.value
   val targetDir = "/app"
 
@@ -18,4 +18,4 @@ dockerfile in docker := {
   }
 }
 
-buildOptions in docker := BuildOptions(cache = false)
+docker / buildOptions := BuildOptions(cache = false)

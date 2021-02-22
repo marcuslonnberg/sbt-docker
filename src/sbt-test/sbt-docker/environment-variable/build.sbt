@@ -8,7 +8,7 @@ version := "0.1.0"
 
 val environmentValue = "b=c 'd|!@#$%^&*(\")e"
 
-dockerfile in docker := {
+docker / dockerfile := {
   new Dockerfile {
     from("busybox")
     env("a"-> environmentValue, "b" -> "value")
@@ -18,7 +18,7 @@ dockerfile in docker := {
 
 val check = taskKey[Unit]("Check")
 check := {
-  val process = scala.sys.process.Process("docker", Seq("run", "--rm", (imageNames in docker).value.head.toString))
+  val process = scala.sys.process.Process("docker", Seq("run", "--rm", (docker / imageNames).value.head.toString))
   val out = process.!!
   if (out.trim != environmentValue) sys.error("Unexpected output: " + out)
 }
