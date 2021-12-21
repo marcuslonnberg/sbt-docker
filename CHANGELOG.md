@@ -1,3 +1,7 @@
+## 1.8.3
+
+- Support build output from Podman. [#125](https://github.com/marcuslonnberg/sbt-docker/issues/125)
+
 ## 1.8.2
 
 - Fix issue with changed output from Buildkit. [#120](https://github.com/marcuslonnberg/sbt-docker/pull/120)
