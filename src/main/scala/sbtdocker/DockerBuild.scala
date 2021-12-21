@@ -85,9 +85,6 @@ object DockerBuild {
     }
   }
 
-  private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
-  private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
-
   private[sbtdocker] def buildAndTag(
     imageNames: Seq[ImageName],
     dockerfilePath: File,
@@ -158,10 +155,7 @@ object DockerBuild {
     }
 
     if (exitCode == 0) {
-      val imageId = lines.collect {
-        case SuccessfullyBuilt(id) => ImageId(id)
-        case SuccessfullyBuiltBuildKit(id) => ImageId(id)
-      }.lastOption
+      val imageId = parseImageId(lines)
 
       imageId match {
         case Some(id) =>
@@ -195,6 +189,18 @@ object DockerBuild {
     }
 
     cacheFlag :: removeFlag :: pullFlag :: buildOptions.additionalArguments.toList
+  }
+
+  private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
+  private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
+  private val SuccessfullyBuiltPodman = "^([0-9a-f]{64})$".r
+
+  private[sbtdocker] def parseImageId(lines: Seq[String]): Option[ImageId] = {
+    lines.collect {
+      case SuccessfullyBuilt(id) => ImageId(id)
+      case SuccessfullyBuiltBuildKit(id) => ImageId(id)
+      case SuccessfullyBuiltPodman(id) => ImageId(id)
+    }.lastOption
   }
 }
 

@@ -105,4 +105,39 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
       flags should contain inOrderElementsOf Seq("--add-host", "127.0.0.1:12345", "--compress")
     }
   }
+
+  "Parse image id" - {
+    "Docker build output" in {
+      val lines = Seq(
+        "Removing intermediate container ba85d1deadeb",
+        " ---> 353fcb84af6b",
+        "Successfully built 353fcb84af6b",
+        "Successfully tagged test:latest"
+      )
+      DockerBuild.parseImageId(lines) shouldEqual Some(ImageId("353fcb84af6b"))
+    }
+
+    "Docker build output version 20.10.10" in {
+      val lines = Seq(
+        "#6 exporting to image",
+        "#6 sha256:e8c613e07b0b7ff33893b694f7759a10d42e180f2b4dc349fb57dc6b71dcab00",
+        "#6 exporting layers done",
+        "#6 writing image sha256:688f3de768e18bed863a7357e48b3d11a546ec2064cbcce2ffbe63343525a3a0 done",
+        "#6 DONE 0.0s"
+      )
+      DockerBuild.parseImageId(lines) shouldEqual Some(ImageId("688f3de768e18bed863a7357e48b3d11a546ec2064cbcce2ffbe63343525a3a0"))
+    }
+
+    "Podman build output" in {
+      val lines = Seq(
+        "--> dada5485d85",
+        "",
+        "Successfully tagged localhost/testbuild:latest",
+        "",
+        "dada5485d85618e75ad1a9772c6c00523f442c8d30487fb7c9f9f9ea544db1db",
+        ""
+      )
+      DockerBuild.parseImageId(lines) shouldEqual Some(ImageId("dada5485d85618e75ad1a9772c6c00523f442c8d30487fb7c9f9f9ea544db1db"))
+    }
+  }
 }
