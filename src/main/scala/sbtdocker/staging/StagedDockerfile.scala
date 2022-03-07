@@ -8,11 +8,11 @@ object StagedDockerfile {
 }
 
 case class StagedDockerfile(instructions: Seq[DockerfileInstruction], stageFiles: Set[(SourceFile, File)]) {
-  def addInstruction(instruction: DockerfileInstruction) = copy(instructions = instructions :+ instruction)
+  def addInstruction(instruction: DockerfileInstruction): StagedDockerfile = copy(instructions = instructions :+ instruction)
 
-  def stageFile(source: SourceFile, destination: File) = copy(stageFiles = stageFiles + (source -> destination))
+  def stageFile(source: SourceFile, destination: File): StagedDockerfile = copy(stageFiles = stageFiles + (source -> destination))
 
-  def stageFiles(files: Set[(SourceFile, File)]) = copy(stageFiles = stageFiles ++ files)
+  def stageFiles(files: Set[(SourceFile, File)]): StagedDockerfile = copy(stageFiles = stageFiles ++ files)
 
-  def instructionsString = instructions.mkString("\n")
+  def instructionsString: String = instructions.mkString("\n")
 }
