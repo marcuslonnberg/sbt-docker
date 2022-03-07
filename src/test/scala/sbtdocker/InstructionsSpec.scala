@@ -113,4 +113,12 @@ class InstructionsSpec extends AnyFlatSpec with Matchers {
       """LABEL com.example.bar="foo" com.example.bor="boz""""
     Label("foo=bar").toString shouldEqual "LABEL foo=bar"
   }
+
+  "Raw" should "create a correct string" in {
+    Raw(
+      "ONBUILD",
+      "RUN /usr/local/bin/python-build --dir /app/src"
+    ).toString shouldEqual "ONBUILD RUN /usr/local/bin/python-build --dir /app/src"
+    Raw("COPY", "--from=stage1 /path/to/file /path/to/file").toString shouldEqual "COPY --from=stage1 /path/to/file /path/to/file"
+  }
 }

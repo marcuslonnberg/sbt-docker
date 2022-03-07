@@ -66,6 +66,7 @@ class MutableDockerfileSpec extends AnyFlatSpec with Matchers {
         retries = Some(3)
       )
       healthCheckNone()
+      customInstruction("COPY", "--from=stage1 /path/to/file /path/to/file")
     }
 
     val instructions = Seq(
@@ -107,7 +108,8 @@ class MutableDockerfileSpec extends AnyFlatSpec with Matchers {
         startPeriod = Some(1.second),
         retries = Some(3)
       ),
-      HealthCheckNone
+      HealthCheckNone,
+      Raw("COPY", "--from=stage1 /path/to/file /path/to/file")
     )
 
     dockerfile.instructions should contain theSameElementsInOrderAs instructions

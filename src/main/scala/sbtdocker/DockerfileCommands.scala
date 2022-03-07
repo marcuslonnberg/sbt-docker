@@ -311,4 +311,20 @@ trait DockerfileCommands {
   def healthCheckShell(commands: String*): T = healthCheckShell(commands)
 
   def healthCheckNone(): T = addInstruction(HealthCheckNone)
+
+  /**
+    * Adds a custom Dockerfile instruction that is not currently supported by this DSL.
+    *
+    * @example
+    * {{{
+    *   // Copy in a multi-stage Dockerfile
+    *   // Equivalent to: "COPY --from=stage1 /path/to/file /path/to/file"
+    *   customInstruction("COPY", "--from=stage1 /path/to/file /path/to/file")
+    *
+    *   // Onbuild instruction can be represented as:
+    *   // ONBUILD RUN /usr/local/bin/python-build --dir /app/src
+    *   customInstruction("ONBUILD", "RUN /usr/local/bin/python-build --dir /app/src")
+    * }}}
+    */
+  def customInstruction(instructionName: String, arguments: String): T = addInstruction(Raw(instructionName, arguments))
 }

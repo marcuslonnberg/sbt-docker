@@ -115,6 +115,23 @@ docker / dockerfile := NativeDockerfile(file("subdirectory") / "Dockerfile")
 
 Have a look at [DockerfileExamples](examples/DockerfileExamples.scala) for different ways of defining a Dockerfile.
 
+#### Missing Dockerfile instructions
+
+Dockerfile instructions that are missing from the sbt-docker DSL can still be used by calling the `.customInstruction(instructionName, arguments)` method.
+Example:
+```scala
+new Dockerfile {
+  customInstruction("FROM", "openjdk AS stage1")
+  run("build")
+
+  customInstruction("FROM", "openjdk AS stage2")
+  customInstruction("COPY", "--from=stage1 /path/to/file /path/to/file")
+  customInstruction("STOPSIGNAL", "SIGQUIT")
+  
+  entryPoint("application")
+}
+```
+
 ### Building an image
 
 To build an image use the `docker` task.

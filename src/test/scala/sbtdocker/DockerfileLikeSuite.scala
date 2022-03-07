@@ -34,7 +34,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
       .exec(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3)),
     HealthCheck
       .shell(Seq("cmd", "arg"), interval = Some(20.seconds), timeout = Some(10.seconds), startPeriod = Some(1.second), retries = Some(3)),
-    HealthCheck.none
+    HealthCheck.none,
+    Raw("COPY", "--from=stage1 /path/to/file /path/to/file")
   )
 
   test("Instructions string is in correct order and matches instructions") {
@@ -62,7 +63,8 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
         |ONBUILD RUN ["echo", "123"]
         |HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD ["cmd", "arg"]
         |HEALTHCHECK --interval=20s --timeout=10s --start-period=1s --retries=3 CMD cmd arg
-        |HEALTHCHECK NONE""".stripMargin
+        |HEALTHCHECK NONE
+        |COPY --from=stage1 /path/to/file /path/to/file""".stripMargin
   }
 
   def staged(dockerfile: immutable.Dockerfile): StagedDockerfile = {
@@ -118,6 +120,7 @@ class DockerfileLikeSuite extends AnyFunSuite with Matchers {
         retries = Some(3)
       )
       .healthCheckNone()
+      .customInstruction("COPY", "--from=stage1 /path/to/file /path/to/file")
 
     withMethods shouldEqual predefined
   }
