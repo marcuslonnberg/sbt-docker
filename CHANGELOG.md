@@ -1,3 +1,7 @@
+## 1.9.0
+
+- Add `Dockerfile.customInstruction()` method to be able to add Dockerfile instructions that are missing from the DSL.
+
 ## 1.8.3
 
 - Support build output from Podman. [#125](https://github.com/marcuslonnberg/sbt-docker/issues/125)
