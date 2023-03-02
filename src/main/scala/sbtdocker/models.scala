@@ -31,12 +31,14 @@ object BuildOptions {
   * @param cache Use cache when building the image.
   * @param removeIntermediateContainers Remove intermediate containers after a build.
   * @param pullBaseImage Always attempts to pull a newer version of the base image.
+  * @param platforms Allows cross platform builds. Make sure that you already set docker's buildx up on the machine that uses this feature
   * @param additionalArguments Provide any other arguments to the `docker build` task, see reference at https://docs.docker.com/engine/reference/commandline/build/#options. For example `Seq("--add-host", "127.0.0.1:12345", "--compress")`.
   */
 final case class BuildOptions(
   cache: Boolean = true,
   removeIntermediateContainers: BuildOptions.Remove.Option = BuildOptions.Remove.OnSuccess,
   pullBaseImage: BuildOptions.Pull.Option = BuildOptions.Pull.IfMissing,
+  platforms: Seq[String] = Seq.empty,
   additionalArguments: Seq[String] = Seq.empty
 )
 
