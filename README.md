@@ -168,12 +168,22 @@ docker / imageNames := Seq(
 
 Use the key `docker / buildOptions` to set build options.
 
-Example:
+#### cross-platform
+The `platforms` parameter enables the cross-platform build.
+With valuing this parameter the docker image will build using `buildx` command and the host environment should already been set up for.
+
+⚠️ For using the cross builds you need QEMU binaries
+```shell
+docker run --privileged --rm tonistiigi/binfmt --install all
+```
+
+#### Example:
 ```scala
 docker / buildOptions := BuildOptions(
   cache = false,
   removeIntermediateContainers = BuildOptions.Remove.Always,
   pullBaseImage = BuildOptions.Pull.Always,
+  platforms = List("linux/arm64/v8"),
   additionalArguments = Seq("--add-host", "127.0.0.1:12345", "--compress")
 )
 ```

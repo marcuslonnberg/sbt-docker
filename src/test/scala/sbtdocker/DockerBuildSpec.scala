@@ -98,6 +98,14 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
       flags should contain("--pull=true")
     }
 
+    "Add platform argument for cross build" in {
+      val options = BuildOptions(platforms = List("linux/amd64", "linux/arm64"))
+      val flags = DockerBuild.generateBuildOptionFlags(options)
+
+      flags should contain("--platform=linux/amd64,linux/arm64")
+
+    }
+
     "Custom arguments" in {
       val options = BuildOptions(additionalArguments = Seq("--add-host", "127.0.0.1:12345", "--compress"))
       val flags = DockerBuild.generateBuildOptionFlags(options)
@@ -115,6 +123,18 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
         "Successfully tagged test:latest"
       )
       DockerBuild.parseImageId(lines) shouldEqual Some(ImageId("353fcb84af6b"))
+    }
+
+    "Docker buildx output" in {
+      val lines = Seq(
+        "#7 exporting layers 0.4s done",
+        "#7 exporting manifest sha256:427ff04564194e7d44a5790d5739465789861cb5ee6db60ccdb15388865dfd64 0.0s done",
+        "#7 exporting config sha256:d1d7dbb3987417e91239032f2a36a2ede76e62276849ebf362004c14d6fc82ac",
+        "#7 exporting config sha256:d1d7dbb3987417e91239032f2a36a2ede76e62276849ebf362004c14d6fc82ac 0.0s done",
+        "#7 sending tarball"
+      )
+      DockerBuild.parseImageId(lines) shouldEqual Some(ImageId("d1d7dbb3987417e91239032f2a36a2ede76e62276849ebf362004c14d6fc82ac"))
+
     }
 
     "Docker build output version 20.10.10" in {

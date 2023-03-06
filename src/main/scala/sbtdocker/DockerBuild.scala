@@ -113,6 +113,8 @@ object DockerBuild {
     var lines = Seq.empty[String]
 
     def runBuild(buildKitSupport: Boolean): Int = {
+      val buildX = if (buildOptions.platforms.isEmpty) Nil else List("buildx")
+      val load = if (buildOptions.platforms.isEmpty) Nil else List("--load")
       val buildOptionFlags = generateBuildOptionFlags(buildOptions)
       val buildKitFlags = if (buildKitSupport) List("--progress=plain") else Nil
       val buildArgumentFlags = buildArguments.toList.flatMap {
@@ -120,12 +122,14 @@ object DockerBuild {
           Seq(s"--build-arg", s"$key=$value")
       }
       val command: Seq[String] = dockerPath ::
+        buildX :::
         "build" ::
         buildOptionFlags :::
         buildKitFlags :::
         buildArgumentFlags :::
+        load :::
         "--file" ::
-        dockerfilePath.name ::
+        dockerfileAbsolutePath.getPath ::
         dockerfileAbsolutePath.getParentFile.getPath ::
         Nil
       log.debug(s"Running command: '${command.mkString(" ")}'")
@@ -187,18 +191,24 @@ object DockerBuild {
       }
       "--pull=" + value
     }
+    val platformsFlag: List[String] = buildOptions.platforms match {
+      case Seq() => Nil
+      case platforms => List(s"--platform=${platforms.mkString(",")}")
+    }
 
-    cacheFlag :: removeFlag :: pullFlag :: buildOptions.additionalArguments.toList
+    cacheFlag :: removeFlag :: pullFlag :: platformsFlag ::: buildOptions.additionalArguments.toList
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
   private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
+  private val SuccessfullyBuiltBuildx = ".* exporting config sha256:([0-9a-f]+) .*\\bdone$".r
   private val SuccessfullyBuiltPodman = "^([0-9a-f]{64})$".r
 
   private[sbtdocker] def parseImageId(lines: Seq[String]): Option[ImageId] = {
     lines.collect {
       case SuccessfullyBuilt(id) => ImageId(id)
       case SuccessfullyBuiltBuildKit(id) => ImageId(id)
+      case SuccessfullyBuiltBuildx(id) => ImageId(id)
       case SuccessfullyBuiltPodman(id) => ImageId(id)
     }.lastOption
   }
