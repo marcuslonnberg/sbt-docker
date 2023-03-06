@@ -13,7 +13,7 @@ jobs:
         run: sbt compile
       - name: Check code formatting
         run: sbt scalafmtCheckAll
-      - name: Unit tests
+      - name: Run unit tests
         run: sbt test
-      - name: Integration tests
+      - name: Run integration tests
         run: sbt scripted
