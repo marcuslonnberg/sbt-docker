@@ -7,9 +7,13 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: olafurpg/setup-scala@v11
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Compile
         run: sbt compile
-      - name: Test
-        run: sbt test scripted
       - name: Check code formatting
         run: sbt scalafmtCheckAll
+      - name: Unit tests
+        run: sbt test
+      - name: Integration tests
+        run: sbt scripted
