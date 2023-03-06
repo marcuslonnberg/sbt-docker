@@ -1,3 +1,8 @@
+## 1.10.0
+
+- Support building with buildx [#131](https://github.com/marcuslonnberg/sbt-docker/pull/131)
+- Deprecate dockerAutoPackageJavaApplication functionality
+
 ## 1.9.0
 
 - Add `Dockerfile.customInstruction()` method to be able to add Dockerfile instructions that are missing from the DSL.
