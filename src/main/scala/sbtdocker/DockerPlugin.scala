@@ -37,6 +37,7 @@ object DockerPlugin extends AutoPlugin {
       * @param exposedVolumes List of volumes to expose.
       * @param username Username that should run the Java process.
       */
+    @deprecated("Use sbt-native-packager plugin instead.", "1.10.0")
     def dockerAutoPackageJavaApplication(
       fromImage: String = "java:8-jre",
       exposedPorts: Seq[Int] = Seq.empty,

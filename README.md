@@ -214,13 +214,6 @@ docker / dockerfile := {
 
 Images can be built with [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/) by enabling it in the daemon configuration or by passing the environment variable `DOCKER_BUILDKIT=1` to sbt.
 
-### Auto packaging JVM applications
-
-If you have a standalone JVM application that you want a simple Docker image for.
-Then you can use `dockerAutoPackageJavaApplication(fromImage, exposedPorts, exposedVolumes, username)`
-which will setup some settings for you, including a Dockerfile.
-Its very basic, so if you have more advanced needs then define your own Dockerfile.
-
 [docker]: https://www.docker.com/
 [dockerfile]: https://docs.docker.com/engine/reference/builder/
 [dockerizing-scala-apps]: https://velvia.github.io/Docker-Scala-Sbt/
