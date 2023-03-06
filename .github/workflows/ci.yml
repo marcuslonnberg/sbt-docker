@@ -1,0 +1,15 @@
+name: CI
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: olafurpg/setup-scala@v11
+      - name: Compile
+        run: sbt compile
+      - name: Test
+        run: sbt test scripted
+      - name: Check code formatting
+        run: sbt scalafmtCheckAll
