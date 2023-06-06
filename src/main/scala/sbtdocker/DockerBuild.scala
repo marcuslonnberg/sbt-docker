@@ -184,19 +184,16 @@ object DockerBuild {
           "--rm=true"
       }
     }
-    val pullFlag = {
-      val value = buildOptions.pullBaseImage match {
-        case BuildOptions.Pull.Always => true
-        case BuildOptions.Pull.IfMissing => false
-      }
-      "--pull=" + value
+    val pullFlag = buildOptions.pullBaseImage match {
+      case BuildOptions.Pull.Always => List("--pull")
+      case BuildOptions.Pull.IfMissing => Nil
     }
     val platformsFlag: List[String] = buildOptions.platforms match {
       case Seq() => Nil
       case platforms => List(s"--platform=${platforms.mkString(",")}")
     }
 
-    cacheFlag :: removeFlag :: pullFlag :: platformsFlag ::: buildOptions.additionalArguments.toList
+    cacheFlag :: removeFlag :: pullFlag ::: platformsFlag ::: buildOptions.additionalArguments.toList
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
