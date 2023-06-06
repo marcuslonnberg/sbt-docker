@@ -200,6 +200,7 @@ object DockerBuild {
   private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
   private val SuccessfullyBuiltBuildx = ".* exporting config sha256:([0-9a-f]+) .*\\bdone$".r
   private val SuccessfullyBuiltPodman = "^([0-9a-f]{64})$".r
+  private val SuccessfullyBuiltNerdctl = "^Loaded image: .*sha256:([0-9a-f]+)$".r
 
   private[sbtdocker] def parseImageId(lines: Seq[String]): Option[ImageId] = {
     lines.collect {
@@ -207,6 +208,7 @@ object DockerBuild {
       case SuccessfullyBuiltBuildKit(id) => ImageId(id)
       case SuccessfullyBuiltBuildx(id) => ImageId(id)
       case SuccessfullyBuiltPodman(id) => ImageId(id)
+      case SuccessfullyBuiltNerdctl(id) => ImageId(id)
     }.lastOption
   }
 }
