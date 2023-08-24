@@ -67,7 +67,7 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
 
       val flags = DockerBuild.generateBuildOptionFlags(options)
 
-      flags should contain theSameElementsAs Seq("--no-cache=false", "--pull=false", "--rm=true")
+      flags should contain theSameElementsAs Seq("--no-cache=false", "--rm=true")
     }
 
     "No cache" in {
@@ -88,14 +88,14 @@ class DockerBuildSpec extends AnyFreeSpec with Matchers {
       val options = BuildOptions(removeIntermediateContainers = BuildOptions.Remove.Never)
       val flags = DockerBuild.generateBuildOptionFlags(options)
 
-      flags should contain("--pull=false")
+      flags should contain("--rm=false")
     }
 
     "Always pull" in {
       val options = BuildOptions(pullBaseImage = BuildOptions.Pull.Always)
       val flags = DockerBuild.generateBuildOptionFlags(options)
 
-      flags should contain("--pull=true")
+      flags should contain("--pull")
     }
 
     "Add platform argument for cross build" in {

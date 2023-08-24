@@ -184,25 +184,23 @@ object DockerBuild {
           "--rm=true"
       }
     }
-    val pullFlag = {
-      val value = buildOptions.pullBaseImage match {
-        case BuildOptions.Pull.Always => true
-        case BuildOptions.Pull.IfMissing => false
-      }
-      "--pull=" + value
+    val pullFlag = buildOptions.pullBaseImage match {
+      case BuildOptions.Pull.Always => List("--pull")
+      case BuildOptions.Pull.IfMissing => Nil
     }
     val platformsFlag: List[String] = buildOptions.platforms match {
       case Seq() => Nil
       case platforms => List(s"--platform=${platforms.mkString(",")}")
     }
 
-    cacheFlag :: removeFlag :: pullFlag :: platformsFlag ::: buildOptions.additionalArguments.toList
+    cacheFlag :: removeFlag :: pullFlag ::: platformsFlag ::: buildOptions.additionalArguments.toList
   }
 
   private val SuccessfullyBuilt = "^Successfully built ([0-9a-f]+)$".r
   private val SuccessfullyBuiltBuildKit = ".* writing image sha256:([0-9a-f]+) .*\\bdone$".r
   private val SuccessfullyBuiltBuildx = ".* exporting config sha256:([0-9a-f]+) .*\\bdone$".r
   private val SuccessfullyBuiltPodman = "^([0-9a-f]{64})$".r
+  private val SuccessfullyBuiltNerdctl = "^Loaded image: .*sha256:([0-9a-f]+)$".r
 
   private[sbtdocker] def parseImageId(lines: Seq[String]): Option[ImageId] = {
     lines.collect {
@@ -210,6 +208,7 @@ object DockerBuild {
       case SuccessfullyBuiltBuildKit(id) => ImageId(id)
       case SuccessfullyBuiltBuildx(id) => ImageId(id)
       case SuccessfullyBuiltPodman(id) => ImageId(id)
+      case SuccessfullyBuiltNerdctl(id) => ImageId(id)
     }.lastOption
   }
 }
