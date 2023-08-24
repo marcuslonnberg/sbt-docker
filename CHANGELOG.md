@@ -1,3 +1,7 @@
+## 1.11.0
+
+- Support nerdctl [#132](https://github.com/marcuslonnberg/sbt-docker/pull/132)
+
 ## 1.10.0
 
 - Support building with buildx [#131](https://github.com/marcuslonnberg/sbt-docker/pull/131)
