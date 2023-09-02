@@ -6,6 +6,7 @@ object DockerKeys {
   val docker = taskKey[ImageId]("Build a Docker image.")
   val dockerBuildAndPush = taskKey[Map[ImageName, ImageDigest]]("Build a Docker image and pushes it to a registry.")
   val dockerPush = taskKey[Map[ImageName, ImageDigest]]("Push a already built Docker image to a registry.")
+  val dockerRmi = taskKey[Map[ImageName, Seq[ImageDigest]]]("Delete built images.")
 
   @deprecated("Use imageNames instead.", "1.0.0")
   val imageName = taskKey[ImageName]("Name of the built image.")

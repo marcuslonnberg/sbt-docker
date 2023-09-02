@@ -25,6 +25,13 @@ object DockerSettings {
 
       DockerPush(dockerPath, imageNames, log)
     },
+    dockerRmi := {
+      val log = Keys.streams.value.log
+      val dockerPath = (docker / DockerKeys.dockerPath).value
+      val imageNames = (docker / DockerKeys.imageNames).value
+
+      DockerRmi(dockerPath, imageNames, log)
+    },
     dockerBuildAndPush := Def.taskDyn {
       docker.value
       Def.task {
